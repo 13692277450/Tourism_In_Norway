@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 允许访问外部存储根目录 -->
+    <external-path name="external_files" path="." />
+    <!-- 允许访问应用内部缓存目录 (ota_update 默认下载到这里) -->
+    <cache-path name="cache" path="." />
+    <files-path name="files" path="." />
+</paths>
