@@ -4,14 +4,11 @@ A new Flutter project.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project is a travle in in the part of Europe for a Flutter application. now it's designing in progress about Norway.
+should be done in one month.
 
-A few resources to get you started if this is your first Flutter project:
+<img width="1240" height="2772" alt="NorwaytravelAppHome" src="https://github.com/user-attachments/assets/141b4a5f-d832-4e83-b62e-9c0ff006b028" />
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
 "# Tourism_In_Norway" 
