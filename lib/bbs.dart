@@ -234,11 +234,10 @@ Future<void> _deletePost(int postId) async {
     
     final uri = Uri.parse('http://www.pavogroup.top:3004/api/posts').replace(
       queryParameters: {
-        'user_id': userId.toString(),
+        'id': userId.toString(),
       },
     );
     
-    debugPrint('获取我的帖子: $uri');
     
     final response = await http.get(uri);
     
@@ -617,8 +616,8 @@ class Post {
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
       content: json['content'] ?? '',
-      authorName: json['user_name'] ?? json['author'] ?? '匿名用户',
-      categoryName: json['category_name'] ?? '未分类',
+      authorName: json['user_name'] ?? json['author'] ?? 'Anonymous',
+      categoryName: json['category_name'] ?? 'No Category',
       likesCount: json['likes_count'] ?? 0,
       commentsCount: json['comments_count'] ?? 0,
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),

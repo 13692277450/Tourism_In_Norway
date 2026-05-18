@@ -38,7 +38,6 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _mailController = TextEditingController();
   final TextEditingController _telephoneController = TextEditingController();
@@ -53,7 +52,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _showIconPicker = false;
 
   Future<void> _submitRegister() async {
-    if (_usernameController.text.isEmpty ||
+    if (_selectedCountry == null ||
         _mailController.text.isEmpty ||
         _telephoneController.text.isEmpty ||
         _passwordController.text.isEmpty ||
@@ -81,9 +80,8 @@ class _RegisterPageState extends State<RegisterPage> {
         Uri.parse('http://www.pavogroup.top:3004/api/users/register'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'username': _usernameController.text,
           'name': _nameController.text,
-          'mail': _mailController.text,
+          'email': _mailController.text,
           'telephone': _telephoneController.text,
           'password': _passwordController.text,
           'country': _selectedCountry,
@@ -113,10 +111,12 @@ class _RegisterPageState extends State<RegisterPage> {
         shared.UserManager().login(
           shared.User(
             id: userId,
-            name: _usernameController.text,
+            name: _nameController.text,
             email: _mailController.text,
+            password: _passwordController.text,
             telephone: _telephoneController.text,
             country: _selectedCountry!,
+            remark: _remarkController.text,
           ),
         );
 
@@ -155,18 +155,10 @@ class _RegisterPageState extends State<RegisterPage> {
             SizedBox(height: 16.h),
 
             _buildTextField(
-              controller: _usernameController,
+              controller: _nameController,
               label: '登录用户名 *',
               hint: '请输入登录用户名',
               icon: Icons.person,
-            ),
-            SizedBox(height: 12.h),
-
-            _buildTextField(
-              controller: _nameController,
-              label: '真实姓名',
-              hint: '请输入真实姓名',
-              icon: Icons.account_circle,
             ),
             SizedBox(height: 12.h),
 
@@ -206,7 +198,9 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             SizedBox(height: 12.h),
 
-            _buildCountryDropdown(),
+            _buildCountryDropdown(
+              
+            ),
             SizedBox(height: 12.h),
 
             _buildIconPicker(),

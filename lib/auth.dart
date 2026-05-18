@@ -34,24 +34,27 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // 调用登录API获取用户信息
       final response = await http.post(
-        Uri.parse('http://www.pavogroup.top:3004/api/login'),
-        body: {
+        Uri.parse('http://www.pavogroup.top:3004/api/users/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
           'email': _emailController.text,
           'password': _passwordController.text,
-        },
+        }),
       );
       
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
-        final userData = decoded['data'] as Map<String, dynamic>;
+        final userData = (decoded['data'] as Map<String, dynamic>)['user'] as Map<String, dynamic>;
         
         shared.UserManager().login(
           shared.User(
             id: userData['id'] ?? 1,
-            name: userData['name'] ?? userData['username'] ?? '用户',
+            name: userData['name'] ?? userData['username'] ?? 'User',
             email: userData['email'] ?? _emailController.text,
+            password: _passwordController.text,
             telephone: userData['telephone'] ?? '',
             country: userData['country'] ?? '',
+            remark: userData['remark'] ?? '',
           ),
         );
         
@@ -62,18 +65,9 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } catch (e) {
-      debugPrint('Login error: $e');
-      // 如果API调用失败，使用模拟数据（保持原有行为）
-      shared.UserManager().login(
-        shared.User(
-          id: 1,
-          name: '测试用户',
-          email: _emailController.text,
-          telephone: '',
-          country: '中国',
-        ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('网络错误，请检查连接')),
       );
-      Navigator.pop(context);
     }
 
     setState(() {

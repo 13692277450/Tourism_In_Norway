@@ -710,16 +710,20 @@ class User {
   final int? id;
   final String name;
   final String email;
+  final String password;
   final String telephone;
   final String country;
   final String avatar;
+  final String remark;
   
   User({
     required this.id,
     required this.name,
     required this.email,
+    required this.password,
     required this.telephone,
     required this.country,
+    required this.remark,
     this.avatar = '',
   });
 }
