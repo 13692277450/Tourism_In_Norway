@@ -94,7 +94,16 @@ class _HomePageState extends State<HomePage> {
           final description = map['description'] ?? map['desc'] ?? '';
           final phone = map['telephone'] ?? map['phone'] ?? '';
           final rating = (map['grade'] ?? map['rating'] ?? 0);
-          final imageUrl = map['picture']?.toString().trim() ?? map['img']?.toString().trim() ?? '';
+          // 尝试多种可能的图片字段名
+          final imageUrl = 
+            map['picture']?.toString().trim() ?? 
+            map['img']?.toString().trim() ?? 
+            map['image']?.toString().trim() ??
+            map['image_url']?.toString().trim() ??
+            map['photo']?.toString().trim() ??
+            map['photos']?.toString().trim() ??
+            map['imageUrl']?.toString().trim() ??
+            '';
           final website = map['website'] ?? '';
           final highlights = map['attend'] ?? map['highlights'] ?? '';
 
@@ -107,6 +116,8 @@ class _HomePageState extends State<HomePage> {
             imageUrl: imageUrl,
             website: website,
             highlights: highlights,
+            address: location,  // 添加 address 参数
+
           );
         }).toList();
 
@@ -152,7 +163,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   String _shortDesc(String description) {
-    const maxLen = 20;
+    const maxLen = 50;
     if (description.length <= maxLen) return description;
     return '${description.substring(0, maxLen)}…';
   }
@@ -330,7 +341,7 @@ class _StaggeredTwoColumnGrid extends StatelessWidget {
                     place: rightColumn[i],
                     shortDesc: shortDesc(rightColumn[i].description),
                     onTap: () => onTap(rightColumn[i]),
-                    marginTop: i == 0 ? 40.h : 16.h,
+                    marginTop: i == 0 ? 0: 16.h, // 40.h : 16.h,
                   ),
               ],
             ),
@@ -363,7 +374,7 @@ class _StaggeredCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.w),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha((0.05 * 255).round()),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

@@ -187,6 +187,33 @@ class _BbsPageState extends State<BbsPage> {
     }
   });
 }
+
+Future<void> _deletePost(int postId) async {
+  try {
+    final response = await http.delete(
+      Uri.parse('http://www.pavogroup.top:3004/api/posts/$postId'),
+    );
+    
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('删除成功')),
+      );
+      _fetchPosts(isRefresh: true);
+      if (_showMyPosts) {
+        _fetchMyPosts();
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('删除失败，请稍后重试')),
+      );
+    }
+  } catch (e) {
+    debugPrint('Error deleting post: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('网络错误，请检查连接')),
+    );
+  }
+}
   
   void _toggleMyPosts() {
     setState(() {
@@ -464,6 +491,7 @@ class _BbsPageState extends State<BbsPage> {
                     return _PostCard(
                       post: post,
                       onTap: () => _navigateToPostDetail(post),
+                      onDelete: () => _deletePost(post.id),
                     );
                   },
                   childCount: _showMyPosts ? _myPosts.length : _posts.length,
@@ -603,14 +631,22 @@ class Post {
 class _PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   const _PostCard({
     required this.post,
     required this.onTap,
+    required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
+    final userManager = shared.UserManager();
+    final isLoggedIn = userManager.isLoggedIn;
+    final currentUserName = userManager.currentUser?.name ?? '';
+    // 只在当前用户自己的帖子中显示删除按钮
+    final isOwnPost = isLoggedIn && post.authorName == currentUserName;
+    
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
@@ -657,7 +693,7 @@ class _PostCard extends StatelessWidget {
                 SizedBox(height: 8.h),
                 
                 if (post.images.isNotEmpty)
-                  Container(
+                  SizedBox(
                     height: 80.h,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
@@ -684,6 +720,46 @@ class _PostCard extends StatelessWidget {
                     ),
                   ),
                 SizedBox(height: 12.h),
+                
+                // DELETE按钮（仅当前用户自己的帖子显示）
+                if (isOwnPost)
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        _showDeleteConfirmation(context);
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        foregroundColor: const Color(0xFFEF4444),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 4.h,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6.w),
+                          side: const BorderSide(
+                            color: Color(0xFFEF4444),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.delete_outline, size: 14),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '删除',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w200,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (isOwnPost) SizedBox(height: 8.h),
                 
                 Row(
                   children: [
@@ -745,6 +821,42 @@ class _PostCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('确认删除'),
+          content: const Text('确定要删除这条帖子吗？此操作无法撤销。'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.w),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[600],
+              ),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onDelete();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFFF4757),
+              ),
+              child: const Text('删除'),
+            ),
+          ],
+        );
+      },
     );
   }
 

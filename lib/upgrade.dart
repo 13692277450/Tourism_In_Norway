@@ -76,7 +76,7 @@ class UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
     if (status == null && value == null) return '正在准备更新…';
     final pct = _progressPercent().toStringAsFixed(0);
-    return '请稍等下，APP更新进行中：${pct} %';
+    return '请稍等下，APP更新进行中：$pct %';
   }
 
   @override

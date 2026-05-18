@@ -98,7 +98,7 @@ class ServicePage extends StatefulWidget {
 class _ServicePageState extends State<ServicePage> {
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
-  List<CartItem> _cartItems = [];
+  final List<CartItem> _cartItems = [];
   String _searchQuery = '';
   bool _isLoading = true;
 

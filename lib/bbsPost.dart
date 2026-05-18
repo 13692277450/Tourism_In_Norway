@@ -23,8 +23,8 @@ class _BbsPostPageState extends State<BbsPostPage> {
   
   List<Category> _categories = [];
   int? _selectedCategoryId;
-  List<File> _imageFiles = [];  // 本地图片文件
-  List<String> _imageUrls = [];  // 上传后的图片URL
+  final List<File> _imageFiles = [];  // 本地图片文件
+  final List<String> _imageUrls = [];  // 上传后的图片URL
   bool _isSubmitting = false;
   
   final UserManager = shared.UserManager();
@@ -300,7 +300,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
               ),
             ),
             SizedBox(height: 8.h),
-            Container(
+            SizedBox(
               height: 100.h,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:map_launcher/map_launcher.dart';
+
+import 'app_shared.dart' as shared;
 
 class Place {
   final String name;
@@ -15,7 +12,6 @@ class Place {
   final String imageUrl;
   final String website;
   final String highlights;
-  final String address;
 
   const Place({
     required this.name,
@@ -26,7 +22,6 @@ class Place {
     required this.imageUrl,
     required this.website,
     required this.highlights,
-    required this.address,
   });
 }
 
@@ -84,19 +79,27 @@ class PlaceDetailPage extends StatelessWidget {
                         children: [
                           AspectRatio(
                             aspectRatio: 16 / 10,
-                            child: CachedNetworkImage(
-                              imageUrl: place.imageUrl,
+                            child: Image.network(
+                              place.imageUrl,
                               fit: BoxFit.cover,
-                              errorWidget: (context, url, error) => Container(
+                              errorBuilder: (context, error, stackTrace) => Container(
                                 color: Colors.black.withOpacity(0.05),
                                 alignment: Alignment.center,
                                 child: const Icon(Icons.broken_image_rounded, size: 40),
                               ),
-                              placeholder: (context, url) => Container(
-                                color: Colors.black.withOpacity(0.04),
-                                alignment: Alignment.center,
-                                child: const CircularProgressIndicator(),
-                              ),
+                              loadingBuilder: (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: Colors.black.withOpacity(0.04),
+                                  alignment: Alignment.center,
+                                  child: CircularProgressIndicator(
+                                    value: loadingProgress.expectedTotalBytes != null
+                                        ? loadingProgress.cumulativeBytesLoaded /
+                                            (loadingProgress.expectedTotalBytes ?? 1)
+                                        : null,
+                                  ),
+                                );
+                              },
                             ),
                           ),
                           Positioned(
@@ -207,12 +210,6 @@ class PlaceDetailPage extends StatelessWidget {
                         ],
                       ),
                     ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _LocationMap(
-                    address: place.address,
-                    title: place.name,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -329,189 +326,6 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _LocationMap extends StatefulWidget {
-  final String address;
-  final String title;
-
-  const _LocationMap({
-    required this.address,
-    required this.title,
-  });
-
-  @override
-  State<_LocationMap> createState() => _LocationMapState();
-}
-
-class _LocationMapState extends State<_LocationMap> {
-  LatLng? _position;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _geocodeAddress();
-  }
-
-  Future<void> _geocodeAddress() async {
-    setState(() {
-      _position = const LatLng(59.9139, 10.7522);
-      _isLoading = false;
-    });
-  }
-
-  Future<void> _openExternalMap() async {
-    final availableMaps = await MapLauncher.installedMaps;
-    
-    if (availableMaps.isNotEmpty) {
-      await MapLauncher.showMarker(
-        mapType: MapType.google,
-        coords: Coords(
-          _position?.latitude ?? 59.9139,
-          _position?.longitude ?? 10.7522,
-        ),
-        title: widget.address,
-      );
-    } else {
-      // Fallback to url_launcher if no maps are available
-      final url = 'geo:${_position?.latitude ?? 59.9139},${_position?.longitude ?? 10.7522}?q=${Uri.encodeComponent(widget.address)}';
-      if (await canLaunchUrl(Uri.parse(url))) {
-        await launchUrl(Uri.parse(url));
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.w),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Row(
-              children: [
-                const Icon(Icons.location_on_rounded, color: Color(0xFF8B5CF6)),
-                SizedBox(width: 10.w),
-                Text(
-                  'Location',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF1E1E2D),
-                  ),
-                ),
-                const Spacer(),
-                TextButton(
-                  onPressed: _openExternalMap,
-                  child: Text(
-                    'Open in Maps',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF6366F1),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            child: Text(
-              widget.address,
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: const Color(0xFF65748B),
-                height: 1.5,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 200.h,
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : Stack(
-                    children: [
-                      FlutterMap(
-                        options: MapOptions(
-                          initialCenter: _position ?? const LatLng(59.9139, 10.7522),
-                          initialZoom: 14,
-                          interactionOptions: const InteractionOptions(
-                            flags: InteractiveFlag.none,
-                          ),
-                        ),
-                        children: [
-                          TileLayer(
-                            urlTemplate: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
-                            userAgentPackageName: 'tourism_in_norway/1.0.0',
-                          ),
-                          MarkerLayer(
-                            markers: [
-                              Marker(
-                                point: _position ?? const LatLng(59.9139, 10.7522),
-                                width: 30.w,
-                                height: 30.w,
-                                child: _CallunaMarker(),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      Positioned.fill(
-                        child: GestureDetector(
-                          onTap: _openExternalMap,
-                          behavior: HitTestBehavior.opaque,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CallunaMarker extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 20.w,
-      height: 20.h,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF9B5DE5), Color(0xFFF15BB5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12.w),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromARGB(255, 178, 120, 248).withOpacity(0.4),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Icon(
-          Icons.location_on_outlined,
-          color: Colors.white,
-          size: 12.r,
-        ),
-      ),
-    );
-  }
-}
+// 兼容旧代码：保留 shared.AppLocalizations 的依赖不做业务逻辑改动
+// ignore: unused_import
+final _ = shared.AppLocalizations.supportedLocales;
