@@ -46,7 +46,7 @@ class _UpdateCheckWrapperState extends State<UpdateCheckWrapper> {
         );
       }
     } catch (e) {
-      print('版本检查失败: $e');
+      throw Exception('版本检查失败: $e');
     } finally {
       setState(() {
         _initialized = true;
@@ -222,17 +222,17 @@ class MainScreen extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                SizedBox(height: 24.h),
+                SizedBox(height: 10.h),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _HeaderCard(),
+                      //_HeaderCard(),
                     ],
                   ),
                 ),
-                SizedBox(height: 24.h),
+               // SizedBox(height: 24.h),
                 Expanded(child: _buildPage(context)),
               ],
             ),

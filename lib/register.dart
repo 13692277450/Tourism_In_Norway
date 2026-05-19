@@ -95,17 +95,26 @@ class _RegisterPageState extends State<RegisterPage> {
         ).showSnackBar(const SnackBar(content: Text('注册成功')));
 
         // 解析服务器返回的用户ID
-        int userId = 1; // 默认值
-        try {
-          final decoded = json.decode(response.body);
-          if (decoded['data'] != null && decoded['data']['id'] != null) {
-            userId =
-                decoded['data']['id'] is int
-                    ? decoded['data']['id']
-                    : int.parse(decoded['data']['id'].toString());
-          }
-        } catch (e) {
-          debugPrint('Failed to parse user ID from response: $e');
+        final decoded = json.decode(response.body);
+        final data = decoded['data'] as Map<String, dynamic>?;
+        if (data == null || data['id'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('注册成功，但未获取到用户ID，请重新登录')),
+          );
+          Navigator.pop(context);
+          return;
+        }
+
+        final userId = data['id'] is int
+            ? data['id']
+            : int.tryParse(data['id'].toString()) ?? 0;
+
+        if (userId <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('注册成功，但获取用户ID失败，请重新登录')),
+          );
+          Navigator.pop(context);
+          return;
         }
 
         shared.UserManager().login(

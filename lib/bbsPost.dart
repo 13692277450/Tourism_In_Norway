@@ -82,7 +82,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
       );
       
       request.files.add(await http.MultipartFile.fromPath(
-        'image',
+        'images',
         imageFile.path,
       ));
       
@@ -135,61 +135,62 @@ class _BbsPostPageState extends State<BbsPostPage> {
         final url = await _uploadImage(imageFile);
         if (url != null) {
           _imageUrls.add(url);
+        } else {
+          throw Exception('图片上传失败，请重试');
         }
       }
       
       debugPrint('上传的图片URL: $_imageUrls');
 
+      final currentUser = UserManager.currentUser;
+      if (currentUser == null || currentUser.id == null) {
+        throw Exception('未检测到有效登录用户，请重新登录');
+      }
+
       // 第二步：发布帖子
+      final Map<String, dynamic> requestBody = {
+        'id': currentUser.id,
+        'title': _titleController.text,
+        'category_id': _selectedCategoryId ?? 1,
+        'content': _contentController.text,
+      };
+      if (_imageUrls.isNotEmpty) {
+        requestBody['images'] = _imageUrls;
+      }
+
+      final bodyJson = json.encode(requestBody);
+
+  
+
       final response = await http.post(
         Uri.parse('http://www.pavogroup.top:3004/api/posts'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'user_id': UserManager.currentUser?.id != null 
-              ? UserManager.currentUser!.id.toString() 
-              : '1',
-          'title': _titleController.text,
-          'category_id': _selectedCategoryId,
-          'content': _contentController.text,
-          'images': _imageUrls,
-        }),
+        body: bodyJson,
       );
 
       debugPrint('Response status: ${response.statusCode}');
       debugPrint('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        try {
-          final decoded = json.decode(response.body);
-          if (decoded['message'] == '发布成功') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('发布成功')),
-            );
-            Navigator.pop(context);
-          } else {
-            final errorMessage = decoded['message'] ?? '发布失败';
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(errorMessage)),
-            );
-          }
-        } catch (e) {
+        final decoded = json.decode(response.body);
+        final success = decoded['success'] == true || decoded['message'] == '发布成功';
+        if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('发布成功')),
           );
           Navigator.pop(context);
-        }
-      } else {
-        try {
-          final decoded = json.decode(response.body);
-          final errorMessage = decoded['message'] ?? '发布失败，状态码: ${response.statusCode}';
+        } else {
+          final errorMessage = decoded['message'] ?? '发布失败';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(errorMessage)),
           );
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('发布失败，状态码: ${response.statusCode}')),
-          );
         }
+      } else {
+        final decoded = _tryParseJson(response.body);
+        final errorMessage = decoded?['message'] ?? '发布失败，状态码: ${response.statusCode}';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
       }
     } catch (e) {
       debugPrint('Error submitting post: $e');
@@ -201,6 +202,15 @@ class _BbsPostPageState extends State<BbsPostPage> {
     setState(() {
       _isSubmitting = false;
     });
+  }
+
+  Map<String, dynamic>? _tryParseJson(String body) {
+    try {
+      final decoded = json.decode(body);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
   }
 
   @override

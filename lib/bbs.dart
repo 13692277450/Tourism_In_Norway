@@ -225,46 +225,64 @@ Future<void> _deletePost(int postId) async {
   }
   
   Future<void> _fetchMyPosts() async {
-  setState(() {
-    _isLoading = true;
-  });
-  
-  try {
-    final userId = UserManager.currentUser?.id ?? 1;
-    
-    final uri = Uri.parse('http://www.pavogroup.top:3004/api/posts').replace(
-      queryParameters: {
-        'id': userId.toString(),
-      },
-    );
-    
-    
-    final response = await http.get(uri);
-    
-    if (response.statusCode == 200) {
-      final decoded = json.decode(response.body);
-      final dataMap = decoded['data'] as Map<String, dynamic>? ?? {};
-      final dataList = dataMap['list'] as List<dynamic>? ?? [];
-      
+    final currentUser = UserManager.currentUser;
+    if (currentUser == null || currentUser.id == null) {
       setState(() {
-        _myPosts = dataList.map((item) => Post.fromJson(item)).toList();
+        _myPosts = [];
         _isLoading = false;
       });
-    } else {
-      debugPrint('获取我的帖子失败: ${response.statusCode}');
+      debugPrint('未检测到有效登录用户，无法获取我的帖子');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _myPosts = [];
+    });
+
+    try {
+      final userId = currentUser.id!;
+      final uri = Uri.parse('http://www.pavogroup.top:3004/api/posts').replace(
+        queryParameters: {
+          'user_id': userId.toString(),
+          'id': userId.toString(),
+        },
+      );
+
+      debugPrint('我的留言请求URL: $uri');
+
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final data = decoded['data'];
+        List<dynamic> dataList = [];
+
+        if (data is Map<String, dynamic>) {
+          dataList = data['list'] as List<dynamic>? ?? [];
+        } else if (data is List<dynamic>) {
+          dataList = data;
+        }
+
+        setState(() {
+          _myPosts = dataList.map((item) => Post.fromJson(item)).toList();
+          _isLoading = false;
+        });
+      } else {
+        debugPrint('获取我的帖子失败: ${response.statusCode} ${response.body}');
+        setState(() {
+          _myPosts = [];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching my posts: $e');
       setState(() {
         _myPosts = [];
         _isLoading = false;
       });
     }
-  } catch (e) {
-    debugPrint('Error fetching my posts: $e');
-    setState(() {
-      _myPosts = [];
-      _isLoading = false;
-    });
   }
-}
 
   @override
   Widget build(BuildContext context) {

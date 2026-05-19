@@ -26,6 +26,21 @@ class _HomePageState extends State<HomePage> {
   
   bool isLoading = true; // 仅用于首次加载
   String? errorMessage;
+  String? _selectedScenicTag;
+
+  List<String> get _scenicTagNames {
+    final names = places
+        .map((place) => place.name.trim())
+        .where((name) => name.isNotEmpty)
+        .toSet()
+        .toList();
+    return names.take(12).toList();
+  }
+
+  List<Place> get _filteredPlaces {
+    if (_selectedScenicTag == null) return places;
+    return places.where((place) => place.name == _selectedScenicTag).toList();
+  }
 
   @override
   void initState() {
@@ -168,9 +183,137 @@ class _HomePageState extends State<HomePage> {
     return '${description.substring(0, maxLen)}…';
   }
 
+  Widget _buildScenicTagArea() {
+    final tags = _scenicTagNames;
+    if (tags.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final firstRow = tags.take(4).toList();
+    final secondRow = tags.length > 4 ? tags.sublist(4) : <String>[];
+
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF111827), Color(0xFF1E293B)],
+        ),
+        borderRadius: BorderRadius.circular(24.w),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.18),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '热门景点',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (_selectedScenicTag != null)
+                GestureDetector(
+                  onTap: () => setState(() => _selectedScenicTag = null),
+                  child: Text(
+                    '清除',
+                    style: TextStyle(
+                      color: Colors.blue[200],
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          _buildTagRow(firstRow),
+          if (secondRow.isNotEmpty) ...[
+            SizedBox(height: 10.h),
+            _buildTagRow(secondRow),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTagRow(List<String> tags) {
+    return SizedBox(
+      height: 48.h,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: tags.length,
+        separatorBuilder: (_, __) => SizedBox(width: 10.w),
+        itemBuilder: (context, index) {
+          final tag = tags[index];
+          final selected = tag == _selectedScenicTag;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedScenicTag = selected ? null : tag;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
+              decoration: BoxDecoration(
+                gradient: selected
+                    ? const LinearGradient(
+                        colors: [Color(0xFF5B86E5), Color(0xFF36D1DC)],
+                      )
+                    : const LinearGradient(
+                        colors: [Color(0xFF334155), Color(0xFF1E293B)],
+                      ),
+                borderRadius: BorderRadius.circular(999.w),
+                border: Border.all(
+                  color: selected ? Colors.transparent : Colors.white.withOpacity(0.14),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: selected
+                        ? const Color(0xFF36D1DC).withOpacity(0.25)
+                        : Colors.black.withOpacity(0.12),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  tag,
+                  style: TextStyle(
+                    color: selected ? Colors.white : Colors.white70,
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = shared.AppLocalizations.of(context);
+    final filteredPlaces = _filteredPlaces;
 
     return Scaffold(
       body: NotificationListener<ScrollNotification>(
@@ -188,24 +331,24 @@ class _HomePageState extends State<HomePage> {
         },
         child: CustomScrollView(
           slivers: [
-            SliverAppBar(
-              title: Text(loc.appName),
-              pinned: true,
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
-              expandedHeight: 200.h,
-              flexibleSpace: const FlexibleSpaceBar(
-                background: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            // SliverAppBar(
+            //   title: Text(loc.appName),
+            //   pinned: true,
+            //   backgroundColor: const Color(0xFF0F172A),
+            //   foregroundColor: Colors.white,
+            //   expandedHeight: 200.h,
+            //   flexibleSpace: const FlexibleSpaceBar(
+            //     background: DecoratedBox(
+            //       decoration: BoxDecoration(
+            //         gradient: LinearGradient(
+            //           begin: Alignment.topCenter,
+            //           end: Alignment.bottomCenter,
+            //           colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             
             // 首次加载状态
             if (isLoading && places.isEmpty)
@@ -237,22 +380,40 @@ class _HomePageState extends State<HomePage> {
             
             // 正常列表内容
             else ...[
-              SliverPadding(
-                padding: EdgeInsets.only(bottom: 24.h),
-                sliver: SliverToBoxAdapter(
-                  child: _StaggeredTwoColumnGrid(
-                    items: places,
-                    shortDesc: _shortDesc,
-                    onTap: (place) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => PlaceDetailPage(place: place),
-                        ),
-                      );
-                    },
+              SliverToBoxAdapter(child: _buildScenicTagArea()),
+              if (filteredPlaces.isEmpty)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 24.w),
+                      child: Text(
+                        _selectedScenicTag == null
+                            ? '暂无景点数据，请稍后重试。'
+                            : '暂无匹配 "$_selectedScenicTag" 的景点。',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14.sp, color: Colors.grey[300]),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: EdgeInsets.only(bottom: 24.h),
+                  sliver: SliverToBoxAdapter(
+                    child: _StaggeredTwoColumnGrid(
+                      items: filteredPlaces,
+                      shortDesc: _shortDesc,
+                      onTap: (place) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => PlaceDetailPage(place: place),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
-              ),
               
               // 底部加载状态指示器
               if (_isLoadingMore)

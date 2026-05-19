@@ -44,11 +44,38 @@ class _LoginPageState extends State<LoginPage> {
       
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
-        final userData = (decoded['data'] as Map<String, dynamic>)['user'] as Map<String, dynamic>;
-        
+        final data = decoded['data'] as Map<String, dynamic>?;
+        final userData = data != null && data['user'] is Map<String, dynamic>
+            ? data['user'] as Map<String, dynamic>
+            : null;
+
+        if (userData == null || userData['id'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('登录失败，未获取到用户信息')),
+          );
+          setState(() {
+            _isSubmitting = false;
+          });
+          return;
+        }
+
+        final userId = userData['id'] is int
+            ? userData['id']
+            : int.tryParse(userData['id'].toString()) ?? 0;
+
+        if (userId <= 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('登录失败，用户ID无效')),
+          );
+          setState(() {
+            _isSubmitting = false;
+          });
+          return;
+        }
+
         shared.UserManager().login(
           shared.User(
-            id: userData['id'] ?? 1,
+            id: userId,
             name: userData['name'] ?? userData['username'] ?? 'User',
             email: userData['email'] ?? _emailController.text,
             password: _passwordController.text,
