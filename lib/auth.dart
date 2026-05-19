@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
             ? data['user'] as Map<String, dynamic>
             : null;
 
-        if (userData == null || userData['id'] == null) {
+        if (userData == null || userData['user_id'] == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('登录失败，未获取到用户信息')),
           );
@@ -59,9 +59,9 @@ class _LoginPageState extends State<LoginPage> {
           return;
         }
 
-        final userId = userData['id'] is int
-            ? userData['id']
-            : int.tryParse(userData['id'].toString()) ?? 0;
+        final userId = userData['user_id'] is int
+            ? userData['user_id']
+            : int.tryParse(userData['user_id'].toString()) ?? 0;
 
         if (userId <= 0) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -75,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
 
         shared.UserManager().login(
           shared.User(
-            id: userId,
+            user_id: userId,
             name: userData['name'] ?? userData['username'] ?? 'User',
             email: userData['email'] ?? _emailController.text,
             password: _passwordController.text,

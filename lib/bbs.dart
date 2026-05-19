@@ -226,7 +226,7 @@ Future<void> _deletePost(int postId) async {
   
   Future<void> _fetchMyPosts() async {
     final currentUser = UserManager.currentUser;
-    if (currentUser == null || currentUser.id == null) {
+    if (currentUser == null || currentUser.user_id == null) {
       setState(() {
         _myPosts = [];
         _isLoading = false;
@@ -241,7 +241,7 @@ Future<void> _deletePost(int postId) async {
     });
 
     try {
-      final userId = currentUser.id!;
+      final userId = currentUser.user_id!;
       final uri = Uri.parse('http://www.pavogroup.top:3004/api/posts').replace(
         queryParameters: {
           'user_id': userId.toString(),
@@ -589,6 +589,7 @@ class Category {
 
 class Post {
   final int id;
+  final int user_id;
   final String title;
   final String content;
   final String authorName;
@@ -601,6 +602,7 @@ class Post {
 
   Post({
     required this.id,
+    required this.user_id,
     required this.title,
     required this.content,
     required this.authorName,
@@ -632,6 +634,7 @@ class Post {
 
     return Post(
       id: json['id'] ?? 0,
+      user_id: json['user_id'] ?? 0,
       title: json['title'] ?? '',
       content: json['content'] ?? '',
       authorName: json['user_name'] ?? json['author'] ?? 'Anonymous',

@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
 import 'dart:io';
 
 import 'bbs.dart';
@@ -129,47 +131,56 @@ class _BbsPostPageState extends State<BbsPostPage> {
     });
 
     try {
-      // 第一步：上传所有图片
-      _imageUrls.clear();
-      for (var imageFile in _imageFiles) {
-        final url = await _uploadImage(imageFile);
-        if (url != null) {
-          _imageUrls.add(url);
-        } else {
-          throw Exception('图片上传失败，请重试');
-        }
-      }
-      
-      debugPrint('上传的图片URL: $_imageUrls');
-
       final currentUser = UserManager.currentUser;
-      if (currentUser == null || currentUser.id == null) {
+      if (currentUser == null || currentUser.user_id == null) {
         throw Exception('未检测到有效登录用户，请重新登录');
       }
 
-      // 第二步：发布帖子
-      final Map<String, dynamic> requestBody = {
-        'id': currentUser.id,
-        'title': _titleController.text,
-        'category_id': _selectedCategoryId ?? 1,
-        'content': _contentController.text,
-      };
-      if (_imageUrls.isNotEmpty) {
-        requestBody['images'] = _imageUrls;
-      }
-
-      final bodyJson = json.encode(requestBody);
-
-  
-
-      final response = await http.post(
+      // 创建 multipart 请求（直接发送图片文件）
+      var request = http.MultipartRequest(
+        'POST',
         Uri.parse('http://www.pavogroup.top:3004/api/posts'),
-        headers: {'Content-Type': 'application/json'},
-        body: bodyJson,
       );
 
-      debugPrint('Response status: ${response.statusCode}');
-      debugPrint('Response body: ${response.body}');
+      // 添加文本字段（使用数据库自增ID，整数类型）
+      request.fields['id'] = currentUser.user_id.toString();
+      request.fields['user_id'] = currentUser.user_id.toString();
+      request.fields['title'] = _titleController.text;
+      request.fields['category_id'] = (_selectedCategoryId ?? 1).toString();
+      request.fields['content'] = _contentController.text;
+
+      // 添加图片文件, 并显式指定 MIME 类型
+      for (var imageFile in _imageFiles) {
+        final extension = path.extension(imageFile.path).toLowerCase();
+        String mimeType;
+        if (extension == '.png') {
+          mimeType = 'image/png';
+        } else if (extension == '.gif') {
+          mimeType = 'image/gif';
+        } else {
+          mimeType = 'image/jpeg';
+        }
+
+        debugPrint('Attach file: ${imageFile.path}, mimeType: $mimeType');
+
+        request.files.add(await http.MultipartFile.fromPath(
+          'images',  // ← 必须与服务器端 upload.array('images', 5) 一致
+          imageFile.path,
+          filename: path.basename(imageFile.path),
+          contentType: MediaType(
+            mimeType.split('/')[0],
+            mimeType.split('/')[1],
+          ),
+        ));
+      }
+
+      debugPrint('发送的字段: ${request.fields}');
+      debugPrint('发送的文件数量: ${request.files.length}');
+
+      // 发送请求
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);

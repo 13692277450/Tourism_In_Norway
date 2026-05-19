@@ -119,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
         shared.UserManager().login(
           shared.User(
-            id: userId,
+            user_id: userId,
             name: _nameController.text,
             email: _mailController.text,
             password: _passwordController.text,
