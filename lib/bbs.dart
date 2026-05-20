@@ -289,9 +289,24 @@ Future<void> _deletePost(int postId) async {
     final loc = shared.AppLocalizations.of(context);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToPostPage,
-        child: const Icon(Icons.add),
+      backgroundColor: const Color(0xFF0F172A),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF00D4FF),
+              blurRadius: 15,
+              spreadRadius: 5,
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: _navigateToPostPage,
+          backgroundColor: const Color(0xFF0F172A),
+          foregroundColor: const Color(0xFF00D4FF),
+          elevation: 0,
+          child: const Icon(Icons.add),
+        ),
       ),
       body: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
@@ -351,17 +366,20 @@ Future<void> _deletePost(int postId) async {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: _showMyPosts
-                              ? const Color(0xFF3D5AFE)
+                              ? const Color(0xFF0F172A)
                               : Colors.white,
                           foregroundColor: _showMyPosts
-                              ? Colors.white
-                              : const Color(0xFF3D5AFE),
-                          side: const BorderSide(
-                            color: Color(0xFF3D5AFE),
+                              ? const Color(0xFF00D4FF)
+                              : const Color(0xFF00D4FF),
+                          side: BorderSide(
+                            color: const Color(0xFF00D4FF),
+                            width: 2,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.w),
                           ),
+                          shadowColor: const Color(0xFF00D4FF),
+                          elevation: _showMyPosts ? 8 : 0,
                         ),
                         child: const Text('我的留言'),
                       ),
@@ -376,15 +394,19 @@ Future<void> _deletePost(int postId) async {
                 padding: EdgeInsets.all(16.w),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color(0xFF0F172A),
                     borderRadius: BorderRadius.circular(12.w),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                        color: const Color(0xFF00D4FF).withOpacity(0.3),
+                        blurRadius: 15,
+                        spreadRadius: 2,
                       ),
                     ],
+                    border: Border.all(
+                      color: const Color(0xFF00D4FF).withOpacity(0.5),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -394,9 +416,10 @@ Future<void> _deletePost(int postId) async {
                       Expanded(
                         child: TextField(
                           controller: _searchController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: '搜索帖子或用户名',
                             border: InputBorder.none,
+                            hintStyle: TextStyle(color: Colors.grey[400]),
                           ),
                           onSubmitted: (_) => _searchPosts(),
                         ),
@@ -428,11 +451,15 @@ Future<void> _deletePost(int postId) async {
                           onPressed: () => _onCategorySelected(category.id),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isSelected
-                                ? const Color(0xFF3D5AFE)
-                                : Colors.white,
+                                ? const Color(0xFF0F172A)
+                                : Colors.transparent,
                             foregroundColor: isSelected
-                                ? Colors.white
-                                : Colors.black87,
+                                ? const Color(0xFFFF00FF)
+                                : const Color(0xFFFF00FF),
+                            side: BorderSide(
+                              color: const Color(0xFFFF00FF),
+                              width: 2,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20.w),
                             ),
@@ -440,6 +467,8 @@ Future<void> _deletePost(int postId) async {
                               horizontal: 20.w,
                               vertical: 12.h,
                             ),
+                            shadowColor: isSelected ? const Color(0xFFFF00FF) : null,
+                            elevation: isSelected ? 8 : 0,
                           ),
                           child: Text(category.name),
                         ),
@@ -456,27 +485,52 @@ Future<void> _deletePost(int postId) async {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.login,
                         size: 48,
-                        color: Colors.grey,
+                        color: const Color(0xFF00D4FF),
+                        shadows: [
+                          Shadow(
+                            color: const Color(0xFF00D4FF),
+                            blurRadius: 20,
+                          ),
+                        ],
                       ),
                       SizedBox(height: 16.h),
                       Text(
                         '请先登录',
-                        style: TextStyle(fontSize: 16.sp),
+                        style: TextStyle(fontSize: 16.sp, color: Colors.white),
                       ),
                       SizedBox(height: 16.h),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginPage(),
+                      Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF00FF).withOpacity(0.5),
+                              blurRadius: 15,
+                              spreadRadius: 3,
                             ),
-                          ).then((_) => setState(() {}));
-                        },
-                        child: const Text('去登录'),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ),
+                            ).then((_) => setState(() {}));
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: const Color(0xFFFF00FF),
+                            side: const BorderSide(
+                              color: Color(0xFFFF00FF),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Text('去登录'),
+                        ),
                       ),
                     ],
                   ),
@@ -544,15 +598,21 @@ Future<void> _deletePost(int postId) async {
                     child: Center(
                       child: Column(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.message,
                             size: 48,
-                            color: Colors.grey,
+                            color: const Color(0xFF00D4FF),
+                            shadows: [
+                              Shadow(
+                                color: const Color(0xFF00D4FF),
+                                blurRadius: 20,
+                              ),
+                            ],
                           ),
                           SizedBox(height: 16.h),
                           Text(
                             '暂无留言',
-                            style: TextStyle(fontSize: 16.sp),
+                            style: TextStyle(fontSize: 16.sp, color: Colors.white),
                           ),
                         ],
                       ),
@@ -670,15 +730,24 @@ class _PostCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(12.w),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: const Color(0xFF00D4FF).withOpacity(0.4),
+            blurRadius: 20,
+            spreadRadius: 3,
+          ),
+          BoxShadow(
+            color: const Color(0xFFFF00FF).withOpacity(0.2),
+            blurRadius: 15,
+            spreadRadius: 2,
           ),
         ],
+        border: Border.all(
+          color: const Color(0xFF00D4FF).withOpacity(0.6),
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -695,6 +764,7 @@ class _PostCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
+                    color: const Color(0xFF00D4FF),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -702,14 +772,14 @@ class _PostCard extends StatelessWidget {
                 SizedBox(height: 8.h),
                 
                 Text(
-                  post.content,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[600],
-                  ),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                      post.content,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey[300],
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                 SizedBox(height: 8.h),
                 
                 if (post.images.isNotEmpty)
@@ -744,38 +814,49 @@ class _PostCard extends StatelessWidget {
                 // DELETE按钮（仅当前用户自己的帖子显示）
                 if (isOwnPost)
                   Center(
-                    child: TextButton(
-                      onPressed: () {
-                        _showDeleteConfirmation(context);
-                      },
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: const Color(0xFFEF4444),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 16.w,
-                          vertical: 4.h,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6.w),
-                          side: const BorderSide(
-                            color: Color(0xFFEF4444),
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.delete_outline, size: 14),
-                          SizedBox(width: 4.w),
-                          Text(
-                            '删除',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w200,
-                            ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF4757).withOpacity(0.5),
+                            blurRadius: 10,
+                            spreadRadius: 2,
                           ),
                         ],
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          _showDeleteConfirmation(context);
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: const Color(0xFFFF4757),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 16.w,
+                            vertical: 4.h,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6.w),
+                            side: const BorderSide(
+                              color: Color(0xFFFF4757),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.delete_outline, size: 14),
+                            SizedBox(width: 4.w),
+                            Text(
+                              '删除',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w200,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -789,14 +870,24 @@ class _PostCard extends StatelessWidget {
                         vertical: 2.h,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE0E7FF),
+                        color: const Color(0xFF0F172A),
                         borderRadius: BorderRadius.circular(4.w),
+                        border: Border.all(
+                          color: const Color(0xFFFF00FF),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFF00FF).withOpacity(0.5),
+                            blurRadius: 5,
+                          ),
+                        ],
                       ),
                       child: Text(
                         post.categoryName,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: const Color(0xFF4338CA),
+                          color: const Color(0xFFFF00FF),
                         ),
                       ),
                     ),
@@ -805,7 +896,7 @@ class _PostCard extends StatelessWidget {
                       post.authorName,
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: Colors.grey[500],
+                        color: Colors.grey[400],
                       ),
                     ),
                     const Spacer(),
@@ -815,14 +906,14 @@ class _PostCard extends StatelessWidget {
                         SizedBox(width: 4.w),
                         Text(
                           post.likesCount.toString(),
-                          style: TextStyle(fontSize: 12.sp),
+                          style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
                         ),
                         SizedBox(width: 16.w),
-                        Icon(Icons.comment, size: 14.sp, color: Colors.grey),
+                        Icon(Icons.comment, size: 14.sp, color: Colors.grey[400]),
                         SizedBox(width: 4.w),
                         Text(
                           post.commentsCount.toString(),
-                          style: TextStyle(fontSize: 12.sp),
+                          style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
                         ),
                       ],
                     ),
@@ -833,9 +924,9 @@ class _PostCard extends StatelessWidget {
                   _formatDate(post.createdAt),
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: Colors.grey[400],
+                    color: Colors.grey[500],
                   ),
-                ),
+                )
               ],
             ),
           ),

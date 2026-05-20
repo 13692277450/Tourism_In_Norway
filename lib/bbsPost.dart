@@ -227,8 +227,13 @@ class _BbsPostPageState extends State<BbsPostPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
-        title: const Text('发布帖子'),
+        title: const Text('发布帖子', style: TextStyle(color: Color(0xFF00D4FF))),
+        backgroundColor: const Color(0xFF0F172A),
+        foregroundColor: Colors.white,
+        shadowColor: const Color(0xFF00D4FF).withOpacity(0.5),
+        elevation: 8,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
@@ -241,18 +246,36 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
+                color: const Color(0xFF00D4FF),
               ),
             ),
             SizedBox(height: 8.h),
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                hintText: '请输入标题',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.w),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8.w),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00D4FF).withOpacity(0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+                border: Border.all(
+                  color: const Color(0xFF00D4FF),
+                  width: 1,
                 ),
               ),
-              maxLength: 200,
+              child: TextField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: '请输入标题',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(12.w),
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                ),
+                style: const TextStyle(color: Colors.white),
+                maxLength: 200,
+              ),
             ),
             SizedBox(height: 16.h),
             
@@ -262,24 +285,35 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
+                color: const Color(0xFFFF00FF),
               ),
             ),
             SizedBox(height: 8.h),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
+                border: Border.all(color: const Color(0xFFFF00FF)),
                 borderRadius: BorderRadius.circular(8.w),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF00FF).withOpacity(0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+                color: const Color(0xFF0F172A),
               ),
               child: DropdownButton<int>(
                 value: _selectedCategoryId,
-                hint: const Text('请选择分类'),
+                hint: const Text('请选择分类', style: TextStyle(color: Colors.grey)),
                 isExpanded: true,
                 underline: const SizedBox(),
+                dropdownColor: const Color(0xFF0F172A),
+                style: const TextStyle(color: Colors.white),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
                     value: category.id,
-                    child: Text(category.name),
+                    child: Text(category.name, style: const TextStyle(color: Colors.white)),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -297,18 +331,36 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
+                color: const Color(0xFF00D4FF),
               ),
             ),
             SizedBox(height: 8.h),
-            TextField(
-              controller: _contentController,
-              decoration: InputDecoration(
-                hintText: '请输入内容',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.w),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8.w),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00D4FF).withOpacity(0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+                border: Border.all(
+                  color: const Color(0xFF00D4FF),
+                  width: 1,
                 ),
               ),
-              maxLines: 10,
+              child: TextField(
+                controller: _contentController,
+                decoration: InputDecoration(
+                  hintText: '请输入内容',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(12.w),
+                  hintStyle: TextStyle(color: Colors.grey[400]),
+                ),
+                style: const TextStyle(color: Colors.white),
+                maxLines: 10,
+              ),
             ),
             SizedBox(height: 16.h),
             
@@ -318,6 +370,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
+                color: const Color(0xFFFF00FF),
               ),
             ),
             SizedBox(height: 8.h),
@@ -330,21 +383,34 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   if (index == _imageFiles.length) {
                     return Padding(
                       padding: EdgeInsets.only(right: 8.w),
-                      child: GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          width: 100.w,
-                          height: 100.h,
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey[300]!,
-                              style: BorderStyle.solid,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00D4FF).withOpacity(0.4),
+                              blurRadius: 10,
+                              spreadRadius: 2,
                             ),
-                            borderRadius: BorderRadius.circular(8.w),
-                          ),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.grey,
+                          ],
+                        ),
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            width: 100.w,
+                            height: 100.h,
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFF00D4FF),
+                                style: BorderStyle.solid,
+                                width: 2,
+                              ),
+                              borderRadius: BorderRadius.circular(8.w),
+                              color: const Color(0xFF0F172A),
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              color: Color(0xFF00D4FF),
+                            ),
                           ),
                         ),
                       ),
@@ -391,23 +457,47 @@ class _BbsPostPageState extends State<BbsPostPage> {
             
             // 提交按钮
             Center(
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitPost,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(200.w, 48.h),
-                  backgroundColor: const Color.fromARGB(255, 159, 171, 242),
-                ),
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : Text( 'SUBMIT',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: const Color.fromARGB(255, 147, 133, 9),
-                      ),
+              child: Container(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF00FF),
+                      blurRadius: 20,
+                      spreadRadius: 5,
                     ),
+                    BoxShadow(
+                      color: const Color(0xFF00D4FF),
+                      blurRadius: 15,
+                      spreadRadius: 3,
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submitPost,
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(200.w, 48.h),
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: const Color(0xFFFF00FF),
+                    side: const BorderSide(
+                      color: Color(0xFFFF00FF),
+                      width: 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.w),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const CircularProgressIndicator(color: Color(0xFFFF00FF))
+                      : Text(
+                          'SUBMIT',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
+            ),
           ],
         ),
       ),
