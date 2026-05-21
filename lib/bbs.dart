@@ -33,7 +33,7 @@ class _BbsPageState extends State<BbsPage> {
   bool _isLoading = true;
   String? _errorMessage;
   
-  final UserManager = shared.UserManager();
+  final shared.UserManager userManager = shared.UserManager();
 
   @override
   void initState() {
@@ -151,6 +151,11 @@ class _BbsPageState extends State<BbsPage> {
   }
 
   void _onCategorySelected(int categoryId) {
+    if (_showMyPosts) {
+      setState(() {
+        _showMyPosts = false;
+      });
+    }
     debugPrint('选中分类: $categoryId');
     setState(() {
       _selectedCategoryId = categoryId;
@@ -165,67 +170,70 @@ class _BbsPageState extends State<BbsPage> {
     ).then((_) => _fetchPosts(isRefresh: true));
   }
 
- void _navigateToPostPage() {
-  if (!UserManager.isLoggedIn) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('请先登录')),
-    );
+  void _navigateToPostPage() {
+    if (!userManager.isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先登录')),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+      return;
+    }
+    
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-    );
-    return;
-  }
-  
-  Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => const BbsPostPage()),
-  ).then((_) {
-    _fetchPosts(isRefresh: true);
-    if (_showMyPosts) {
-      _fetchMyPosts();
-    }
-  });
-}
-
-Future<void> _deletePost(int postId) async {
-  try {
-    final response = await http.delete(
-      Uri.parse('http://www.pavogroup.top:3004/api/posts/$postId'),
-    );
-    
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('删除成功')),
-      );
+      MaterialPageRoute(builder: (context) => const BbsPostPage()),
+    ).then((_) {
       _fetchPosts(isRefresh: true);
-      if (_showMyPosts) {
-        _fetchMyPosts();
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('删除失败，请稍后重试')),
-      );
-    }
-  } catch (e) {
-    debugPrint('Error deleting post: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('网络错误，请检查连接')),
-    );
-  }
-}
-  
-  void _toggleMyPosts() {
-    setState(() {
-      _showMyPosts = !_showMyPosts;
       if (_showMyPosts) {
         _fetchMyPosts();
       }
     });
   }
+
+  Future<void> _deletePost(int postId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('http://www.pavogroup.top:3004/api/posts/$postId'),
+      );
+      
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('删除成功')),
+        );
+        _fetchPosts(isRefresh: true);
+        if (_showMyPosts) {
+          _fetchMyPosts();
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('删除失败，请稍后重试')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error deleting post: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('网络错误，请检查连接')),
+      );
+    }
+  }
+  
+  void _toggleMyPosts() {
+    setState(() {
+      _showMyPosts = !_showMyPosts;
+      if (_showMyPosts) {
+        _selectedCategoryId = 0; // 清除分类选择
+        _fetchMyPosts();
+      } else {
+        _fetchPosts(isRefresh: true);
+      }
+    });
+  }
   
   Future<void> _fetchMyPosts() async {
-    final currentUser = UserManager.currentUser;
+    final currentUser = userManager.currentUser;
     if (currentUser == null || currentUser.user_id == null) {
       setState(() {
         _myPosts = [];
@@ -245,7 +253,6 @@ Future<void> _deletePost(int postId) async {
       final uri = Uri.parse('http://www.pavogroup.top:3004/api/posts').replace(
         queryParameters: {
           'user_id': userId.toString(),
-          'id': userId.toString(),
         },
       );
 
@@ -287,16 +294,22 @@ Future<void> _deletePost(int postId) async {
   @override
   Widget build(BuildContext context) {
     final loc = shared.AppLocalizations.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      floatingActionButton: Container(
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+      floatingActionButton: isDark ? Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF00D4FF),
               blurRadius: 15,
               spreadRadius: 5,
+            ),
+            BoxShadow(
+              color: const Color(0xFFFF00FF).withOpacity(0.5),
+              blurRadius: 10,
+              spreadRadius: 3,
             ),
           ],
         ),
@@ -307,12 +320,17 @@ Future<void> _deletePost(int postId) async {
           elevation: 0,
           child: const Icon(Icons.add),
         ),
+      ) : FloatingActionButton(
+        onPressed: _navigateToPostPage,
+        backgroundColor: const Color(0xFF3D5AFE),
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
       body: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification is ScrollEndNotification &&
               scrollNotification.metrics.extentAfter == 0) {
-            if (!_isLoadingMore && _hasMore && !_isLoading) {
+            if (!_isLoadingMore && _hasMore && !_isLoading && !_showMyPosts) {
               _fetchPosts();
             }
           }
@@ -321,72 +339,12 @@ Future<void> _deletePost(int postId) async {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: const Text('论坛'),
+              title: Text('论坛', style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : Colors.black)),
               pinned: true,
-              backgroundColor: const Color(0xFF0F172A),
-              foregroundColor: Colors.white,
-              actions: [
-                IconButton(
-                  onPressed: () {
-                    if (UserManager.isLoggedIn) {
-                      _toggleMyPosts();
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
-                        ),
-                      ).then((_) => setState(() {}));
-                    }
-                  },
-                  icon: const Icon(Icons.message),
-                  tooltip: '我的留言',
-                ),
-              ],
-            ),
-            
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () {
-                          if (UserManager.isLoggedIn) {
-                            _toggleMyPosts();
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                            ).then((_) => setState(() {}));
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _showMyPosts
-                              ? const Color(0xFF0F172A)
-                              : Colors.white,
-                          foregroundColor: _showMyPosts
-                              ? const Color(0xFF00D4FF)
-                              : const Color(0xFF00D4FF),
-                          side: BorderSide(
-                            color: const Color(0xFF00D4FF),
-                            width: 2,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.w),
-                          ),
-                          shadowColor: const Color(0xFF00D4FF),
-                          elevation: _showMyPosts ? 8 : 0,
-                        ),
-                        child: const Text('我的留言'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+              foregroundColor: isDark ? Colors.white : Colors.black,
+              elevation: isDark ? 0 : 4,
+              shadowColor: isDark ? const Color(0xFF00D4FF).withOpacity(0.3) : null,
             ),
             
             SliverToBoxAdapter(
@@ -394,24 +352,37 @@ Future<void> _deletePost(int postId) async {
                 padding: EdgeInsets.all(16.w),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
+                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
                     borderRadius: BorderRadius.circular(12.w),
-                    boxShadow: [
+                    boxShadow: isDark ? [
                       BoxShadow(
-                        color: const Color(0xFF00D4FF).withOpacity(0.3),
+                        color: const Color(0xFF00D4FF).withOpacity(0.4),
                         blurRadius: 15,
+                        spreadRadius: 3,
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFFFF00FF).withOpacity(0.2),
+                        blurRadius: 10,
                         spreadRadius: 2,
                       ),
+                    ] : [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                      ),
                     ],
-                    border: Border.all(
-                      color: const Color(0xFF00D4FF).withOpacity(0.5),
+                    border: isDark ? Border.all(
+                      color: const Color(0xFF00D4FF).withOpacity(0.6),
+                      width: 1.5,
+                    ) : Border.all(
+                      color: Colors.grey[200]!,
                       width: 1,
                     ),
                   ),
                   child: Row(
                     children: [
                       SizedBox(width: 12.w),
-                      const Icon(Icons.search, color: Colors.grey),
+                      Icon(Icons.search, color: isDark ? const Color(0xFF00D4FF) : Colors.grey[500]),
                       SizedBox(width: 8.w),
                       Expanded(
                         child: TextField(
@@ -419,14 +390,15 @@ Future<void> _deletePost(int postId) async {
                           decoration: InputDecoration(
                             hintText: '搜索帖子或用户名',
                             border: InputBorder.none,
-                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500]),
                           ),
+                          style: TextStyle(color: isDark ? Colors.white : Colors.black),
                           onSubmitted: (_) => _searchPosts(),
                         ),
                       ),
                       TextButton(
                         onPressed: _searchPosts,
-                        child: const Text('搜索'),
+                        child: Text('搜索', style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF3D5AFE))),
                       ),
                     ],
                   ),
@@ -434,31 +406,64 @@ Future<void> _deletePost(int postId) async {
               ),
             ),
             
-            if (!_showMyPosts)
-              SliverToBoxAdapter(
-                child: SizedBox(
-                  height: 56.h,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      final category = _categories[index];
-                      final isSelected = _selectedCategoryId == category.id;
+            // 分类按钮栏（包含我的留言按钮）
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 42.h,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w),
+                  itemCount: _categories.length + 1, // +1 为"我的留言"按钮
+                  itemBuilder: (context, index) {
+                    // 第一个按钮是"全部"分类
+                    if (index == 0) {
+                      final category = _categories[0];
+                      final isSelected = !_showMyPosts && _selectedCategoryId == category.id;
                       return Padding(
                         padding: EdgeInsets.only(right: 12.w),
-                        child: ElevatedButton(
+                        child: isDark ? Container(
+                          decoration: isSelected ? BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF00FF),
+                                blurRadius: 15,
+                                spreadRadius: 3,
+                              ),
+                              BoxShadow(
+                                color: const Color(0xFF00D4FF).withOpacity(0.5),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ) : null,
+                          child: ElevatedButton(
+                            onPressed: () => _onCategorySelected(category.id),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F172A),
+                              foregroundColor: const Color(0xFFFF00FF),
+                              side: BorderSide(
+                                color: const Color(0xFFFF00FF),
+                                width: isSelected ? 2 : 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.w),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20.w,
+                                vertical: 12.h,
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(category.name),
+                          ),
+                        ) : ElevatedButton(
                           onPressed: () => _onCategorySelected(category.id),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isSelected
-                                ? const Color(0xFF0F172A)
-                                : Colors.transparent,
-                            foregroundColor: isSelected
-                                ? const Color(0xFFFF00FF)
-                                : const Color(0xFFFF00FF),
+                            backgroundColor: isSelected ? const Color(0xFF3D5AFE) : Colors.white,
+                            foregroundColor: isSelected ? Colors.white : const Color(0xFF3D5AFE),
                             side: BorderSide(
-                              color: const Color(0xFFFF00FF),
-                              width: 2,
+                              color: const Color(0xFF3D5AFE),
+                              width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20.w),
@@ -467,18 +472,165 @@ Future<void> _deletePost(int postId) async {
                               horizontal: 20.w,
                               vertical: 12.h,
                             ),
-                            shadowColor: isSelected ? const Color(0xFFFF00FF) : null,
-                            elevation: isSelected ? 8 : 0,
+                            elevation: isSelected ? 4 : 0,
                           ),
                           child: Text(category.name),
                         ),
                       );
-                    },
-                  ),
+                    }
+                    
+                    // 第二个按钮是"我的留言"（橙色边框）
+                    if (index == 1) {
+                      final isSelected = _showMyPosts;
+                      return Padding(
+                        padding: EdgeInsets.only(right: 12.w),
+                        child: isDark ? Container(
+                          decoration: isSelected ? BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF6600),
+                                blurRadius: 15,
+                                spreadRadius: 3,
+                              ),
+                              BoxShadow(
+                                color: const Color(0xFFFF00FF).withOpacity(0.5),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ) : null,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (userManager.isLoggedIn) {
+                                _toggleMyPosts();
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginPage(),
+                                  ),
+                                ).then((_) => setState(() {}));
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F172A),
+                              foregroundColor: const Color(0xFFFF6600),
+                              side: BorderSide(
+                                color: const Color(0xFFFF6600),
+                                width: isSelected ? 2 : 1.5,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.w),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 20.w,
+                                vertical: 12.h,
+                              ),
+                              elevation: 0,
+                            ),
+                            child: const Text('我的留言'),
+                          ),
+                        ) : ElevatedButton(
+                          onPressed: () {
+                            if (userManager.isLoggedIn) {
+                              _toggleMyPosts();
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginPage(),
+                                ),
+                              ).then((_) => setState(() {}));
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isSelected ? const Color(0xFFFF6600) : Colors.white,
+                            foregroundColor: isSelected ? Colors.white : const Color(0xFFFF6600),
+                            side: BorderSide(
+                              color: const Color(0xFFFF6600),
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20.w),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
+                            elevation: isSelected ? 4 : 0,
+                          ),
+                          child: const Text('我的留言'),
+                        ),
+                      );
+                    }
+                    
+                    // 其他分类按钮（索引从2开始）
+                    final category = _categories[index - 1];
+                    final isSelected = !_showMyPosts && _selectedCategoryId == category.id;
+                    return Padding(
+                      padding: EdgeInsets.only(right: 12.w),
+                      child: isDark ? Container(
+                        decoration: isSelected ? BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF00FF),
+                              blurRadius: 15,
+                              spreadRadius: 3,
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFF00D4FF).withOpacity(0.5),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ) : null,
+                        child: ElevatedButton(
+                          onPressed: () => _onCategorySelected(category.id),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: const Color(0xFFFF00FF),
+                            side: BorderSide(
+                              color: const Color(0xFFFF00FF),
+                              width: isSelected ? 2 : 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20.w),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(category.name),
+                        ),
+                      ) : ElevatedButton(
+                        onPressed: () => _onCategorySelected(category.id),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isSelected ? const Color(0xFF3D5AFE) : Colors.white,
+                          foregroundColor: isSelected ? Colors.white : const Color(0xFF3D5AFE),
+                          side: BorderSide(
+                            color: const Color(0xFF3D5AFE),
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.w),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 12.h,
+                          ),
+                          elevation: isSelected ? 4 : 0,
+                        ),
+                        child: Text(category.name),
+                      ),
+                    );
+                  },
                 ),
               ),
+            ),
             
-            if (_showMyPosts && !UserManager.isLoggedIn)
+            if (_showMyPosts && !userManager.isLoggedIn)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
@@ -488,21 +640,21 @@ Future<void> _deletePost(int postId) async {
                       Icon(
                         Icons.login,
                         size: 48,
-                        color: const Color(0xFF00D4FF),
-                        shadows: [
+                        color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF3D5AFE),
+                        shadows: isDark ? [
                           Shadow(
                             color: const Color(0xFF00D4FF),
                             blurRadius: 20,
                           ),
-                        ],
+                        ] : null,
                       ),
                       SizedBox(height: 16.h),
                       Text(
                         '请先登录',
-                        style: TextStyle(fontSize: 16.sp, color: Colors.white),
+                        style: TextStyle(fontSize: 16.sp, color: isDark ? Colors.white : Colors.black),
                       ),
                       SizedBox(height: 16.h),
-                      Container(
+                      isDark ? Container(
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
@@ -531,19 +683,33 @@ Future<void> _deletePost(int postId) async {
                           ),
                           child: const Text('去登录'),
                         ),
+                      ) : ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          ).then((_) => setState(() {}));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3D5AFE),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('去登录'),
                       ),
                     ],
                   ),
                 ),
-              )
+              ),
             
-            else if (_isLoading && _posts.isEmpty)
+            if (!_showMyPosts && _isLoading && _posts.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: const Center(child: CircularProgressIndicator()),
-              )
+              ),
             
-            else if (_errorMessage != null && _posts.isEmpty)
+            if (!_showMyPosts && _errorMessage != null && _posts.isEmpty)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
@@ -552,74 +718,91 @@ Future<void> _deletePost(int postId) async {
                     style: TextStyle(fontSize: 14.sp, color: Colors.redAccent),
                   ),
                 ),
-              )
+              ),
             
-            else ...[
+            if (!_showMyPosts && _posts.isNotEmpty) ...[
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final post = _showMyPosts ? _myPosts[index] : _posts[index];
+                    final post = _posts[index];
                     return _PostCard(
                       post: post,
                       onTap: () => _navigateToPostDetail(post),
                       onDelete: () => _deletePost(post.id),
+                      currentUserId: userManager.currentUser?.user_id,
                     );
                   },
-                  childCount: _showMyPosts ? _myPosts.length : _posts.length,
+                  childCount: _posts.length,
                 ),
               ),
               
-              if (!_showMyPosts) ...[
-                if (_isLoadingMore)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                  )
-                else if (!_hasMore && _posts.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16.h),
-                      child: Center(
-                        child: Text(
-                          '—— 没有更多帖子了 ——',
-                          style: TextStyle(fontSize: 12.sp, color: Colors.grey),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-              
-              if (_showMyPosts && _myPosts.isEmpty && !_isLoading)
+              if (_isLoadingMore)
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32.h),
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                )
+              else if (!_hasMore && _posts.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.h),
                     child: Center(
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.message,
-                            size: 48,
-                            color: const Color(0xFF00D4FF),
-                            shadows: [
-                              Shadow(
-                                color: const Color(0xFF00D4FF),
-                                blurRadius: 20,
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 16.h),
-                          Text(
-                            '暂无留言',
-                            style: TextStyle(fontSize: 16.sp, color: Colors.white),
-                          ),
-                        ],
+                      child: Text(
+                        '—— 没有更多帖子了 ——',
+                        style: TextStyle(fontSize: 12.sp, color: isDark ? Colors.grey[400] : Colors.grey[500]),
                       ),
                     ),
                   ),
                 ),
             ],
+            
+            // 我的留言列表
+            if (_showMyPosts && _myPosts.isNotEmpty)
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final post = _myPosts[index];
+                    return _PostCard(
+                      post: post,
+                      onTap: () => _navigateToPostDetail(post),
+                      onDelete: () => _deletePost(post.id),
+                      currentUserId: userManager.currentUser?.user_id,
+                    );
+                  },
+                  childCount: _myPosts.length,
+                ),
+              ),
+            
+            // 暂无留言提示
+            if (_showMyPosts && _myPosts.isEmpty && !_isLoading)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32.h),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.message,
+                          size: 48,
+                          color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF3D5AFE),
+                          shadows: isDark ? [
+                            Shadow(
+                              color: const Color(0xFF00D4FF),
+                              blurRadius: 20,
+                            ),
+                          ] : null,
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          '暂无留言',
+                          style: TextStyle(fontSize: 16.sp, color: isDark ? Colors.white : Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -627,6 +810,7 @@ Future<void> _deletePost(int postId) async {
   }
 }
 
+// Category 和 Post 类保持不变
 class Category {
   final int id;
   final String name;
@@ -707,229 +891,261 @@ class Post {
     );
   }
 }
-
 class _PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final int? currentUserId;
 
   const _PostCard({
     required this.post,
     required this.onTap,
     required this.onDelete,
+    this.currentUserId,
   });
 
   @override
   Widget build(BuildContext context) {
-    final userManager = shared.UserManager();
-    final isLoggedIn = userManager.isLoggedIn;
-    final currentUserName = userManager.currentUser?.name ?? '';
-    // 只在当前用户自己的帖子中显示删除按钮
-    final isOwnPost = isLoggedIn && post.authorName == currentUserName;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isOwnPost = currentUserId != null && post.user_id == currentUserId;
     
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(12.w),
-        boxShadow: [
+        boxShadow: isDark ? [
           BoxShadow(
-            color: const Color(0xFF00D4FF).withOpacity(0.4),
+            color: const Color(0xFF00D4FF).withOpacity(0.5),
             blurRadius: 20,
-            spreadRadius: 3,
+            spreadRadius: 4,
           ),
           BoxShadow(
-            color: const Color(0xFFFF00FF).withOpacity(0.2),
+            color: const Color(0xFFFF00FF).withOpacity(0.3),
             blurRadius: 15,
+            spreadRadius: 3,
+          ),
+        ] : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
             spreadRadius: 2,
           ),
         ],
-        border: Border.all(
-          color: const Color(0xFF00D4FF).withOpacity(0.6),
+        border: isDark ? Border.all(
+          color: const Color(0xFF00D4FF).withOpacity(0.7),
+          width: 1.5,
+        ) : Border.all(
+          color: Colors.grey[200]!,
           width: 1,
         ),
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12.w),
-          child: Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  post.title,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF00D4FF),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 8.h),
-                
-                Text(
+        child: Stack(
+          children: [
+            // 主要内容 - 可点击区域
+            InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12.w),
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 标题行（为删除按钮留出空间）
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            post.title,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF1E3A8A),
+                              shadows: isDark ? [
+                                Shadow(
+                                  color: const Color(0xFF00D4FF).withOpacity(0.5),
+                                  blurRadius: 10,
+                                ),
+                              ] : null,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // 为删除按钮预留空间（如果显示的话）
+                        if (isOwnPost) SizedBox(width: 32.w),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    
+                    Text(
                       post.content,
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: Colors.grey[300],
+                        color: isDark ? Colors.grey[300] : Colors.grey[600],
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
-                SizedBox(height: 8.h),
-                
-                if (post.images.isNotEmpty)
-                  SizedBox(
-                    height: 80.h,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: post.images.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: EdgeInsets.only(right: 8.w),
-                          child: Image.network(
-                            post.images[index],
-                            width: 80.w,
-                            height: 80.h,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
+                    SizedBox(height: 8.h),
+                    
+                    if (post.images.isNotEmpty)
+                      SizedBox(
+                        height: 80.h,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: post.images.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: EdgeInsets.only(right: 8.w),
+                              child: Image.network(
+                                post.images[index],
                                 width: 80.w,
                                 height: 80.h,
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.broken_image),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                SizedBox(height: 12.h),
-                
-                // DELETE按钮（仅当前用户自己的帖子显示）
-                if (isOwnPost)
-                  Center(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF4757).withOpacity(0.5),
-                            blurRadius: 10,
-                            spreadRadius: 2,
-                          ),
-                        ],
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    width: 80.w,
+                                    height: 80.h,
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.broken_image),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                      child: TextButton(
-                        onPressed: () {
-                          _showDeleteConfirmation(context);
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F172A),
-                          foregroundColor: const Color(0xFFFF4757),
+                    SizedBox(height: 12.h),
+                    
+                    Row(
+                      children: [
+                        isDark ? Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 16.w,
-                            vertical: 4.h,
+                            horizontal: 8.w,
+                            vertical: 2.h,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6.w),
-                            side: const BorderSide(
-                              color: Color(0xFFFF4757),
-                              width: 2,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F172A),
+                            borderRadius: BorderRadius.circular(4.w),
+                            border: Border.all(
+                              color: const Color(0xFFFF00FF),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFF00FF).withOpacity(0.6),
+                                blurRadius: 8,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            post.categoryName,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFFFF00FF),
+                            ),
+                          ),
+                        ) : Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F6FF),
+                            borderRadius: BorderRadius.circular(4.w),
+                            border: Border.all(
+                              color: const Color(0xFF3D5AFE),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            post.categoryName,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF3D5AFE),
                             ),
                           ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                        SizedBox(width: 12.w),
+                        Text(
+                          post.authorName,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: isDark ? Colors.grey[400] : Colors.grey[500],
+                          ),
+                        ),
+                        const Spacer(),
+                        Row(
                           children: [
-                            const Icon(Icons.delete_outline, size: 14),
+                            Icon(Icons.thumb_up, size: 14.sp, color: isDark ? Colors.grey[400] : Colors.grey[500]),
                             SizedBox(width: 4.w),
                             Text(
-                              '删除',
-                              style: TextStyle(
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w200,
-                              ),
+                              post.likesCount.toString(),
+                              style: TextStyle(fontSize: 12.sp, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                            ),
+                            SizedBox(width: 16.w),
+                            Icon(Icons.comment, size: 14.sp, color: Colors.grey[400]),
+                            SizedBox(width: 4.w),
+                            Text(
+                              post.commentsCount.toString(),
+                              style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
                             ),
                           ],
                         ),
-                      ),
+                      ],
                     ),
-                  ),
-                if (isOwnPost) SizedBox(height: 8.h),
-                
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 2.h,
+                    SizedBox(height: 4.h),
+                    Text(
+                      _formatDate(post.createdAt),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey[500],
                       ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            // 删除按钮 - 右上角
+            if (isOwnPost)
+              Positioned(
+                top: 8.h,
+                right: 8.w,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _showDeleteConfirmation(context),
+                    borderRadius: BorderRadius.circular(20.r),
+                    child: Container(
+                      padding: EdgeInsets.all(6.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(4.w),
-                        border: Border.all(
-                          color: const Color(0xFFFF00FF),
-                          width: 1,
-                        ),
+                        color: isDark 
+                            ? const Color(0xFF1A1A2E).withOpacity(0.9)
+                            : Colors.white.withOpacity(0.95),
+                        shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFFF00FF).withOpacity(0.5),
-                            blurRadius: 5,
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
                           ),
                         ],
                       ),
-                      child: Text(
-                        post.categoryName,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: const Color(0xFFFF00FF),
-                        ),
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: 18.sp,
+                        color: isDark ? const Color(0xFFFF4757) : Colors.redAccent,
                       ),
                     ),
-                    SizedBox(width: 12.w),
-                    Text(
-                      post.authorName,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[400],
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Icon(Icons.thumb_up, size: 14.sp, color: Colors.grey),
-                        SizedBox(width: 4.w),
-                        Text(
-                          post.likesCount.toString(),
-                          style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
-                        ),
-                        SizedBox(width: 16.w),
-                        Icon(Icons.comment, size: 14.sp, color: Colors.grey[400]),
-                        SizedBox(width: 4.w),
-                        Text(
-                          post.commentsCount.toString(),
-                          style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  _formatDate(post.createdAt),
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[500],
                   ),
-                )
-              ],
-            ),
-          ),
+                ),
+              ),
+          ],
         ),
       ),
     );

@@ -226,14 +226,16 @@ class _BbsPostPageState extends State<BbsPostPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
       appBar: AppBar(
-        title: const Text('发布帖子', style: TextStyle(color: Color(0xFF00D4FF))),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
-        shadowColor: const Color(0xFF00D4FF).withOpacity(0.5),
-        elevation: 8,
+        title: Text('发布帖子', style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : Colors.black)),
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        shadowColor: isDark ? const Color(0xFF00D4FF).withOpacity(0.5) : null,
+        elevation: isDark ? 8 : 4,
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
@@ -246,24 +248,30 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF00D4FF),
+                color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF1E3A8A),
               ),
             ),
             SizedBox(height: 8.h),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.w),
-                boxShadow: [
+                boxShadow: isDark ? [
                   BoxShadow(
-                    color: const Color(0xFF00D4FF).withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 1,
+                    color: const Color(0xFF00D4FF).withOpacity(0.4),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ] : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
                   ),
                 ],
                 border: Border.all(
-                  color: const Color(0xFF00D4FF),
-                  width: 1,
+                  color: isDark ? const Color(0xFF00D4FF) : Colors.grey[300]!,
+                  width: isDark ? 1.5 : 1,
                 ),
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
               ),
               child: TextField(
                 controller: _titleController,
@@ -271,9 +279,9 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   hintText: '请输入标题',
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.all(12.w),
-                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500]),
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 maxLength: 200,
               ),
             ),
@@ -285,20 +293,20 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFFFF00FF),
+                color: isDark ? const Color(0xFFFF00FF) : const Color(0xFF7C3AED),
               ),
             ),
             SizedBox(height: 8.h),
-            Container(
+            isDark ? Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w),
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFFF00FF)),
+                border: Border.all(color: const Color(0xFFFF00FF), width: 1.5),
                 borderRadius: BorderRadius.circular(8.w),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF00FF).withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 1,
+                    color: const Color(0xFFFF00FF).withOpacity(0.4),
+                    blurRadius: 12,
+                    spreadRadius: 2,
                   ),
                 ],
                 color: const Color(0xFF0F172A),
@@ -322,6 +330,32 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   });
                 },
               ),
+            ) : Container(
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFF7C3AED), width: 1),
+                borderRadius: BorderRadius.circular(8.w),
+                color: Colors.white,
+              ),
+              child: DropdownButton<int>(
+                value: _selectedCategoryId,
+                hint: const Text('请选择分类', style: TextStyle(color: Color(0xFF9CA3AF))),
+                isExpanded: true,
+                underline: const SizedBox(),
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black),
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category.id,
+                    child: Text(category.name, style: const TextStyle(color: Colors.black)),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategoryId = value;
+                  });
+                },
+              ),
             ),
             SizedBox(height: 16.h),
             
@@ -331,24 +365,30 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFF00D4FF),
+                color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF1E3A8A),
               ),
             ),
             SizedBox(height: 8.h),
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.w),
-                boxShadow: [
+                boxShadow: isDark ? [
                   BoxShadow(
-                    color: const Color(0xFF00D4FF).withOpacity(0.3),
-                    blurRadius: 10,
-                    spreadRadius: 1,
+                    color: const Color(0xFF00D4FF).withOpacity(0.4),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ] : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
                   ),
                 ],
                 border: Border.all(
-                  color: const Color(0xFF00D4FF),
-                  width: 1,
+                  color: isDark ? const Color(0xFF00D4FF) : Colors.grey[300]!,
+                  width: isDark ? 1.5 : 1,
                 ),
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
               ),
               child: TextField(
                 controller: _contentController,
@@ -356,9 +396,9 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   hintText: '请输入内容',
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.all(12.w),
-                  hintStyle: TextStyle(color: Colors.grey[400]),
+                  hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500]),
                 ),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 maxLines: 10,
               ),
             ),
@@ -370,7 +410,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFFFF00FF),
+                color: isDark ? const Color(0xFFFF00FF) : const Color(0xFF7C3AED),
               ),
             ),
             SizedBox(height: 8.h),
@@ -383,13 +423,13 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   if (index == _imageFiles.length) {
                     return Padding(
                       padding: EdgeInsets.only(right: 8.w),
-                      child: Container(
+                      child: isDark ? Container(
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF00D4FF).withOpacity(0.4),
-                              blurRadius: 10,
-                              spreadRadius: 2,
+                              color: const Color(0xFF00D4FF).withOpacity(0.5),
+                              blurRadius: 15,
+                              spreadRadius: 3,
                             ),
                           ],
                         ),
@@ -411,6 +451,25 @@ class _BbsPostPageState extends State<BbsPostPage> {
                               Icons.add,
                               color: Color(0xFF00D4FF),
                             ),
+                          ),
+                        ),
+                      ) : GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: 100.w,
+                          height: 100.h,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: const Color(0xFF3D5AFE),
+                              style: BorderStyle.solid,
+                              width: 1.5,
+                            ),
+                            borderRadius: BorderRadius.circular(8.w),
+                            color: Colors.white,
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: Color(0xFF3D5AFE),
                           ),
                         ),
                       ),
@@ -457,7 +516,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
             
             // 提交按钮
             Center(
-              child: Container(
+              child: isDark ? Container(
                 decoration: BoxDecoration(
                   boxShadow: [
                     BoxShadow(
@@ -482,20 +541,26 @@ class _BbsPostPageState extends State<BbsPostPage> {
                       color: Color(0xFFFF00FF),
                       width: 2,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.w),
-                    ),
+                    elevation: 0,
                   ),
                   child: _isSubmitting
                       ? const CircularProgressIndicator(color: Color(0xFFFF00FF))
-                      : Text(
-                          'SUBMIT',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      : const Text('发布帖子'),
                 ),
+              ) : ElevatedButton(
+                onPressed: _isSubmitting ? null : _submitPost,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(200.w, 48.h),
+                  backgroundColor: const Color(0xFF3D5AFE),
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.w),
+                  ),
+                ),
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('发布帖子'),
               ),
             ),
           ],

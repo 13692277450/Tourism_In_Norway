@@ -95,14 +95,16 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
       appBar: AppBar(
-        title: const Text('帖子详情', style: TextStyle(color: Color(0xFF00D4FF))),
-        backgroundColor: const Color(0xFF0F172A),
-        foregroundColor: Colors.white,
-        shadowColor: const Color(0xFF00D4FF).withOpacity(0.5),
-        elevation: 8,
+        title: Text('帖子详情', style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : Colors.black)),
+        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        shadowColor: isDark ? const Color(0xFF00D4FF).withOpacity(0.5) : null,
+        elevation: isDark ? 8 : 4,
       ),
       body: CustomScrollView(
         slivers: [
@@ -111,9 +113,9 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
               padding: EdgeInsets.all(16.w),
               margin: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
                 borderRadius: BorderRadius.circular(12.w),
-                boxShadow: [
+                boxShadow: isDark ? [
                   BoxShadow(
                     color: const Color(0xFF00D4FF).withOpacity(0.4),
                     blurRadius: 20,
@@ -124,11 +126,17 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     blurRadius: 15,
                     spreadRadius: 2,
                   ),
+                ] : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
                 ],
-                border: Border.all(
+                border: isDark ? Border.all(
                   color: const Color(0xFF00D4FF).withOpacity(0.6),
                   width: 1,
-                ),
+                ) : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,7 +147,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                       horizontal: 8.w,
                       vertical: 2.h,
                     ),
-                    decoration: BoxDecoration(
+                    decoration: isDark ? BoxDecoration(
                       color: const Color(0xFF0F172A),
                       borderRadius: BorderRadius.circular(4.w),
                       border: Border.all(
@@ -152,12 +160,15 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                           blurRadius: 5,
                         ),
                       ],
+                    ) : BoxDecoration(
+                      color: const Color(0xFFE0E7FF),
+                      borderRadius: BorderRadius.circular(4.w),
                     ),
                     child: Text(
                       widget.post.categoryName,
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: const Color(0xFFFF00FF),
+                        color: isDark ? const Color(0xFFFF00FF) : const Color(0xFF4338CA),
                       ),
                     ),
                   ),
@@ -169,7 +180,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFF00D4FF),
+                      color: isDark ? const Color(0xFF00D4FF) : Colors.black,
                     ),
                   ),
                   SizedBox(height: 12.h),
@@ -191,14 +202,14 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: isDark ? Colors.white : Colors.black,
                             ),
                           ),
                           Text(
                             _formatDate(widget.post.createdAt),
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: Colors.grey[400],
+                              color: isDark ? Colors.grey[400] : Colors.grey[500],
                             ),
                           ),
                         ],
@@ -213,7 +224,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     style: TextStyle(
                       fontSize: 16.sp,
                       height: 1.8,
-                      color: Colors.grey[300],
+                      color: isDark ? Colors.grey[300] : Colors.black87,
                     ),
                   ),
                   SizedBox(height: 16.h),
@@ -241,27 +252,27 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                         onPressed: _toggleLike,
                         icon: Icon(
                           Icons.thumb_up,
-                          color: _isLiked ? Colors.red : Colors.grey,
+                          color: _isLiked ? Colors.red : (isDark ? Colors.grey[400] : Colors.grey[500]),
                           size: 24.r,
                         ),
                       ),
-                      Text(_likesCount.toString()),
+                      Text(_likesCount.toString(), style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600])),
                       SizedBox(width: 24.w),
                       IconButton(
                         onPressed: () {},
                         icon: Icon(
                           Icons.comment,
-                          color: Colors.grey,
+                          color: isDark ? Colors.grey[400] : Colors.grey[500],
                           size: 24.r,
                         ),
                       ),
-                      Text(_comments.length.toString()),
+                      Text(_comments.length.toString(), style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600])),
                       SizedBox(width: 24.w),
                       IconButton(
                         onPressed: () {},
                         icon: Icon(
                           Icons.share,
-                          color: Colors.grey,
+                          color: isDark ? Colors.grey[400] : Colors.grey[500],
                           size: 24.r,
                         ),
                       ),
@@ -281,7 +292,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFFFF00FF),
+                  color: isDark ? const Color(0xFFFF00FF) : Colors.black,
                 ),
               ),
             ),
@@ -295,7 +306,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
           else if (_comments.isEmpty)
             SliverToBoxAdapter(
               child: Center(
-                child: Text('暂无评论', style: TextStyle(color: Colors.grey[400])),
+                child: Text('暂无评论', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500])),
               ),
             )
           else
@@ -314,8 +325,8 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
             child: Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F172A),
-                border: Border(top: BorderSide(color: const Color(0xFF00D4FF).withOpacity(0.3))),
+                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                border: Border(top: BorderSide(color: isDark ? const Color(0xFF00D4FF).withOpacity(0.3) : Colors.grey[200]!)),
               ),
               child: Row(
                 children: [
@@ -323,17 +334,18 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20.w),
-                        boxShadow: [
+                        boxShadow: isDark ? [
                           BoxShadow(
                             color: const Color(0xFF00D4FF).withOpacity(0.3),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),
-                        ],
+                        ] : [],
                         border: Border.all(
-                          color: const Color(0xFF00D4FF),
+                          color: isDark ? const Color(0xFF00D4FF) : Colors.grey[300]!,
                           width: 1,
                         ),
+                        color: isDark ? const Color(0xFF0F172A) : Colors.white,
                       ),
                       child: TextField(
                         controller: _commentController,
@@ -341,14 +353,14 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                           hintText: '发表评论...',
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-                          hintStyle: TextStyle(color: Colors.grey[400]),
+                          hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500]),
                         ),
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(color: isDark ? Colors.white : Colors.black),
                       ),
                     ),
                   ),
                   SizedBox(width: 8.w),
-                  Container(
+                  isDark ? Container(
                     decoration: BoxDecoration(
                       boxShadow: [
                         BoxShadow(
@@ -370,6 +382,13 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                       ),
                       child: const Text('发送'),
                     ),
+                  ) : ElevatedButton(
+                    onPressed: _submitComment,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3D5AFE),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('发送'),
                   ),
                 ],
               ),
@@ -415,23 +434,30 @@ class _CommentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       padding: EdgeInsets.all(16.w),
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F172A),
+        color: isDark ? const Color(0xFF0F172A) : Colors.white,
         borderRadius: BorderRadius.circular(12.w),
-        boxShadow: [
+        boxShadow: isDark ? [
           BoxShadow(
             color: const Color(0xFF00D4FF).withOpacity(0.3),
             blurRadius: 15,
             spreadRadius: 2,
           ),
+        ] : [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 4,
+          ),
         ],
-        border: Border.all(
+        border: isDark ? Border.all(
           color: const Color(0xFF00D4FF).withOpacity(0.4),
           width: 1,
-        ),
+        ) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,14 +478,14 @@ class _CommentCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: isDark ? Colors.white : Colors.black,
                     ),
                   ),
                   Text(
                     _formatDate(comment.createdAt),
                     style: TextStyle(
                       fontSize: 12.sp,
-                      color: Colors.grey[500],
+                      color: isDark ? Colors.grey[500] : Colors.grey[400],
                     ),
                   ),
                 ],
@@ -469,7 +495,7 @@ class _CommentCard extends StatelessWidget {
           SizedBox(height: 8.h),
           Text(
             comment.content,
-            style: TextStyle(fontSize: 14.sp, color: Colors.grey[300]),
+            style: TextStyle(fontSize: 14.sp, color: isDark ? Colors.grey[300] : Colors.black87),
           ),
         ],
       ),

@@ -349,17 +349,17 @@ class MainScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // 主题切换按钮（顶部）
-                      IconButton(
-                        icon: Icon(
-                          isDark ? Icons.light_mode : Icons.dark_mode,
-                          color: isDark ? Colors.amber : const Color(0xFF6A78A4),
-                        ),
-                        onPressed: () {
-                          onThemeModeChanged(
-                            isDark ? ThemeMode.light : ThemeMode.dark,
-                          );
-                        },
-                      ),
+                      // IconButton(
+                      //   icon: Icon(
+                      //     isDark ? Icons.light_mode : Icons.dark_mode,
+                      //     color: isDark ? Colors.amber : const Color(0xFF6A78A4),
+                      //   ),
+                      //   onPressed: () {
+                      //     onThemeModeChanged(
+                      //       isDark ? ThemeMode.light : ThemeMode.dark,
+                      //     );
+                      //   },
+                      // ),
                     ],
                   ),
                 ),

@@ -29,6 +29,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        
+        // 只定义一个 manifestPlaceholders
+        manifestPlaceholders = [
+            flutterDownloaderScheme: "tourismnorway"  // 用于 flutter_downloader
+        ]
     }
 
     buildTypes {
@@ -36,6 +41,13 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            
+            // 可选：开启混淆（如果需要在 release 版本中混淆代码）
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -43,9 +55,12 @@ android {
 dependencies {
     // Required when isCoreLibraryDesugaringEnabled = true
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22")
-    // 确保有这一行，版本可能不同
-    implementation("androidx.core:core-ktx:1.10.1")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.0")  // 更新版本
+    implementation("androidx.core:core-ktx:1.12.0")  // 更新版本
+    
+    // 如果你使用 flutter_downloader，确保有这些依赖
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }
 
 flutter {

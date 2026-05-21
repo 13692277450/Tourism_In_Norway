@@ -29,6 +29,10 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // 配置 flutter_downloader 的 scheme
+        manifestPlaceholders = [
+            flutterDownloaderScheme: "tourismnorway"
+        ]
     }
 
     buildTypes {

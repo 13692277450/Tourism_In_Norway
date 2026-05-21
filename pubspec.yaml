@@ -43,7 +43,8 @@ dependencies:
     sdk: flutter
   http: ^1.6.0
   flutter_screenutil: ^5.9.3
-  ota_update: ^7.1.0
+  flutter_downloader: ^1.11.6
+  open_file: ^3.3.2
   cached_network_image: ^3.4.1
   image_picker: ^1.2.1
   package_info_plus: ^4.0.0
@@ -53,6 +54,8 @@ dependencies:
   map_launcher: ^3.0.1
   google_fonts: ^6.3.2
   shared_preferences: ^2.5.3
+  permission_handler: ^11.0.1
+
 
 dev_dependencies:
   flutter_test:
