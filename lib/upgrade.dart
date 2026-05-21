@@ -7,7 +7,7 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:permission_handler/permission_handler.dart'; // 添加权限处理
+import 'package:permission_handler/permission_handler.dart'; // 添加这个
 
 class Upgrade extends StatefulWidget {
   final String? apkUrl;
@@ -26,6 +26,7 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
   late AnimationController _spinnerController;
   StreamSubscription? _downloadSubscription;
   bool _isInitialized = false;
+  bool _isRequestingPermission = false;
 
   @override
   void initState() {
@@ -35,30 +36,116 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       duration: const Duration(seconds: 2),
     )..repeat();
     
-    // 初始化下载器
-    _initializeDownloader();
+    _initializeAndCheckPermissions();
   }
 
-  Future<void> _initializeDownloader() async {
+  Future<void> _initializeAndCheckPermissions() async {
     try {
-      // 确保 FlutterDownloader 已初始化
-      await FlutterDownloader.initialize(
-        debug: true, // 开启调试日志
-      );
-      
-      // 注册回调
+      // 初始化下载器
+      await FlutterDownloader.initialize(debug: true);
       FlutterDownloader.registerCallback(downloadCallback);
       
-      setState(() {
-        _isInitialized = true;
-      });
-      
-      // 自动开始下载
-      await _startDownload();
+      // 请求权限
+      final hasPermission = await _requestAllPermissions();
+      if (hasPermission) {
+        setState(() {
+          _isInitialized = true;
+        });
+        await _startDownload();
+      } else {
+        _showError('需要存储权限才能下载更新');
+      }
     } catch (e) {
       print('初始化失败: $e');
       _showError('初始化失败: $e');
     }
+  }
+
+  Future<bool> _requestAllPermissions() async {
+    if (!Platform.isAndroid) return true;
+    
+    setState(() {
+      _isRequestingPermission = true;
+    });
+    
+    List<Permission> permissions = [];
+    
+    // Android 13+ (API 33+) 需要通知权限
+    if (await Permission.notification.isDenied) {
+      permissions.add(Permission.notification);
+    }
+    
+    // Android 10 及以下需要存储权限
+    if (await Permission.storage.isDenied) {
+      permissions.add(Permission.storage);
+    }
+    
+    // 安装权限（所有版本都需要）
+    if (await Permission.requestInstallPackages.isDenied) {
+      permissions.add(Permission.requestInstallPackages);
+    }
+    
+    // Android 11+ 可能需要管理外部存储权限
+    if (await Permission.manageExternalStorage.isDenied) {
+      permissions.add(Permission.manageExternalStorage);
+    }
+    
+    if (permissions.isEmpty) {
+      setState(() {
+        _isRequestingPermission = false;
+      });
+      return true;
+    }
+    
+    // 请求权限
+    final results = await permissions.request();
+    
+    setState(() {
+      _isRequestingPermission = false;
+    });
+    
+    // 检查是否所有权限都被授予
+    bool allGranted = true;
+    for (var permission in permissions) {
+      if (!await permission.isGranted) {
+        allGranted = false;
+        print('权限被拒绝: ${permission.toString()}');
+      }
+    }
+    
+    if (!allGranted) {
+      // 如果权限被拒绝，提示用户
+      _showPermissionDialog();
+      return false;
+    }
+    
+    return true;
+  }
+
+  void _showPermissionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('需要权限'),
+        content: const Text('应用需要存储权限才能下载更新文件，请在设置中授予权限。'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // 返回上一页
+            },
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings(); // 打开应用设置页面
+            },
+            child: const Text('去设置'),
+          ),
+        ],
+      ),
+    );
   }
 
   @pragma('vm:entry-point')
@@ -82,9 +169,11 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         return;
       }
 
-      // 请求必要权限
-      final hasPermission = await _requestPermissions();
-      if (!hasPermission) {
+      // 再次确认权限
+      final hasStoragePermission = await Permission.storage.isGranted;
+      final hasManagePermission = await Permission.manageExternalStorage.isGranted;
+      
+      if (!hasStoragePermission && !hasManagePermission) {
         _showError('需要存储权限才能下载');
         return;
       }
@@ -137,7 +226,7 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         fileName: 'app-release.apk',
         showNotification: true,
         openFileFromNotification: false,
-        saveInPublicStorage: true, // 重要：保存到公共存储
+        saveInPublicStorage: true,
       );
 
       print('下载任务ID: $_taskId');
@@ -156,38 +245,11 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
     }
   }
 
-  Future<bool> _requestPermissions() async {
-    if (Platform.isAndroid) {
-      // Android 13+ 通知权限
-      if (await Permission.notification.isDenied) {
-        await Permission.notification.request();
-      }
-      
-      // 存储权限（Android 10及以下）
-      if (await Permission.storage.isDenied) {
-        final status = await Permission.storage.request();
-        if (!status.isGranted) {
-          return false;
-        }
-      }
-      
-      // 安装权限
-      if (await Permission.requestInstallPackages.isDenied) {
-        final status = await Permission.requestInstallPackages.request();
-        if (!status.isGranted) {
-          _showError('需要安装权限才能更新应用');
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
   Future<Directory?> _getDownloadDirectory() async {
     try {
-      // 尝试获取外部存储目录（Download文件夹）
+      // 尝试获取外部存储目录
       if (Platform.isAndroid) {
-        // 获取外部存储目录
+        // 方法1: 使用 getExternalStorageDirectory
         final externalDir = await getExternalStorageDirectory();
         if (externalDir != null) {
           print('使用外部存储目录: ${externalDir.path}');
@@ -195,7 +257,7 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         }
       }
       
-      // 回退到应用文档目录
+      // 方法2: 回退到应用文档目录
       final docDir = await getApplicationDocumentsDirectory();
       print('使用应用文档目录: ${docDir.path}');
       return docDir;
@@ -262,6 +324,10 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
   String _statusText() {
     final pct = _progressPercent().toStringAsFixed(0);
 
+    if (_isRequestingPermission) {
+      return '正在请求权限...';
+    }
+
     switch (_status) {
       case 0:
         return '准备更新...';
@@ -296,7 +362,6 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isReady = _status != DownloadTaskStatus.enqueued.index;
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -318,12 +383,12 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
                     angle: _spinnerController.value * 2 * 3.14159,
                     child: Icon(
                       _status == DownloadTaskStatus.complete.index 
-                          ? Icons.check_circle 
+                          ? Icons.center_focus_weak_outlined 
                           : (_status == DownloadTaskStatus.running.index 
                               ? Icons.downloading_rounded 
                               : Icons.download_done_rounded),
                       size: 64.r,
-                      color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF3D5AFE),
+                      color: isDark ? const Color.fromARGB(255, 98, 220, 244) : const Color.fromARGB(255, 82, 104, 226),
                     ),
                   );
                 },
@@ -353,36 +418,11 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
                   ),
                 ),
               ],
-              SizedBox(height: 32.h),
-
-              if (_status != DownloadTaskStatus.running.index &&
-                  _status != DownloadTaskStatus.complete.index)
-                ElevatedButton(
-                  onPressed: _startDownload,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(200.w, 48.h),
-                    backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFF3D5AFE),
-                    foregroundColor: isDark ? const Color(0xFF00D4FF) : Colors.white,
-                    side: isDark ? const BorderSide(
-                      color: Color(0xFF00D4FF),
-                      width: 2,
-                    ) : null,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.w),
-                    ),
-                  ),
-                  child: const Text('开始更新'),
-                ),
               
-              if (_status == DownloadTaskStatus.failed.index)
-                ElevatedButton(
-                  onPressed: _startDownload,
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(200.w, 48.h),
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('重试'),
+              if (_isRequestingPermission)
+                Padding(
+                  padding: EdgeInsets.only(top: 24.h),
+                  child: const CircularProgressIndicator(),
                 ),
             ],
           ),
