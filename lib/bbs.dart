@@ -890,6 +890,35 @@ class Post {
       categoryId: json['category_id'] ?? 0,
     );
   }
+
+  // 添加 copyWith 方法
+  Post copyWith({
+    int? id,
+    int? user_id,
+    String? title,
+    String? content,
+    String? authorName,
+    String? categoryName,
+    int? likesCount,
+    int? commentsCount,
+    DateTime? createdAt,
+    List<String>? images,
+    int? categoryId,
+  }) {
+    return Post(
+      id: id ?? this.id,
+      user_id: user_id ?? this.user_id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      authorName: authorName ?? this.authorName,
+      categoryName: categoryName ?? this.categoryName,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      createdAt: createdAt ?? this.createdAt,
+      images: images ?? this.images,
+      categoryId: categoryId ?? this.categoryId,
+    );
+  }
 }
 class _PostCard extends StatelessWidget {
   final Post post;
