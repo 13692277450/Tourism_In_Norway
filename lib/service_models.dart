@@ -1,6 +1,16 @@
 // service_models.dart
 import 'dart:convert';
 
+// 安全地将值转换为 double（支持字符串和数字类型）
+double _toDouble(dynamic value) {
+  if (value == null) return 0.0;
+  if (value is num) return value.toDouble();
+  if (value is String) {
+    return double.tryParse(value) ?? 0.0;
+  }
+  return 0.0;
+}
+
 class ServiceCategory {
   final int id;
   final String name;
@@ -83,8 +93,8 @@ class ServiceGoods {
       goodsNo: json['goods_no'] ?? '',
       name: json['name'] ?? '',
       nameEn: json['name_en'],
-      price: (json['price'] ?? 0).toDouble(),
-      originalPrice: json['original_price']?.toDouble(),
+      price: _toDouble(json['price']),
+      originalPrice: json['original_price'] != null ? _toDouble(json['original_price']) : null,
       stock: json['stock'] ?? 0,
       score: json['score'] ?? 0,
       shortDescription: json['short_description'],
@@ -151,7 +161,7 @@ class ServiceCartItem {
       goodsNo: json['goods_no'] ?? '',
       name: json['name'] ?? '',
       mainImage: json['main_image'],
-      price: (json['price'] ?? 0).toDouble(),
+      price: _toDouble(json['price']),
       quantity: json['quantity'] ?? 1,
       selected: json['selected'] == 1,
       stock: json['stock'] ?? 0,
@@ -229,8 +239,8 @@ class ServiceOrder {
     return ServiceOrder(
       id: json['id'] ?? 0,
       orderNo: json['order_no'] ?? '',
-      totalAmount: (json['total_amount'] ?? 0).toDouble(),
-      actualAmount: (json['actual_amount'] ?? 0).toDouble(),
+      totalAmount: _toDouble(json['total_amount']),
+      actualAmount: _toDouble(json['actual_amount']),
       status: json['status'] ?? 0,
       receiverName: json['receiver_name'] ?? '',
       receiverPhone: json['receiver_phone'] ?? '',
@@ -266,9 +276,9 @@ class ServiceOrderItem {
       goodsId: json['goods_id'] ?? 0,
       goodsName: json['goods_name'] ?? '',
       goodsImage: json['goods_image'],
-      price: (json['price'] ?? 0).toDouble(),
+      price: _toDouble(json['price']),
       quantity: json['quantity'] ?? 0,
-      totalAmount: (json['total_amount'] ?? 0).toDouble(),
+      totalAmount: _toDouble(json['total_amount']),
     );
   }
 }

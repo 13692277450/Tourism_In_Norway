@@ -1,13 +1,11 @@
 // service_home.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart';
 import 'service_product_detail.dart';
 import 'service_cart.dart';
-import '../auth.dart';
 
 class ServiceHomePage extends StatefulWidget {
   const ServiceHomePage({super.key});
@@ -136,7 +134,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     setState(() {
       _isLoading = false;
       _isLoadingMore = false;
-      _errorMessage = '网络错误: ${e.toString()}';
+      _errorMessage = '网络错误: $e';
     });
   }
 }
