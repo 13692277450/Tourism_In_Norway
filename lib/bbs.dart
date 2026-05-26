@@ -297,32 +297,32 @@ class _BbsPageState extends State<BbsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       floatingActionButton: isDark ? Container(
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF00D4FF),
-              blurRadius: 15,
-              spreadRadius: 5,
+              color: const Color(0xFF4F46E5),
+              blurRadius: 12,
+              spreadRadius: 4,
             ),
             BoxShadow(
-              color: const Color(0xFFFF00FF).withOpacity(0.5),
-              blurRadius: 10,
-              spreadRadius: 3,
+              color: const Color(0xFF0EA5E9).withOpacity(0.5),
+              blurRadius: 8,
+              spreadRadius: 2,
             ),
           ],
         ),
         child: FloatingActionButton(
           onPressed: _navigateToPostPage,
-          backgroundColor: const Color(0xFF0F172A),
-          foregroundColor: const Color(0xFF00D4FF),
+          backgroundColor: const Color(0xFF1E293B),
+          foregroundColor: const Color(0xFF4F46E5),
           elevation: 0,
           child: const Icon(Icons.add),
         ),
       ) : FloatingActionButton(
         onPressed: _navigateToPostPage,
-        backgroundColor: const Color(0xFF3D5AFE),
+        backgroundColor: const Color(0xFF4F46E5),
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
@@ -339,12 +339,12 @@ class _BbsPageState extends State<BbsPage> {
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text('论坛', style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : Colors.black)),
+              title: Text('论坛', style: TextStyle(color: isDark ? const Color(0xFFFFFFFF) : const Color(0xFF1E293B))),
               pinned: true,
-              backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+              backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
               foregroundColor: isDark ? Colors.white : Colors.black,
               elevation: isDark ? 0 : 4,
-              shadowColor: isDark ? const Color(0xFF00D4FF).withOpacity(0.3) : null,
+              shadowColor: isDark ? const Color(0xFF4F46E5).withOpacity(0.3) : null,
             ),
             
             SliverToBoxAdapter(
@@ -352,17 +352,17 @@ class _BbsPageState extends State<BbsPage> {
                 padding: EdgeInsets.all(16.w),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: BorderRadius.circular(12.w),
                     boxShadow: isDark ? [
                       BoxShadow(
-                        color: const Color(0xFF00D4FF).withOpacity(0.4),
-                        blurRadius: 15,
-                        spreadRadius: 3,
+                        color: const Color(0xFF4F46E5).withOpacity(0.3),
+                        blurRadius: 12,
+                        spreadRadius: 2,
                       ),
                       BoxShadow(
-                        color: const Color(0xFFFF00FF).withOpacity(0.2),
-                        blurRadius: 10,
+                        color: const Color(0xFF0EA5E9).withOpacity(0.2),
+                        blurRadius: 8,
                         spreadRadius: 2,
                       ),
                     ] : [
@@ -372,7 +372,7 @@ class _BbsPageState extends State<BbsPage> {
                       ),
                     ],
                     border: isDark ? Border.all(
-                      color: const Color(0xFF00D4FF).withOpacity(0.6),
+                      color: const Color(0xFF4F46E5).withOpacity(0.5),
                       width: 1.5,
                     ) : Border.all(
                       color: Colors.grey[200]!,
@@ -382,7 +382,7 @@ class _BbsPageState extends State<BbsPage> {
                   child: Row(
                     children: [
                       SizedBox(width: 12.w),
-                      Icon(Icons.search, color: isDark ? const Color(0xFF00D4FF) : Colors.grey[500]),
+                      Icon(Icons.search, color: isDark ? const Color(0xFF4F46E5) : Colors.grey[500]),
                       SizedBox(width: 8.w),
                       Expanded(
                         child: TextField(
@@ -390,7 +390,7 @@ class _BbsPageState extends State<BbsPage> {
                           decoration: InputDecoration(
                             hintText: '搜索帖子或用户名',
                             border: InputBorder.none,
-                            hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                            hintStyle: TextStyle(color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
                           ),
                           style: TextStyle(color: isDark ? Colors.white : Colors.black),
                           onSubmitted: (_) => _searchPosts(),
@@ -398,7 +398,7 @@ class _BbsPageState extends State<BbsPage> {
                       ),
                       TextButton(
                         onPressed: _searchPosts,
-                        child: Text('搜索', style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF3D5AFE))),
+                        child: Text('搜索', style: TextStyle(color: isDark ? const Color(0xFF4F46E5) : const Color(0xFF4F46E5))),
                       ),
                     ],
                   ),
@@ -425,13 +425,13 @@ class _BbsPageState extends State<BbsPage> {
                           decoration: isSelected ? BoxDecoration(
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF00FF),
-                                blurRadius: 15,
-                                spreadRadius: 3,
+                                color: const Color(0xFF4F46E5),
+                                blurRadius: 12,
+                                spreadRadius: 2,
                               ),
                               BoxShadow(
-                                color: const Color(0xFF00D4FF).withOpacity(0.5),
-                                blurRadius: 10,
+                                color: const Color(0xFF0EA5E9).withOpacity(0.5),
+                                blurRadius: 8,
                                 spreadRadius: 2,
                               ),
                             ],
@@ -439,10 +439,10 @@ class _BbsPageState extends State<BbsPage> {
                           child: ElevatedButton(
                             onPressed: () => _onCategorySelected(category.id),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              foregroundColor: const Color(0xFFFF00FF),
+                              backgroundColor: const Color(0xFF1E293B),
+                              foregroundColor: const Color(0xFF4F46E5),
                               side: BorderSide(
-                                color: const Color(0xFFFF00FF),
+                                color: const Color(0xFF4F46E5),
                                 width: isSelected ? 2 : 1.5,
                               ),
                               shape: RoundedRectangleBorder(
@@ -459,10 +459,10 @@ class _BbsPageState extends State<BbsPage> {
                         ) : ElevatedButton(
                           onPressed: () => _onCategorySelected(category.id),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isSelected ? const Color(0xFF3D5AFE) : Colors.white,
-                            foregroundColor: isSelected ? Colors.white : const Color(0xFF3D5AFE),
+                            backgroundColor: isSelected ? const Color(0xFF4F46E5) : Colors.white,
+                            foregroundColor: isSelected ? Colors.white : const Color(0xFF4F46E5),
                             side: BorderSide(
-                              color: const Color(0xFF3D5AFE),
+                              color: const Color(0xFF4F46E5),
                               width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(
@@ -479,7 +479,7 @@ class _BbsPageState extends State<BbsPage> {
                       );
                     }
                     
-                    // 第二个按钮是"我的留言"（橙色边框）
+                    // 第二个按钮是"我的留言"（金色边框）
                     if (index == 1) {
                       final isSelected = _showMyPosts;
                       return Padding(
@@ -488,13 +488,13 @@ class _BbsPageState extends State<BbsPage> {
                           decoration: isSelected ? BoxDecoration(
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF6600),
-                                blurRadius: 15,
-                                spreadRadius: 3,
+                                color: const Color(0xFFD4AF37),
+                                blurRadius: 12,
+                                spreadRadius: 2,
                               ),
                               BoxShadow(
-                                color: const Color(0xFFFF00FF).withOpacity(0.5),
-                                blurRadius: 10,
+                                color: const Color(0xFF4F46E5).withOpacity(0.5),
+                                blurRadius: 8,
                                 spreadRadius: 2,
                               ),
                             ],
@@ -513,10 +513,10 @@ class _BbsPageState extends State<BbsPage> {
                               }
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F172A),
-                              foregroundColor: const Color(0xFFFF6600),
+                              backgroundColor: const Color(0xFF1E293B),
+                              foregroundColor: const Color(0xFFD4AF37),
                               side: BorderSide(
-                                color: const Color(0xFFFF6600),
+                                color: const Color(0xFFD4AF37),
                                 width: isSelected ? 2 : 1.5,
                               ),
                               shape: RoundedRectangleBorder(
@@ -544,10 +544,10 @@ class _BbsPageState extends State<BbsPage> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: isSelected ? const Color(0xFFFF6600) : Colors.white,
-                            foregroundColor: isSelected ? Colors.white : const Color(0xFFFF6600),
+                            backgroundColor: isSelected ? const Color(0xFFD4AF37) : Colors.white,
+                            foregroundColor: isSelected ? Colors.black : const Color(0xFFD4AF37),
                             side: BorderSide(
-                              color: const Color(0xFFFF6600),
+                              color: const Color(0xFFD4AF37),
                               width: 1.5,
                             ),
                             shape: RoundedRectangleBorder(
@@ -573,13 +573,13 @@ class _BbsPageState extends State<BbsPage> {
                         decoration: isSelected ? BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFFF00FF),
-                              blurRadius: 15,
-                              spreadRadius: 3,
+                              color: const Color(0xFF4F46E5),
+                              blurRadius: 12,
+                              spreadRadius: 2,
                             ),
                             BoxShadow(
-                              color: const Color(0xFF00D4FF).withOpacity(0.5),
-                              blurRadius: 10,
+                              color: const Color(0xFF0EA5E9).withOpacity(0.5),
+                              blurRadius: 8,
                               spreadRadius: 2,
                             ),
                           ],
@@ -587,10 +587,10 @@ class _BbsPageState extends State<BbsPage> {
                         child: ElevatedButton(
                           onPressed: () => _onCategorySelected(category.id),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F172A),
-                            foregroundColor: const Color(0xFFFF00FF),
+                            backgroundColor: const Color(0xFF1E293B),
+                            foregroundColor: const Color(0xFF4F46E5),
                             side: BorderSide(
-                              color: const Color(0xFFFF00FF),
+                              color: const Color(0xFF4F46E5),
                               width: isSelected ? 2 : 1.5,
                             ),
                             shape: RoundedRectangleBorder(
@@ -607,10 +607,10 @@ class _BbsPageState extends State<BbsPage> {
                       ) : ElevatedButton(
                         onPressed: () => _onCategorySelected(category.id),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isSelected ? const Color(0xFF3D5AFE) : Colors.white,
-                          foregroundColor: isSelected ? Colors.white : const Color(0xFF3D5AFE),
+                          backgroundColor: isSelected ? const Color(0xFF4F46E5) : Colors.white,
+                          foregroundColor: isSelected ? Colors.white : const Color(0xFF4F46E5),
                           side: BorderSide(
-                            color: const Color(0xFF3D5AFE),
+                            color: const Color(0xFF4F46E5),
                             width: 1.5,
                           ),
                           shape: RoundedRectangleBorder(
@@ -941,18 +941,18 @@ class _PostCard extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12.w),
         boxShadow: isDark ? [
           BoxShadow(
-            color: const Color(0xFF00D4FF).withOpacity(0.5),
-            blurRadius: 20,
-            spreadRadius: 4,
+            color: const Color(0xFF4F46E5).withOpacity(0.4),
+            blurRadius: 18,
+            spreadRadius: 3,
           ),
           BoxShadow(
-            color: const Color(0xFFFF00FF).withOpacity(0.3),
-            blurRadius: 15,
-            spreadRadius: 3,
+            color: const Color(0xFF0EA5E9).withOpacity(0.25),
+            blurRadius: 12,
+            spreadRadius: 2,
           ),
         ] : [
           BoxShadow(
@@ -962,7 +962,7 @@ class _PostCard extends StatelessWidget {
           ),
         ],
         border: isDark ? Border.all(
-          color: const Color(0xFF00D4FF).withOpacity(0.7),
+          color: const Color(0xFF4F46E5).withOpacity(0.6),
           width: 1.5,
         ) : Border.all(
           color: Colors.grey[200]!,
@@ -992,11 +992,11 @@ class _PostCard extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 18.sp,
                               fontWeight: FontWeight.bold,
-                              color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF1E3A8A),
+                              color: isDark ? const Color(0xFF4F46E5) : const Color(0xFF1E3A8A),
                               shadows: isDark ? [
                                 Shadow(
-                                  color: const Color(0xFF00D4FF).withOpacity(0.5),
-                                  blurRadius: 10,
+                                  color: const Color(0xFF4F46E5).withOpacity(0.4),
+                                  blurRadius: 8,
                                 ),
                               ] : null,
                             ),
@@ -1014,7 +1014,7 @@ class _PostCard extends StatelessWidget {
                       post.content,
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: isDark ? Colors.grey[300] : Colors.grey[600],
+                        color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                       ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
@@ -1058,17 +1058,17 @@ class _PostCard extends StatelessWidget {
                             vertical: 2.h,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0F172A),
+                            color: const Color(0xFF1E293B),
                             borderRadius: BorderRadius.circular(4.w),
                             border: Border.all(
-                              color: const Color(0xFFFF00FF),
+                              color: const Color(0xFF4F46E5),
                               width: 1.5,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF00FF).withOpacity(0.6),
-                                blurRadius: 8,
-                                spreadRadius: 2,
+                                color: const Color(0xFF4F46E5).withOpacity(0.5),
+                                blurRadius: 6,
+                                spreadRadius: 1,
                               ),
                             ],
                           ),
@@ -1076,7 +1076,7 @@ class _PostCard extends StatelessWidget {
                             post.categoryName,
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: const Color(0xFFFF00FF),
+                              color: const Color(0xFF4F46E5),
                             ),
                           ),
                         ) : Container(
@@ -1085,10 +1085,10 @@ class _PostCard extends StatelessWidget {
                             vertical: 2.h,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F6FF),
+                            color: const Color(0xFFEEF2FF),
                             borderRadius: BorderRadius.circular(4.w),
                             border: Border.all(
-                              color: const Color(0xFF3D5AFE),
+                              color: const Color(0xFF4F46E5),
                               width: 1,
                             ),
                           ),
@@ -1096,7 +1096,7 @@ class _PostCard extends StatelessWidget {
                             post.categoryName,
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: const Color(0xFF3D5AFE),
+                              color: const Color(0xFF4F46E5),
                             ),
                           ),
                         ),
@@ -1105,24 +1105,24 @@ class _PostCard extends StatelessWidget {
                           post.authorName,
                           style: TextStyle(
                             fontSize: 12.sp,
-                            color: isDark ? Colors.grey[400] : Colors.grey[500],
+                            color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500],
                           ),
                         ),
                         const Spacer(),
                         Row(
                           children: [
-                            Icon(Icons.thumb_up, size: 14.sp, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                            Icon(Icons.thumb_up, size: 14.sp, color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
                             SizedBox(width: 4.w),
                             Text(
                               post.likesCount.toString(),
-                              style: TextStyle(fontSize: 12.sp, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+                              style: TextStyle(fontSize: 12.sp, color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
                             ),
                             SizedBox(width: 16.w),
-                            Icon(Icons.comment, size: 14.sp, color: Colors.grey[400]),
+                            Icon(Icons.comment, size: 14.sp, color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
                             SizedBox(width: 4.w),
                             Text(
                               post.commentsCount.toString(),
-                              style: TextStyle(fontSize: 12.sp, color: Colors.grey[400]),
+                              style: TextStyle(fontSize: 12.sp, color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
                             ),
                           ],
                         ),
@@ -1133,7 +1133,7 @@ class _PostCard extends StatelessWidget {
                       _formatDate(post.createdAt),
                       style: TextStyle(
                         fontSize: 12.sp,
-                        color: Colors.grey[500],
+                        color: isDark ? const Color(0xFF64748B) : Colors.grey[500],
                       ),
                     )
                   ],
@@ -1154,7 +1154,7 @@ class _PostCard extends StatelessWidget {
                       padding: EdgeInsets.all(6.w),
                       decoration: BoxDecoration(
                         color: isDark 
-                            ? const Color(0xFF1A1A2E).withOpacity(0.9)
+                            ? const Color(0xFF334155).withOpacity(0.9)
                             : Colors.white.withOpacity(0.95),
                         shape: BoxShape.circle,
                         boxShadow: [

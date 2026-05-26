@@ -10,7 +10,6 @@ import 'bbs.dart';
 import 'settings.dart';
 import 'version_checker.dart';
 import 'update_dialog.dart';
-import 'serviceold.dart';
 
 import 'app_shared.dart' as shared;
 

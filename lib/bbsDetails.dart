@@ -192,14 +192,13 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(
-          '帖子详情',
-          style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : Colors.black),
-        ),
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
-        elevation: 0,
+        title: const Text('帖子详情'),
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        foregroundColor: isDark ? Colors.white : Colors.black,
+        elevation: isDark ? 0 : 4,
+        shadowColor: isDark ? const Color(0xFF4F46E5).withOpacity(0.3) : null,
       ),
       body: Column(
         children: [
@@ -216,7 +215,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     style: TextStyle(
                       fontSize: 20.sp,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF1E3A8A),
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -230,7 +229,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                         _post.authorName,
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
                         ),
                       ),
                       const Spacer(),
@@ -238,7 +237,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                         _formatDate(_post.createdAt),
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: isDark ? Colors.grey[500] : Colors.grey[500],
+                          color: isDark ? const Color(0xFF64748B) : Colors.grey[500],
                         ),
                       ),
                     ],
@@ -251,7 +250,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     style: TextStyle(
                       fontSize: 16.sp,
                       height: 1.5,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: isDark ? const Color(0xFF94A3B8) : Colors.black87,
                     ),
                   ),
                   SizedBox(height: 16.h),
@@ -323,7 +322,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: isDark ? Colors.white : const Color(0xFF1E293B),
                     ),
                   ),
                   SizedBox(height: 12.h),
@@ -374,7 +373,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -397,7 +396,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+                      fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFEEF2FF),
                       contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
                     ),
                     style: TextStyle(color: isDark ? Colors.white : Colors.black),
@@ -409,7 +408,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                   child: Container(
                     padding: EdgeInsets.all(10.w),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3D5AFE),
+                      color: const Color(0xFF4F46E5),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -431,10 +430,10 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: isDark ? const Color(0xFFFF00FF) : const Color(0xFF3D5AFE),
+          color: const Color(0xFF4F46E5),
           width: 1.5,
         ),
       ),
@@ -442,7 +441,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
         _post.categoryName,
         style: TextStyle(
           fontSize: 12.sp,
-          color: isDark ? const Color(0xFFFF00FF) : const Color(0xFF3D5AFE),
+          color: const Color(0xFF4F46E5),
         ),
       ),
     );
@@ -460,19 +459,19 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
       child: Column(
         children: [
           Icon(
-            icon,
-            color: isActive
-                ? const Color(0xFF3D5AFE)
-                : (isDark ? Colors.grey[400] : Colors.grey[600]),
-            size: 24.sp,
-          ),
+              icon,
+              color: isActive
+                  ? const Color(0xFF4F46E5)
+                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
+              size: 24.sp,
+            ),
           SizedBox(height: 4.h),
           Text(
             label,
             style: TextStyle(
               fontSize: 12.sp,
               color: isActive
-                  ? const Color(0xFF3D5AFE)
+                  ? const Color(0xFF4F46E5)
                   : (isDark ? Colors.grey[400] : Colors.grey[600]),
             ),
           ),
@@ -486,10 +485,10 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1A1A2E) : Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+          color: isDark ? const Color(0xFF4F46E5).withOpacity(0.5) : Colors.grey[200]!,
         ),
       ),
       child: Column(

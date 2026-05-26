@@ -5,8 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:tourism_in_norway/service_checkout.dart';
 import 'service_models.dart';
 import 'service_api.dart';
-import 'service_theme.dart';
-import 'service_cart.dart';
+import 'service_theme.dart' as theme;
 
 class ServiceProductDetailPage extends StatefulWidget {
   final ServiceGoods goods;
@@ -27,6 +26,9 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
   int? _currentUserId;
 
   final PageController _pageController = PageController();
+  final ScrollController _scrollController = ScrollController();
+  double _imageOffset = 0.0;
+  double _maxOffset = 150.0;  // 图片最大移动距离
 
   @override
   void initState() {
@@ -145,52 +147,65 @@ void _buyNow() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDark ? ServiceNeonColors.darkBg : ServiceNeonColors.lightBg,
-      appBar: AppBar(
-        title: Text(
-          '商品详情',
-          style: TextStyle(color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border,
-                color: _isLiked ? ServiceNeonColors.magenta : null),
-            onPressed: _toggleLike,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 图片轮播
-          _buildImageCarousel(isDark),
-          // 商品信息
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProductInfo(isDark),
-                  SizedBox(height: 16.h),
-                  _buildNeonDivider(isDark),
-                  SizedBox(height: 16.h),
-                  _buildQuantitySelector(isDark),
-                  SizedBox(height: 16.h),
-                  _buildNeonDivider(isDark),
-                  SizedBox(height: 16.h),
-                  _buildProductDescription(isDark),
-                  SizedBox(height: 16.h),
-                  _buildNeonDivider(isDark),
-                  SizedBox(height: 16.h),
-                  _buildCommentsSection(isDark),
-                  SizedBox(height: 80.h),
-                ],
+      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+              elevation: 0,
+              pinned: true,
+              floating: true,
+              snap: true,
+              expandedHeight: 350.h,
+              flexibleSpace: FlexibleSpaceBar(
+                background: _buildImageCarousel(isDark),
               ),
+              title: Text(
+                '商品详情',
+                style: TextStyle(color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
+              ),
+              actions: [
+                IconButton(
+                  icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: _isLiked ? Colors.red : null),
+                  onPressed: _toggleLike,
+                ),
+              ],
+            ),
+          ];
+        },
+        body: SingleChildScrollView(
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+            ),
+            padding: EdgeInsets.all(20.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProductInfo(isDark),
+                SizedBox(height: 16.h),
+                _buildMetalDivider(isDark),
+                      SizedBox(height: 16.h),
+                      _buildQuantitySelector(isDark),
+                      SizedBox(height: 16.h),
+                      _buildMetalDivider(isDark),
+                      SizedBox(height: 16.h),
+                      _buildProductDescription(isDark),
+                      SizedBox(height: 16.h),
+                      _buildMetalDivider(isDark),
+                SizedBox(height: 16.h),
+                _buildCommentsSection(isDark),
+                SizedBox(height: 16.h),
+                // 购买按钮放在评价区域下面
+                _buildBottomBar(isDark),
+                SizedBox(height: 30.h),
+              ],
             ),
           ),
-          // 底部操作栏
-          _buildBottomBar(isDark),
-        ],
+        ),
       ),
     );
   }
@@ -200,11 +215,11 @@ void _buyNow() async {
         ? [_goods.mainImage!]
         : (_goods.images.isEmpty ? ['https://picsum.photos/id/0/400/400'] : _goods.images);
     
-    return Stack(
-      children: [
-        SizedBox(
-          height: 350.h,
-          child: PageView.builder(
+    return Container(
+      height: 350.h,
+      child: Stack(
+        children: [
+          PageView.builder(
             controller: _pageController,
             onPageChanged: (index) => setState(() => _currentImageIndex = index),
             itemCount: images.length,
@@ -221,30 +236,30 @@ void _buyNow() async {
               );
             },
           ),
-        ),
-        // 指示器
-        Positioned(
-          bottom: 16.h,
-          left: 0,
-          right: 0,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(images.length, (index) {
-              return Container(
-                margin: EdgeInsets.symmetric(horizontal: 4.w),
-                width: 8.w,
-                height: 8.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _currentImageIndex == index
-                      ? (isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan)
-                      : Colors.white.withOpacity(0.5),
-                ),
-              );
-            }),
+          // 指示器
+          Positioned(
+            bottom: 16.h,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(images.length, (index) {
+                return Container(
+                  margin: EdgeInsets.symmetric(horizontal: 4.w),
+                  width: 8.w,
+                  height: 8.w,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentImageIndex == index
+                        ? (isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary)
+                        : Colors.white.withOpacity(0.5),
+                  ),
+                );
+              }),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -258,7 +273,7 @@ void _buyNow() async {
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+                  colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
                 ),
                 borderRadius: BorderRadius.circular(12.r),
               ),
@@ -271,11 +286,11 @@ void _buyNow() async {
             if (_goods.score > 0)
               Row(
                 children: [
-                  Icon(Icons.star, size: 14.sp, color: ServiceNeonColors.amber),
+                  Icon(Icons.star, size: 14.sp, color: theme.ServiceMetalColors.gold),
                   SizedBox(width: 4.w),
                   Text(
                     '${_goods.score}',
-                    style: TextStyle(fontSize: 12.sp, color: isDark ? Colors.white : Colors.black),
+                    style: TextStyle(fontSize: 12.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
                   ),
                 ],
               ),
@@ -287,14 +302,14 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
           ),
         ),
         SizedBox(height: 8.h),
         if (_goods.nameEn != null)
           Text(
             _goods.nameEn!,
-            style: TextStyle(fontSize: 14.sp, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+            style: TextStyle(fontSize: 14.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
           ),
         SizedBox(height: 12.h),
         Row(
@@ -304,8 +319,8 @@ void _buyNow() async {
               style: TextStyle(
                 fontSize: 28.sp,
                 fontWeight: FontWeight.bold,
-                color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan,
-                shadows: isDark ? [Shadow(color: ServiceNeonColors.cyan, blurRadius: 10)] : null,
+                color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
+                shadows: isDark ? [Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 10)] : null,
               ),
             ),
             if (_goods.originalPrice != null)
@@ -316,14 +331,14 @@ void _buyNow() async {
                   style: TextStyle(
                     fontSize: 16.sp,
                     decoration: TextDecoration.lineThrough,
-                    color: isDark ? Colors.grey[500] : Colors.grey[400],
+                    color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary,
                   ),
                 ),
               ),
             const Spacer(),
             Text(
               '库存 ${_goods.stock}',
-              style: TextStyle(fontSize: 12.sp, color: isDark ? Colors.grey[400] : Colors.grey[600]),
+              style: TextStyle(fontSize: 12.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
             ),
           ],
         ),
@@ -343,15 +358,15 @@ void _buyNow() async {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.grey[100],
+        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurfaceElevated,
         borderRadius: BorderRadius.circular(20.r),
-        border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
       ),
       child: Row(
         children: [
-          Icon(icon, size: 14.sp, color: isDark ? ServiceNeonColors.cyan : Colors.grey),
+          Icon(icon, size: 14.sp, color: isDark ? theme.ServiceMetalColors.primary : Colors.grey),
           SizedBox(width: 6.w),
-          Text(label, style: TextStyle(fontSize: 11.sp, color: isDark ? Colors.white : Colors.black87)),
+          Text(label, style: TextStyle(fontSize: 11.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText)),
         ],
       ),
     );
@@ -365,13 +380,13 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black87,
+            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
           ),
         ),
         const Spacer(),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: isDark ? ServiceNeonColors.cyan.withOpacity(0.5) : Colors.grey[300]!),
+            border: Border.all(color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[300]!),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Row(
@@ -384,7 +399,7 @@ void _buyNow() async {
                 alignment: Alignment.center,
                 child: Text(
                   '$_quantity',
-                  style: TextStyle(fontSize: 16.sp, color: isDark ? Colors.white : Colors.black),
+                  style: TextStyle(fontSize: 16.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
                 ),
               ),
               _buildQuantityButton(Icons.add, () {
@@ -403,10 +418,10 @@ void _buyNow() async {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isDark ? ServiceNeonColors.darkSurface : Colors.grey[100],
+          color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurfaceElevated,
           borderRadius: BorderRadius.circular(8.r),
         ),
-        child: Icon(icon, size: 18.sp, color: isDark ? ServiceNeonColors.cyan : Colors.black87),
+        child: Icon(icon, size: 18.sp, color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
       ),
     );
   }
@@ -420,7 +435,7 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
           ),
         ),
         SizedBox(height: 12.h),
@@ -429,7 +444,7 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 14.sp,
             height: 1.6,
-            color: isDark ? Colors.grey[300] : Colors.grey[700],
+            color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary,
           ),
         ),
       ],
@@ -445,7 +460,7 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black87,
+            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
           ),
         ),
         SizedBox(height: 12.h),
@@ -457,7 +472,7 @@ void _buyNow() async {
               padding: EdgeInsets.symmetric(vertical: 32.h),
               child: Text(
                 '暂无评价',
-                style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                style: TextStyle(color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
               ),
             ),
           )
@@ -478,7 +493,7 @@ void _buyNow() async {
             },
             child: Text(
               '查看全部 ${_comments.length} 条评价',
-              style: TextStyle(color: ServiceNeonColors.cyan),
+              style: TextStyle(color: theme.ServiceMetalColors.primary),
             ),
           ),
       ],
@@ -490,9 +505,9 @@ void _buyNow() async {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
         borderRadius: BorderRadius.circular(12.r),
-        border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.2)) : null,
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.2)) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -501,16 +516,16 @@ void _buyNow() async {
             children: [
               CircleAvatar(
                 radius: 16.r,
-                backgroundColor: ServiceNeonColors.cyan.withOpacity(0.2),
+                backgroundColor: theme.ServiceMetalColors.primary.withOpacity(0.2),
                 child: Text(
                   comment.userName.isNotEmpty ? comment.userName[0] : 'U',
-                  style: const TextStyle(color: ServiceNeonColors.cyan),
+                  style: const TextStyle(color: theme.ServiceMetalColors.primary),
                 ),
               ),
               SizedBox(width: 8.w),
               Text(
                 comment.userName,
-                style: TextStyle(fontSize: 14.sp, color: isDark ? Colors.white : Colors.black87),
+                style: TextStyle(fontSize: 14.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
               ),
               const Spacer(),
               Row(
@@ -518,7 +533,7 @@ void _buyNow() async {
                   return Icon(
                     index < comment.rating ? Icons.star : Icons.star_border,
                     size: 12.sp,
-                    color: ServiceNeonColors.amber,
+                    color: theme.ServiceMetalColors.gold,
                   );
                 }),
               ),
@@ -527,28 +542,28 @@ void _buyNow() async {
           SizedBox(height: 8.h),
           Text(
             comment.content,
-            style: TextStyle(fontSize: 13.sp, color: isDark ? Colors.grey[300] : Colors.grey[700]),
+            style: TextStyle(fontSize: 13.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
           ),
           SizedBox(height: 6.h),
           Text(
             _formatDate(comment.createdAt),
-            style: TextStyle(fontSize: 10.sp, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+            style: TextStyle(fontSize: 10.sp, color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNeonDivider(bool isDark) {
+  Widget _buildMetalDivider(bool isDark) {
     return Container(
       height: 2,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            isDark ? ServiceNeonColors.cyan.withOpacity(0) : Colors.transparent,
-            isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan,
-            isDark ? ServiceNeonColors.magenta : ServiceNeonColors.magenta,
-            isDark ? ServiceNeonColors.magenta.withOpacity(0) : Colors.transparent,
+            isDark ? theme.ServiceMetalColors.primary.withOpacity(0) : Colors.transparent,
+            isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
+            isDark ? theme.ServiceMetalColors.accent : theme.ServiceMetalColors.accent,
+            isDark ? theme.ServiceMetalColors.accent.withOpacity(0) : Colors.transparent,
           ],
         ),
       ),
@@ -557,37 +572,37 @@ void _buyNow() async {
 
   Widget _buildBottomBar(bool isDark) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? ServiceNeonColors.cyan.withOpacity(0.2) : Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
+        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
+        borderRadius: BorderRadius.circular(16.r),
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+        boxShadow: isDark ? [
+          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.2), blurRadius: 12, spreadRadius: -4),
+        ] : [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, spreadRadius: 2),
         ],
       ),
       child: Row(
         children: [
           Expanded(
-            child: _buildNeonButton(
+            child: _buildMetalButton(
               '加入购物车',
               _addToCart,
               isDark,
               gradient: const LinearGradient(
-                colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+                colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
               ),
             ),
           ),
           SizedBox(width: 12.w),
           Expanded(
-            child: _buildNeonButton(
+            child: _buildMetalButton(
               '立即购买',
               _buyNow,
               isDark,
               gradient: const LinearGradient(
-                colors: [ServiceNeonColors.magenta, ServiceNeonColors.cyan],
+                colors: [theme.ServiceMetalColors.accent, theme.ServiceMetalColors.primary],
               ),
             ),
           ),
@@ -596,7 +611,7 @@ void _buyNow() async {
     );
   }
 
-  Widget _buildNeonButton(String text, VoidCallback onTap, bool isDark, {Gradient? gradient}) {
+  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark, {Gradient? gradient}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -604,12 +619,12 @@ void _buyNow() async {
         decoration: BoxDecoration(
           gradient: gradient ??
               (isDark
-                  ? const LinearGradient(colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta])
-                  : const LinearGradient(colors: [ServiceNeonColors.cyan, ServiceNeonColors.cyan])),
+                  ? const LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent])
+                  : const LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.primary])),
           borderRadius: BorderRadius.circular(24.r),
           boxShadow: isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan, blurRadius: 15, spreadRadius: 2),
-            BoxShadow(color: ServiceNeonColors.magenta, blurRadius: 10, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 15, spreadRadius: 2),
+            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 10, spreadRadius: 1),
           ] : null,
         ),
         alignment: Alignment.center,
@@ -637,6 +652,7 @@ void _buyNow() async {
   @override
   void dispose() {
     _pageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 }

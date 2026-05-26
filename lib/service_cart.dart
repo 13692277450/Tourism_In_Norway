@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'service_models.dart';
 import 'service_api.dart';
-import 'service_theme.dart';
+import 'service_theme.dart' as theme;
 import 'service_checkout.dart';
 
 class ServiceCartPage extends StatefulWidget {
@@ -166,12 +166,12 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? ServiceNeonColors.darkBg : ServiceNeonColors.lightBg,
+      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           '购物车',
           style: TextStyle(
-            color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText,
+            color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText,
           ),
         ),
       ),
@@ -205,7 +205,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
           Icon(
             Icons.shopping_cart_outlined,
             size: 80.sp,
-            color: isDark ? ServiceNeonColors.cyan.withOpacity(0.5) : Colors.grey[400],
+            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[400],
           ),
           SizedBox(height: 16.h),
           Text(
@@ -216,7 +216,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
             ),
           ),
           SizedBox(height: 16.h),
-          _buildNeonButton(
+          _buildMetalButton(
             '去逛逛',
             () => Navigator.pop(context),
             isDark,
@@ -231,11 +231,11 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
         boxShadow: isDark ? [
-          BoxShadow(color: ServiceNeonColors.cyan.withOpacity(0.1), blurRadius: 8),
+          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.1), blurRadius: 8),
         ] : [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4),
         ],
@@ -254,13 +254,13 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: item.selected
-                      ? ServiceNeonColors.cyan
+                      ? theme.ServiceMetalColors.primary
                       : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
                   width: 2,
                 ),
               ),
               child: item.selected
-                  ? Icon(Icons.check, size: 16.sp, color: ServiceNeonColors.cyan)
+                  ? Icon(Icons.check, size: 16.sp, color: theme.ServiceMetalColors.primary)
                   : null,
             ),
           ),
@@ -311,19 +311,19 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                     Text(
                       '¥${item.price.toStringAsFixed(2)}',
                       style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan,
-                        shadows: isDark ? [
-                          Shadow(color: ServiceNeonColors.cyan, blurRadius: 5),
-                        ] : null,
-                      ),
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
+                    shadows: isDark ? [
+                      Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 5),
+                    ] : null,
+                  ),
                     ),
                     // 数量选择器
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: isDark ? ServiceNeonColors.cyan.withOpacity(0.5) : Colors.grey[300]!,
+                          color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[300]!,
                         ),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
@@ -373,10 +373,10 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isDark ? ServiceNeonColors.darkSurface : Colors.grey[100],
+          color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.grey[100],
           borderRadius: BorderRadius.circular(8.r),
         ),
-        child: Icon(icon, size: 16.sp, color: isDark ? ServiceNeonColors.cyan : Colors.black87),
+        child: Icon(icon, size: 16.sp, color: isDark ? theme.ServiceMetalColors.primary : Colors.black87),
       ),
     );
   }
@@ -385,10 +385,10 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: isDark ? ServiceNeonColors.cyan.withOpacity(0.2) : Colors.black.withOpacity(0.05),
+            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.2) : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -409,13 +409,13 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: _isAllSelected
-                            ? ServiceNeonColors.cyan
+                            ? theme.ServiceMetalColors.primary
                             : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
                         width: 2,
                       ),
                     ),
                     child: _isAllSelected
-                        ? Icon(Icons.check, size: 14.sp, color: ServiceNeonColors.cyan)
+                        ? Icon(Icons.check, size: 14.sp, color: theme.ServiceMetalColors.primary)
                         : null,
                   ),
                   SizedBox(width: 8.w),
@@ -438,8 +438,8 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan,
-                    shadows: isDark ? [Shadow(color: ServiceNeonColors.cyan, blurRadius: 8)] : null,
+                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
+                    shadows: isDark ? [Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8)] : null,
                   ),
                 ),
                 Text(
@@ -452,7 +452,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
               ],
             ),
             SizedBox(width: 12.w),
-            _buildNeonButton(
+            _buildMetalButton(
               '结算',
               _checkout,
               isDark,
@@ -464,7 +464,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
     );
   }
 
-  Widget _buildNeonButton(String text, VoidCallback onTap, bool isDark, {double? width}) {
+  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark, {double? width}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -472,12 +472,12 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
         height: 44.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
           ),
           borderRadius: BorderRadius.circular(22.r),
           boxShadow: isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan, blurRadius: 12, spreadRadius: 1),
-            BoxShadow(color: ServiceNeonColors.magenta, blurRadius: 8, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 12, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 8, spreadRadius: 1),
           ] : null,
         ),
         alignment: Alignment.center,

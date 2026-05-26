@@ -6,7 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'service_models.dart';
 import 'service_api.dart';
-import 'service_theme.dart';
+import 'service_theme.dart' as theme;
 import 'service_address.dart';
 
 class ServiceCheckoutPage extends StatefulWidget {
@@ -36,8 +36,8 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   int? _currentUserId;
   
   // 物流信息
-  String _logisticsCompany = '顺丰速运';
-  int _estimatedDays = 3;
+  final String _logisticsCompany = '顺丰速运';
+  final int _estimatedDays = 3;
 
   @override
   void initState() {
@@ -169,7 +169,7 @@ try {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        backgroundColor: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        backgroundColor: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         title: const Text('选择支付方式'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -201,12 +201,12 @@ try {
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          border: Border.all(color: isDark ? ServiceNeonColors.cyan.withOpacity(0.3) : Colors.grey[300]!),
+          border: Border.all(color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.3) : Colors.grey[300]!),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 30.sp, color: ServiceNeonColors.cyan),
+            Icon(icon, size: 30.sp, color: theme.ServiceMetalColors.primary),
             SizedBox(width: 16.w),
             Text(
               name,
@@ -286,11 +286,11 @@ try {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? ServiceNeonColors.darkBg : ServiceNeonColors.lightBg,
+      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           '确认订单',
-          style: TextStyle(color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText),
+          style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
         ),
       ),
       body: _isLoading
@@ -341,16 +341,16 @@ try {
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+          color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(16.r),
-          border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+          border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
           boxShadow: isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan.withOpacity(0.1), blurRadius: 8),
+            BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.1), blurRadius: 8),
           ] : null,
         ),
         child: Row(
           children: [
-            Icon(Icons.location_on, color: ServiceNeonColors.cyan, size: 24.sp),
+            Icon(Icons.location_on, color: theme.ServiceMetalColors.primary, size: 24.sp),
             SizedBox(width: 12.w),
             Expanded(
               child: _selectedAddress == null
@@ -391,9 +391,9 @@ try {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,10 +465,10 @@ try {
         Text(
           '¥${item.totalPrice.toStringAsFixed(2)}',
           style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan,
-          ),
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
+                  ),
         ),
       ],
     );
@@ -478,13 +478,13 @@ try {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
       ),
       child: Row(
         children: [
-          Icon(Icons.local_shipping, color: ServiceNeonColors.cyan, size: 24.sp),
+          Icon(Icons.local_shipping, color: theme.ServiceMetalColors.primary, size: 24.sp),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -518,9 +518,9 @@ try {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
       ),
       child: Column(
         children: [
@@ -530,7 +530,7 @@ try {
           SizedBox(height: 8.h),
           _buildInfoRow('优惠', '-¥0.00', isDark),
           SizedBox(height: 12.h),
-          _buildNeonDivider(isDark),
+          _buildMetalDivider(isDark),
           SizedBox(height: 12.h),
           _buildInfoRow(
             '实付金额',
@@ -560,10 +560,10 @@ try {
             fontSize: isTotal ? 20.sp : 16.sp,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             color: isTotal
-                ? (isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan)
+                ? (isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary)
                 : (isDark ? Colors.white : Colors.black87),
             shadows: isTotal && isDark ? [
-              Shadow(color: ServiceNeonColors.cyan, blurRadius: 8),
+              Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8),
             ] : null,
           ),
         ),
@@ -571,16 +571,16 @@ try {
     );
   }
 
-  Widget _buildNeonDivider(bool isDark) {
+  Widget _buildMetalDivider(bool isDark) {
     return Container(
       height: 1,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            isDark ? ServiceNeonColors.cyan.withOpacity(0) : Colors.transparent,
-            isDark ? ServiceNeonColors.cyan : Colors.grey[300]!,
-            isDark ? ServiceNeonColors.magenta : Colors.grey[300]!,
-            isDark ? ServiceNeonColors.magenta.withOpacity(0) : Colors.transparent,
+            isDark ? theme.ServiceMetalColors.primary.withOpacity(0) : Colors.transparent,
+            isDark ? theme.ServiceMetalColors.primary : Colors.grey[300]!,
+            isDark ? theme.ServiceMetalColors.accent : Colors.grey[300]!,
+            isDark ? theme.ServiceMetalColors.accent.withOpacity(0) : Colors.transparent,
           ],
         ),
       ),
@@ -591,10 +591,10 @@ try {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: isDark ? ServiceNeonColors.cyan.withOpacity(0.2) : Colors.black.withOpacity(0.05),
+            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.2) : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -618,8 +618,8 @@ try {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan,
-                    shadows: isDark ? [Shadow(color: ServiceNeonColors.cyan, blurRadius: 8)] : null,
+                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
+                    shadows: isDark ? [Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8)] : null,
                   ),
                 ),
               ],
@@ -632,7 +632,7 @@ try {
                     alignment: Alignment.center,
                     child: const CircularProgressIndicator(),
                   )
-                : _buildNeonButton(
+                : _buildMetalButton(
                     '提交订单',
                     _createOrder,
                     isDark,
@@ -644,7 +644,7 @@ try {
     );
   }
 
-  Widget _buildNeonButton(String text, VoidCallback onTap, bool isDark, {double? width}) {
+  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark, {double? width}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -652,12 +652,12 @@ try {
         height: 48.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
           ),
           borderRadius: BorderRadius.circular(24.r),
           boxShadow: isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan, blurRadius: 12, spreadRadius: 1),
-            BoxShadow(color: ServiceNeonColors.magenta, blurRadius: 8, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 12, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 8, spreadRadius: 1),
           ] : null,
         ),
         alignment: Alignment.center,
@@ -692,7 +692,7 @@ class ServiceOrderResultPage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? ServiceNeonColors.darkBg : ServiceNeonColors.lightBg,
+      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(32.w),
@@ -705,11 +705,11 @@ class ServiceOrderResultPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+                    colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
                   ),
                   boxShadow: isDark ? [
-                    BoxShadow(color: ServiceNeonColors.cyan, blurRadius: 20),
-                    BoxShadow(color: ServiceNeonColors.magenta, blurRadius: 15),
+                    BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 20),
+                    BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 15),
                   ] : null,
                 ),
                 child: Icon(Icons.check, size: 50.sp, color: Colors.black),
@@ -727,9 +727,9 @@ class ServiceOrderResultPage extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+                  color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
-                  border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+                  border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
                 ),
                 child: Column(
                   children: [
@@ -745,7 +745,7 @@ class ServiceOrderResultPage extends StatelessWidget {
                       '预计 $estimatedDays 天内送达',
                       style: TextStyle(
                         fontSize: 14.sp,
-                        color: ServiceNeonColors.cyan,
+                        color: theme.ServiceMetalColors.primary,
                       ),
                     ),
                   ],
@@ -787,16 +787,16 @@ class ServiceOrderResultPage extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: outlined
               ? null
-              : const LinearGradient(colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta]),
-          color: outlined ? (isDark ? ServiceNeonColors.darkSurface : Colors.white) : null,
+              : const LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent]),
+          color: outlined ? (isDark ? theme.ServiceMetalColors.darkSurface : Colors.white) : null,
           borderRadius: BorderRadius.circular(24.r),
-          border: outlined ? Border.all(color: ServiceNeonColors.cyan) : null,
+          border: outlined ? Border.all(color: theme.ServiceMetalColors.primary) : null,
         ),
         alignment: Alignment.center,
         child: Text(
           text,
           style: TextStyle(
-            color: outlined ? ServiceNeonColors.cyan : Colors.black,
+            color: outlined ? theme.ServiceMetalColors.primary : Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 14,
           ),

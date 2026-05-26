@@ -229,12 +229,12 @@ class _BbsPostPageState extends State<BbsPostPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text('发布帖子', style: TextStyle(color: isDark ? const Color(0xFF00D4FF) : Colors.black)),
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F6FF),
+        title: Text('发布帖子', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF1E293B))),
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         foregroundColor: isDark ? Colors.white : Colors.black,
-        shadowColor: isDark ? const Color(0xFF00D4FF).withOpacity(0.5) : null,
+        shadowColor: isDark ? const Color(0xFF4F46E5).withOpacity(0.5) : null,
         elevation: isDark ? 8 : 4,
       ),
       body: SingleChildScrollView(
@@ -248,7 +248,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF1E3A8A),
+                color: isDark ? const Color(0xFF4F46E5) : const Color(0xFF1E293B),
               ),
             ),
             SizedBox(height: 8.h),
@@ -257,8 +257,8 @@ class _BbsPostPageState extends State<BbsPostPage> {
                 borderRadius: BorderRadius.circular(8.w),
                 boxShadow: isDark ? [
                   BoxShadow(
-                    color: const Color(0xFF00D4FF).withOpacity(0.4),
-                    blurRadius: 12,
+                    color: const Color(0xFF4F46E5).withOpacity(0.3),
+                    blurRadius: 10,
                     spreadRadius: 2,
                   ),
                 ] : [
@@ -268,10 +268,10 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   ),
                 ],
                 border: Border.all(
-                  color: isDark ? const Color(0xFF00D4FF) : Colors.grey[300]!,
+                  color: isDark ? const Color(0xFF4F46E5) : Colors.grey[300]!,
                   width: isDark ? 1.5 : 1,
                 ),
-                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
               ),
               child: TextField(
                 controller: _titleController,
@@ -293,30 +293,30 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFFFF00FF) : const Color(0xFF7C3AED),
+                color: isDark ? const Color(0xFF0EA5E9) : const Color(0xFF4F46E5),
               ),
             ),
             SizedBox(height: 8.h),
             isDark ? Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w),
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFFF00FF), width: 1.5),
+                border: Border.all(color: const Color(0xFF0EA5E9), width: 1.5),
                 borderRadius: BorderRadius.circular(8.w),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFFF00FF).withOpacity(0.4),
-                    blurRadius: 12,
+                    color: const Color(0xFF0EA5E9).withOpacity(0.3),
+                    blurRadius: 10,
                     spreadRadius: 2,
                   ),
                 ],
-                color: const Color(0xFF0F172A),
+                color: const Color(0xFF1E293B),
               ),
               child: DropdownButton<int>(
                 value: _selectedCategoryId,
                 hint: const Text('请选择分类', style: TextStyle(color: Colors.grey)),
                 isExpanded: true,
                 underline: const SizedBox(),
-                dropdownColor: const Color(0xFF0F172A),
+                dropdownColor: const Color(0xFF1E293B),
                 style: const TextStyle(color: Colors.white),
                 items: _categories.map((category) {
                   return DropdownMenuItem(
@@ -333,7 +333,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
             ) : Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w),
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFF7C3AED), width: 1),
+                border: Border.all(color: const Color(0xFF4F46E5), width: 1),
                 borderRadius: BorderRadius.circular(8.w),
                 color: Colors.white,
               ),
@@ -365,7 +365,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF1E3A8A),
+                color: isDark ? const Color(0xFF4F46E5) : const Color(0xFF1E293B),
               ),
             ),
             SizedBox(height: 8.h),
@@ -374,8 +374,8 @@ class _BbsPostPageState extends State<BbsPostPage> {
                 borderRadius: BorderRadius.circular(8.w),
                 boxShadow: isDark ? [
                   BoxShadow(
-                    color: const Color(0xFF00D4FF).withOpacity(0.4),
-                    blurRadius: 12,
+                    color: const Color(0xFF4F46E5).withOpacity(0.3),
+                    blurRadius: 10,
                     spreadRadius: 2,
                   ),
                 ] : [
@@ -385,10 +385,10 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   ),
                 ],
                 border: Border.all(
-                  color: isDark ? const Color(0xFF00D4FF) : Colors.grey[300]!,
+                  color: isDark ? const Color(0xFF4F46E5) : Colors.grey[300]!,
                   width: isDark ? 1.5 : 1,
                 ),
-                color: isDark ? const Color(0xFF0F172A) : Colors.white,
+                color: isDark ? const Color(0xFF1E293B) : Colors.white,
               ),
               child: TextField(
                 controller: _contentController,
@@ -410,7 +410,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
-                color: isDark ? const Color(0xFFFF00FF) : const Color(0xFF7C3AED),
+                color: isDark ? const Color(0xFF0EA5E9) : const Color(0xFF4F46E5),
               ),
             ),
             SizedBox(height: 8.h),
@@ -427,9 +427,9 @@ class _BbsPostPageState extends State<BbsPostPage> {
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF00D4FF).withOpacity(0.5),
-                              blurRadius: 15,
-                              spreadRadius: 3,
+                              color: const Color(0xFF4F46E5).withOpacity(0.4),
+                              blurRadius: 12,
+                              spreadRadius: 2,
                             ),
                           ],
                         ),
@@ -440,16 +440,16 @@ class _BbsPostPageState extends State<BbsPostPage> {
                             height: 100.h,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: const Color(0xFF00D4FF),
+                                color: const Color(0xFF4F46E5),
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(8.w),
-                              color: const Color(0xFF0F172A),
+                              color: const Color(0xFF1E293B),
                             ),
                             child: const Icon(
                               Icons.add,
-                              color: Color(0xFF00D4FF),
+                              color: Color(0xFF4F46E5),
                             ),
                           ),
                         ),
@@ -460,7 +460,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
                           height: 100.h,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: const Color(0xFF3D5AFE),
+                              color: const Color(0xFF4F46E5),
                               style: BorderStyle.solid,
                               width: 1.5,
                             ),
@@ -469,7 +469,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
                           ),
                           child: const Icon(
                             Icons.add,
-                            color: Color(0xFF3D5AFE),
+                            color: Color(0xFF4F46E5),
                           ),
                         ),
                       ),
@@ -520,14 +520,14 @@ class _BbsPostPageState extends State<BbsPostPage> {
                 decoration: BoxDecoration(
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFF00FF),
-                      blurRadius: 20,
-                      spreadRadius: 5,
+                      color: const Color(0xFF4F46E5),
+                      blurRadius: 15,
+                      spreadRadius: 4,
                     ),
                     BoxShadow(
-                      color: const Color(0xFF00D4FF),
-                      blurRadius: 15,
-                      spreadRadius: 3,
+                      color: const Color(0xFF0EA5E9),
+                      blurRadius: 10,
+                      spreadRadius: 2,
                     ),
                   ],
                 ),
@@ -535,23 +535,23 @@ class _BbsPostPageState extends State<BbsPostPage> {
                   onPressed: _isSubmitting ? null : _submitPost,
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(200.w, 48.h),
-                    backgroundColor: const Color(0xFF0F172A),
-                    foregroundColor: const Color(0xFFFF00FF),
+                    backgroundColor: const Color(0xFF1E293B),
+                    foregroundColor: const Color(0xFF4F46E5),
                     side: const BorderSide(
-                      color: Color(0xFFFF00FF),
+                      color: Color(0xFF4F46E5),
                       width: 2,
                     ),
                     elevation: 0,
                   ),
                   child: _isSubmitting
-                      ? const CircularProgressIndicator(color: Color(0xFFFF00FF))
+                      ? const CircularProgressIndicator(color: Color(0xFF4F46E5))
                       : const Text('发布帖子'),
                 ),
               ) : ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitPost,
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(200.w, 48.h),
-                  backgroundColor: const Color(0xFF3D5AFE),
+                  backgroundColor: const Color(0xFF4F46E5),
                   foregroundColor: Colors.white,
                   elevation: 4,
                   shape: RoundedRectangleBorder(

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'service_models.dart';
 import 'service_api.dart';
-import 'service_theme.dart';
+import 'service_theme.dart' as theme;
 
 class ServiceAddressPage extends StatefulWidget {
   final int? selectedAddressId;
@@ -112,15 +112,15 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? ServiceNeonColors.darkBg : ServiceNeonColors.lightBg,
+      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           '收货地址',
-          style: TextStyle(color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText),
+          style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: isDark ? ServiceNeonColors.cyan : null),
+            icon: Icon(Icons.add, color: isDark ? theme.ServiceMetalColors.primary : null),
             onPressed: () => _addOrEditAddress(),
           ),
         ],
@@ -140,8 +140,8 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
       floatingActionButton: _addresses.isNotEmpty
           ? FloatingActionButton(
               onPressed: () => _addOrEditAddress(),
-              backgroundColor: isDark ? ServiceNeonColors.darkSurface : ServiceNeonColors.cyan,
-              child: Icon(Icons.add, color: isDark ? ServiceNeonColors.cyan : Colors.white),
+              backgroundColor: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.primary,
+              child: Icon(Icons.add, color: isDark ? theme.ServiceMetalColors.primary : Colors.white),
             )
           : null,
     );
@@ -155,7 +155,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
           Icon(
             Icons.location_off_outlined,
             size: 80.sp,
-            color: isDark ? ServiceNeonColors.cyan.withOpacity(0.5) : Colors.grey[400],
+            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[400],
           ),
           SizedBox(height: 16.h),
           Text(
@@ -166,7 +166,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
             ),
           ),
           SizedBox(height: 16.h),
-          _buildNeonButton(
+          _buildMetalButton(
             '添加新地址',
             () => _addOrEditAddress(),
             isDark,
@@ -182,16 +182,16 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
           color: isSelected
-              ? ServiceNeonColors.cyan
-              : (isDark ? ServiceNeonColors.cyan.withOpacity(0.3) : Colors.grey[200]!),
+              ? theme.ServiceMetalColors.primary
+              : (isDark ? theme.ServiceMetalColors.primary.withOpacity(0.3) : Colors.grey[200]!),
           width: isSelected ? 2 : 1,
         ),
         boxShadow: isDark ? [
-          BoxShadow(color: ServiceNeonColors.cyan.withOpacity(0.1), blurRadius: 8),
+          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.1), blurRadius: 8),
         ] : null,
       ),
       child: Material(
@@ -233,7 +233,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+                            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
                           ),
                           borderRadius: BorderRadius.circular(12.r),
                         ),
@@ -265,21 +265,21 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
                       TextButton(
                         onPressed: () => _setDefaultAddress(address),
                         style: TextButton.styleFrom(
-                          foregroundColor: ServiceNeonColors.cyan,
+                          foregroundColor: theme.ServiceMetalColors.primary,
                         ),
                         child: const Text('设为默认'),
                       ),
                     TextButton(
                       onPressed: () => _addOrEditAddress(address: address),
                       style: TextButton.styleFrom(
-                        foregroundColor: ServiceNeonColors.cyan,
+                        foregroundColor: theme.ServiceMetalColors.primary,
                       ),
                       child: const Text('编辑'),
                     ),
                     TextButton(
                       onPressed: () => _deleteAddress(address),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.redAccent,
+                        foregroundColor: theme.ServiceMetalColors.primary,
                       ),
                       child: const Text('删除'),
                     ),
@@ -293,7 +293,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
     );
   }
 
-  Widget _buildNeonButton(String text, VoidCallback onTap, bool isDark) {
+  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -301,12 +301,12 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
         height: 44.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
           ),
           borderRadius: BorderRadius.circular(22.r),
           boxShadow: isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan, blurRadius: 12, spreadRadius: 1),
-            BoxShadow(color: ServiceNeonColors.magenta, blurRadius: 8, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 12, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 8, spreadRadius: 1),
           ] : null,
         ),
         alignment: Alignment.center,
@@ -400,11 +400,11 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? ServiceNeonColors.darkBg : ServiceNeonColors.lightBg,
+      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           widget.address == null ? '添加地址' : '编辑地址',
-          style: TextStyle(color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText),
+          style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
         ),
       ),
       body: Form(
@@ -477,7 +477,7 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
                 Checkbox(
                   value: _isDefault,
                   onChanged: (v) => setState(() => _isDefault = v ?? false),
-                  activeColor: ServiceNeonColors.cyan,
+                  activeColor: theme.ServiceMetalColors.primary,
                   checkColor: Colors.black,
                 ),
                 Text(
@@ -492,7 +492,7 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
             SizedBox(height: 32.h),
             _isSaving
                 ? const Center(child: CircularProgressIndicator())
-                : _buildNeonButton(
+                : _buildMetalButton(
                     '保存地址',
                     _saveAddress,
                     isDark,
@@ -518,9 +518,9 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: ServiceNeonColors.cyan),
+        prefixIcon: Icon(icon, color: theme.ServiceMetalColors.primary),
         filled: true,
-        fillColor: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        fillColor: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: BorderSide.none,
@@ -528,12 +528,12 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
           borderSide: isDark
-              ? BorderSide(color: ServiceNeonColors.cyan.withOpacity(0.3))
+              ? BorderSide(color: theme.ServiceMetalColors.primary.withOpacity(0.3))
               : BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: ServiceNeonColors.cyan, width: 2),
+          borderSide: const BorderSide(color: theme.ServiceMetalColors.primary, width: 2),
         ),
       ),
       style: TextStyle(color: isDark ? Colors.white : Colors.black),
@@ -543,19 +543,19 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
     );
   }
 
-  Widget _buildNeonButton(String text, VoidCallback onTap, bool isDark) {
+  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 50.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta],
+            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
           ),
           borderRadius: BorderRadius.circular(25.r),
           boxShadow: isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan, blurRadius: 15, spreadRadius: 2),
-            BoxShadow(color: ServiceNeonColors.magenta, blurRadius: 10, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 15, spreadRadius: 2),
+            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 10, spreadRadius: 1),
           ] : null,
         ),
         alignment: Alignment.center,

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'service_models.dart';
 import 'service_api.dart';
-import 'service_theme.dart';
+import 'service_theme.dart' as theme;
 import 'service_product_detail.dart';
 import 'service_cart.dart';
 
@@ -181,45 +181,41 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDark ? ServiceNeonColors.darkBg : ServiceNeonColors.lightBg,
-      appBar: AppBar(
-        title: Text(
-          '霓虹商城',
-          style: TextStyle(
-            color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-            shadows: isDark ? [
-              Shadow(color: ServiceNeonColors.cyan, blurRadius: 10),
-              Shadow(color: ServiceNeonColors.magenta, blurRadius: 5),
-            ] : null,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.shopping_cart_outlined, 
-                  color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText),
-                onPressed: _navigateToCart,
+      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      body: NestedScrollView(
+        controller: _scrollController,
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+              elevation: 0,
+              pinned: true,
+              floating: true,
+              snap: true,
+              expandedHeight: 120.h,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  padding: EdgeInsets.only(top: 40.h),
+                  color: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+                  child: Column(
+                    children: [
+                      // 搜索栏
+                      _buildSearchBar(isDark),
+                    ],
+                  ),
+                ),
               ),
-              // 购物车数量角标（可选）
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 搜索栏
-          _buildSearchBar(isDark),
-          // 分类按钮
-          _buildCategoryBar(isDark),
-          // 商品列表
-          Expanded(
-            child: _buildGoodsList(isDark),
-          ),
-        ],
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverCategoryDelegate(
+                categoryBar: _buildCategoryBar(isDark),
+                backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+              ),
+            ),
+          ];
+        },
+        body: _buildGoodsList(isDark),
       ),
     );
   }
@@ -228,36 +224,36 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     return Container(
       margin: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
         borderRadius: BorderRadius.circular(30.r),
         boxShadow: isDark ? [
-          BoxShadow(color: ServiceNeonColors.cyan.withOpacity(0.3), blurRadius: 10),
-          BoxShadow(color: ServiceNeonColors.magenta.withOpacity(0.2), blurRadius: 5),
+          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.3), blurRadius: 10),
+          BoxShadow(color: theme.ServiceMetalColors.accent.withOpacity(0.2), blurRadius: 5),
         ] : [
           BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
         ],
-        border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.5)) : null,
+        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.5)) : null,
       ),
       child: Row(
         children: [
           SizedBox(width: 16.w),
-          Icon(Icons.search, color: isDark ? ServiceNeonColors.cyan : Colors.grey),
+          Icon(Icons.search, color: isDark ? theme.ServiceMetalColors.primary : Colors.grey),
           SizedBox(width: 12.w),
           Expanded(
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: '搜索商品...',
+                hintText: 'Search Service...',
                 border: InputBorder.none,
-                hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                hintStyle: TextStyle(color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
               ),
-              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              style: TextStyle(color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
               onSubmitted: (_) => _searchGoods(),
             ),
           ),
           TextButton(
             onPressed: _searchGoods,
-            child: Text('搜索', style: TextStyle(color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan)),
+            child: Text('Search', style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary)),
           ),
         ],
       ),
@@ -266,7 +262,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
 
   Widget _buildCategoryBar(bool isDark) {
     return SizedBox(
-      height: 48.h,
+      height: 35.h,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: EdgeInsets.symmetric(horizontal: 16.w),
@@ -298,20 +294,20 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24.r),
           gradient: isSelected && isDark
-              ? LinearGradient(colors: [ServiceNeonColors.cyan, ServiceNeonColors.magenta])
+              ? LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent])
               : null,
           color: isSelected && !isDark
-              ? ServiceNeonColors.cyan
-              : (isDark ? ServiceNeonColors.darkSurface : Colors.white),
+              ? theme.ServiceMetalColors.primary
+              : (isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface),
           border: Border.all(
             color: isSelected
-                ? (isDark ? Colors.white : ServiceNeonColors.cyan)
-                : (isDark ? ServiceNeonColors.cyan.withOpacity(0.5) : Colors.grey[300]!),
+                ? (isDark ? theme.ServiceMetalColors.silver : theme.ServiceMetalColors.primary)
+                : (isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[300]!),
             width: 1.5,
           ),
           boxShadow: isSelected && isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan, blurRadius: 15, spreadRadius: 2),
-            BoxShadow(color: ServiceNeonColors.magenta, blurRadius: 10, spreadRadius: 1),
+            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 15, spreadRadius: 2),
+            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 10, spreadRadius: 1),
           ] : null,
         ),
         child: Text(
@@ -319,7 +315,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
           style: TextStyle(
             color: isSelected
                 ? (isDark ? Colors.black : Colors.white)
-                : (isDark ? ServiceNeonColors.cyan : ServiceNeonColors.darkText),
+                : (isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -337,15 +333,15 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: isDark ? ServiceNeonColors.cyan : Colors.grey),
+            Icon(Icons.error_outline, size: 48, color: isDark ? theme.ServiceMetalColors.primary : Colors.grey),
             SizedBox(height: 16.h),
             Text(_errorMessage!, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
             SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () => _loadGoods(isRefresh: true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: ServiceNeonColors.cyan,
-                foregroundColor: Colors.black,
+                backgroundColor: theme.ServiceMetalColors.primary,
+                foregroundColor: Colors.white,
               ),
               child: const Text('重试'),
             ),
@@ -355,13 +351,12 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     }
     
     return GridView.builder(
-      controller: _scrollController,
       padding: EdgeInsets.all(12.w),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.7,
         crossAxisSpacing: 12.w,
-        mainAxisSpacing: 12.w,
+        mainAxisSpacing: 27.w,
       ),
       itemCount: _goodsList.length + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
@@ -387,13 +382,13 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
-          color: isDark ? ServiceNeonColors.darkSurface : Colors.white,
+          color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
           boxShadow: isDark ? [
-            BoxShadow(color: ServiceNeonColors.cyan.withOpacity(0.2), blurRadius: 12, spreadRadius: -4),
+            BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.2), blurRadius: 12, spreadRadius: -4),
           ] : [
             BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, spreadRadius: 2),
           ],
-          border: isDark ? Border.all(color: ServiceNeonColors.cyan.withOpacity(0.3)) : null,
+          border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,11 +400,11 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                 children: [
                   Image.network(
                     goods.mainImage ?? 'https://picsum.photos/id/0/400/400',
-                    height: 160.h,
+                    height: 180.h,
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      height: 160.h,
+                      height: 180.h,
                       color: Colors.grey[200],
                       child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
                     ),
@@ -420,10 +415,10 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                       top: 8.w,
                       right: 8.w,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [ServiceNeonColors.amber, ServiceNeonColors.magenta],
+                            colors: [theme.ServiceMetalColors.gold, theme.ServiceMetalColors.bronze],
                           ),
                           borderRadius: BorderRadius.circular(20.r),
                         ),
@@ -456,7 +451,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -466,7 +461,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 11.sp,
-                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -475,11 +470,11 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                       Text(
                         '¥${goods.price.toStringAsFixed(2)}',
                         style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? ServiceNeonColors.cyan : ServiceNeonColors.cyan,
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.normal,
+                          color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
                           shadows: isDark ? [
-                            Shadow(color: ServiceNeonColors.cyan, blurRadius: 8),
+                            Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8),
                           ] : null,
                         ),
                       ),
@@ -491,21 +486,21 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                             style: TextStyle(
                               fontSize: 12.sp,
                               decoration: TextDecoration.lineThrough,
-                              color: isDark ? Colors.grey[500] : Colors.grey[400],
+                              color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary,
                             ),
                           ),
                         ),
                     ],
                   ),
-                  SizedBox(height: 6.h),
+                  SizedBox(height: 12.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         '销量 ${goods.salesCount}',
-                        style: TextStyle(fontSize: 10.sp, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                        style: TextStyle(fontSize: 10.sp, color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary),
                       ),
-                      _buildNeonIcon(Icons.favorite_border, goods.likeCount, isDark),
+                      _buildMetalIcon(Icons.favorite_border, goods.likeCount, isDark),
                     ],
                   ),
                 ],
@@ -517,14 +512,14 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     );
   }
 
-  Widget _buildNeonIcon(IconData icon, int count, bool isDark) {
+  Widget _buildMetalIcon(IconData icon, int count, bool isDark) {
     return Row(
       children: [
-        Icon(icon, size: 14.sp, color: isDark ? ServiceNeonColors.magenta : Colors.grey),
+        Icon(icon, size: 14.sp, color: isDark ? theme.ServiceMetalColors.accent : Colors.grey),
         SizedBox(width: 4.w),
         Text(
           count.toString(),
-          style: TextStyle(fontSize: 10.sp, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+          style: TextStyle(fontSize: 10.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
         ),
       ],
     );
@@ -535,5 +530,35 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+}
+
+// 分类栏 SliverPersistentHeader 代理
+class _SliverCategoryDelegate extends SliverPersistentHeaderDelegate {
+  final Widget categoryBar;
+  final Color backgroundColor;
+
+  _SliverCategoryDelegate({
+    required this.categoryBar,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: backgroundColor,
+      child: categoryBar,
+    );
+  }
+
+  @override
+  double get maxExtent => 35.h;
+
+  @override
+  double get minExtent => 35.h;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return false;
   }
 }

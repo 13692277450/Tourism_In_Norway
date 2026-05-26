@@ -1,66 +1,72 @@
 // service_theme.dart
 import 'package:flutter/material.dart';
 
-class ServiceNeonColors {
-  // 霓虹色彩
-  static const cyan = Color(0xFF00D4FF);
-  static const magenta = Color(0xFFFF2BD6);
-  static const lime = Color(0xFFB9FF2B);
-  static const amber = Color(0xFFFFC24A);
-  static const purple = Color(0xFF9D4EDD);
-  static const pink = Color(0xFFFF6B6B);
+class ServiceMetalColors {
+  // 现代化金属风格色彩
+  static const primary = Color(0xFF4F46E5);       // 靛蓝紫色 - 主色调
+  static const primaryLight = Color(0xFF6366F1);  // 浅靛蓝
+  static const primaryDark = Color(0xFF3730A3);   // 深靛蓝
+  static const accent = Color(0xFF0EA5E9);        // 天蓝色 - 强调色
+  static const accentLight = Color(0xFF38BDF8);   // 浅天蓝
+  static const gold = Color(0xFFD4AF37);          // 金色 - 点缀色
+  static const silver = Color(0xFFC0C0C0);        // 银色
+  static const bronze = Color(0xFFCD7F32);        // 青铜色
   
   // 背景色
-  static const darkBg = Color(0xFF05060B);
-  static const darkSurface = Color(0xFF0D0F19);
-  static const lightBg = Color(0xFFF1F6FF);
-  static const lightSurface = Colors.white;
+  static const darkBg = Color(0xFF0F172A);        // 深蓝灰背景
+  static const darkSurface = Color(0xFF1E293B);   // 深卡片背景
+  static const darkSurfaceElevated = Color(0xFF334155); // 更高层级卡片
+  static const lightBg = Color(0xFFF8FAFC);       // 浅灰背景
+  static const lightSurface = Colors.white;       // 白色卡片
+  static const lightSurfaceElevated = Color(0xFFF1F5F9); // 浅灰卡片
   
   // 文字色
-  static const darkText = Colors.white;
-  static const darkTextSecondary = Color(0xFF8B8B9B);
-  static const lightText = Color(0xFF1A1A2E);
-  static const lightTextSecondary = Color(0xFF666666);
+  static const darkText = Color(0xFFFFFFFF);      // 白色文字
+  static const darkTextSecondary = Color(0xFF94A3B8); // 浅灰文字
+  static const darkTextTertiary = Color(0xFF64748B);  // 深灰文字
+  static const lightText = Color(0xFF1E293B);     // 深灰文字
+  static const lightTextSecondary = Color(0xFF64748B); // 中灰文字
+  static const lightTextTertiary = Color(0xFF94A3B8);  // 浅灰文字
 }
 
 class ServiceTheme {
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     useMaterial3: true,
-    scaffoldBackgroundColor: ServiceNeonColors.darkBg,
-    primaryColor: ServiceNeonColors.cyan,
+    scaffoldBackgroundColor: ServiceMetalColors.darkBg,
+    primaryColor: ServiceMetalColors.primary,
     colorScheme: const ColorScheme.dark(
-      primary: ServiceNeonColors.cyan,
-      secondary: ServiceNeonColors.magenta,
-      surface: ServiceNeonColors.darkSurface,
+      primary: ServiceMetalColors.primary,
+      secondary: ServiceMetalColors.accent,
+      surface: ServiceMetalColors.darkSurface,
       error: Colors.redAccent,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: ServiceNeonColors.darkBg,
+      backgroundColor: ServiceMetalColors.darkBg,
       elevation: 0,
       centerTitle: true,
-      iconTheme: IconThemeData(color: ServiceNeonColors.cyan),
+      iconTheme: IconThemeData(color: ServiceMetalColors.primary),
       titleTextStyle: TextStyle(
-        color: ServiceNeonColors.cyan,
+        color: ServiceMetalColors.darkText,
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: ServiceNeonColors.darkSurface,
+      fillColor: ServiceMetalColors.darkSurface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
-      hintStyle: const TextStyle(color: ServiceNeonColors.darkTextSecondary),
+      hintStyle: const TextStyle(color: ServiceMetalColors.darkTextSecondary),
     ),
     cardTheme: CardTheme(
-      color: ServiceNeonColors.darkSurface,
+      color: ServiceMetalColors.darkSurface,
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: ServiceNeonColors.cyan.withOpacity(0.3)),
+        side: BorderSide(color: ServiceMetalColors.primary.withOpacity(0.3)),
       ),
     ),
   );
@@ -68,36 +74,36 @@ class ServiceTheme {
   static ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     useMaterial3: true,
-    scaffoldBackgroundColor: ServiceNeonColors.lightBg,
-    primaryColor: ServiceNeonColors.cyan,
+    scaffoldBackgroundColor: ServiceMetalColors.lightBg,
+    primaryColor: ServiceMetalColors.primary,
     colorScheme: const ColorScheme.light(
-      primary: ServiceNeonColors.cyan,
-      secondary: ServiceNeonColors.magenta,
-      surface: ServiceNeonColors.lightSurface,
+      primary: ServiceMetalColors.primary,
+      secondary: ServiceMetalColors.accent,
+      surface: ServiceMetalColors.lightSurface,
       error: Colors.redAccent,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: ServiceNeonColors.lightBg,
+      backgroundColor: ServiceMetalColors.lightBg,
       elevation: 0,
       centerTitle: true,
-      iconTheme: IconThemeData(color: ServiceNeonColors.cyan),
+      iconTheme: IconThemeData(color: ServiceMetalColors.primary),
       titleTextStyle: TextStyle(
-        color: ServiceNeonColors.darkText,
+        color: ServiceMetalColors.lightText,
         fontSize: 20,
         fontWeight: FontWeight.bold,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: ServiceNeonColors.lightSurface,
+      fillColor: ServiceMetalColors.lightSurface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
-      hintStyle: const TextStyle(color: ServiceNeonColors.lightTextSecondary),
+      hintStyle: const TextStyle(color: ServiceMetalColors.lightTextSecondary),
     ),
     cardTheme: CardTheme(
-      color: ServiceNeonColors.lightSurface,
+      color: ServiceMetalColors.lightSurface,
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
