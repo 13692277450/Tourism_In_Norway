@@ -104,6 +104,7 @@ class _ServiceMainPageState extends State<ServiceMainPage> {
               var item = entry.value;
               return Positioned(
                 bottom: 80.h + (2 - index) * 70.h,
+                right: 20.w,
                 child: AnimatedOpacity(
                   opacity: _isMenuOpen ? 1 : 0,
                   duration: const Duration(milliseconds: 200),
@@ -114,7 +115,7 @@ class _ServiceMainPageState extends State<ServiceMainPage> {
                     child: FloatingActionButton(
                       heroTag: 'nav_$index',
                       onPressed: () => _navigateToPage(index),
-                      backgroundColor: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+                      backgroundColor: isDark ? theme.ServiceMetalColors.darkSurface : Colors.yellow.shade200,
                       foregroundColor: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText,
                       elevation: 8,
                       child: Icon(item['icon']),
@@ -125,18 +126,18 @@ class _ServiceMainPageState extends State<ServiceMainPage> {
             }).toList(),
           // 主题切换按钮（首页显示）
           if (_currentIndex == 0)
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: FloatingActionButton(
-                heroTag: 'theme',
-                onPressed: () => themeProvider.toggleTheme(),
-                backgroundColor: theme.ServiceMetalColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 8,
-                child: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-              ),
-            ),
+            // Positioned(
+            //   right: 0,
+            //   bottom: 0,
+            //   child: FloatingActionButton(
+            //     heroTag: 'theme',
+            //     onPressed: () => themeProvider.toggleTheme(),
+            //     backgroundColor: theme.ServiceMetalColors.primary,
+            //     foregroundColor: Colors.white,
+            //     elevation: 8,
+            //     child: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+            //   ),
+            // ),
           // 主菜单按钮
           Positioned(
             left: 20.w,

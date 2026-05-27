@@ -60,6 +60,9 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         ...categories,
       ];
     });
+     if (mounted) {
+    setState(() {});
+  }
   }
 // service_home.dart - 修改 _loadGoods 方法
 
@@ -183,6 +186,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     return Scaffold(
       backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
       body: NestedScrollView(
+        key: ValueKey(_categories.length), // 添加 key，当分类数量变化时强制重建
         controller: _scrollController,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
@@ -190,12 +194,12 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
               backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
               elevation: 0,
               pinned: true,
-              floating: true,
-              snap: true,
-              expandedHeight: 120.h,
+              expandedHeight: 100.h,
+              toolbarHeight: 0,
               flexibleSpace: FlexibleSpaceBar(
+                collapseMode: CollapseMode.pin,
                 background: Container(
-                  padding: EdgeInsets.only(top: 40.h),
+                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10.h),
                   color: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
                   child: Column(
                     children: [
