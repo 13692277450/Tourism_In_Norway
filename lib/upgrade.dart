@@ -6,7 +6,7 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:permission_handler/permission_handler.dart'; // 添加这个
+import 'package:permission_handler/permission_handler.dart';
 
 class Upgrade extends StatefulWidget {
   final String? apkUrl;
@@ -26,6 +26,7 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
   StreamSubscription? _downloadSubscription;
   bool _isInitialized = false;
   bool _isRequestingPermission = false;
+  bool _isDownloadStarted = false; // 新增：标记下载是否真正开始
 
   @override
   void initState() {
@@ -40,53 +41,43 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
   Future<void> _initializeAndCheckPermissions() async {
     try {
-      // 初始化下载器
       await FlutterDownloader.initialize(debug: true);
       FlutterDownloader.registerCallback(downloadCallback);
       
-      // 请求权限
       final hasPermission = await _requestAllPermissions();
+      
       if (hasPermission) {
         setState(() {
           _isInitialized = true;
         });
         await _startDownload();
       } else {
-        _showError('需要存储权限才能下载更新');
+        _showError('需要必要权限才能下载更新');
       }
     } catch (e) {
-      print('初始化失败: $e');
       _showError('初始化失败: $e');
     }
   }
 
   Future<bool> _requestAllPermissions() async {
-    if (!Platform.isAndroid) return true;
+    if (!Platform.isAndroid) {
+      return true;
+    }
     
     setState(() {
       _isRequestingPermission = true;
     });
     
     List<Permission> permissions = [];
-    
-    // Android 13+ (API 33+) 需要通知权限
+
+    // Android 13+ 需要通知权限
     if (await Permission.notification.isDenied) {
       permissions.add(Permission.notification);
-    }
-    
-    // Android 10 及以下需要存储权限
-    if (await Permission.storage.isDenied) {
-      permissions.add(Permission.storage);
     }
     
     // 安装权限（所有版本都需要）
     if (await Permission.requestInstallPackages.isDenied) {
       permissions.add(Permission.requestInstallPackages);
-    }
-    
-    // Android 11+ 可能需要管理外部存储权限
-    if (await Permission.manageExternalStorage.isDenied) {
-      permissions.add(Permission.manageExternalStorage);
     }
     
     if (permissions.isEmpty) {
@@ -96,24 +87,21 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       return true;
     }
     
-    // 请求权限
     final results = await permissions.request();
     
     setState(() {
       _isRequestingPermission = false;
     });
     
-    // 检查是否所有权限都被授予
     bool allGranted = true;
     for (var permission in permissions) {
-      if (!await permission.isGranted) {
+      final granted = await permission.isGranted;
+      if (!granted) {
         allGranted = false;
-        print('权限被拒绝: ${permission.toString()}');
       }
     }
     
     if (!allGranted) {
-      // 如果权限被拒绝，提示用户
       _showPermissionDialog();
       return false;
     }
@@ -126,19 +114,19 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('需要权限'),
-        content: const Text('应用需要存储权限才能下载更新文件，请在设置中授予权限。'),
+        content: const Text('应用需要安装权限才能安装更新，请在设置中授予权限。'),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              Navigator.pop(context); // 返回上一页
+              Navigator.pop(context);
             },
             child: const Text('取消'),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              openAppSettings(); // 打开应用设置页面
+              openAppSettings();
             },
             child: const Text('去设置'),
           ),
@@ -149,7 +137,6 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
   @pragma('vm:entry-point')
   static void downloadCallback(String id, int status, int progress) {
-    print('Download callback: id=$id, status=$status, progress=$progress');
     _downloadStreamController.add({
       'id': id,
       'status': status,
@@ -162,22 +149,11 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
   Future<void> _startDownload() async {
     try {
-      // 检查平台
       if (!Platform.isAndroid) {
         _showError('当前平台不支持自动更新');
         return;
       }
 
-      // 再次确认权限
-      final hasStoragePermission = await Permission.storage.isGranted;
-      final hasManagePermission = await Permission.manageExternalStorage.isGranted;
-      
-      if (!hasStoragePermission && !hasManagePermission) {
-        _showError('需要存储权限才能下载');
-        return;
-      }
-
-      // 获取正确的下载目录
       final directory = await _getDownloadDirectory();
       if (directory == null) {
         _showError('无法获取下载目录');
@@ -190,24 +166,26 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       final file = File(savePath);
       if (await file.exists()) {
         await file.delete();
-        print('已删除旧APK文件');
       }
 
-      print('下载目录: ${directory.path}');
-      print('保存路径: $savePath');
-      print('下载URL: ${apkUrl ?? 'http://www.pavogroup.top/tourism/NorwayTravel/app-release.apk'}');
+
+      // 设置下载状态为准备中
+      setState(() {
+        _status = DownloadTaskStatus.enqueued.index;
+        _progress = 0;
+        _isDownloadStarted = false;
+      });
 
       // 监听下载状态
       _downloadSubscription?.cancel();
       _downloadSubscription = _downloadStreamController.stream.listen((data) {
-        print('收到下载数据: $data');
         if (mounted && data['id'] == _taskId) {
           setState(() {
             _status = data['status'];
             _progress = data['progress'].toDouble();
+            _isDownloadStarted = true;
           });
 
-          print('下载进度: ${data['progress']}%, 状态: ${_getStatusText(data['status'])}');
 
           if (data['status'] == DownloadTaskStatus.complete.index) {
             _installApk();
@@ -217,51 +195,56 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         }
       });
 
-      // 开始下载
-      print('开始创建下载任务...');
       _taskId = await FlutterDownloader.enqueue(
         url: apkUrl ?? 'http://www.pavogroup.top/tourism/NorwayTravel/app-release.apk',
         savedDir: directory.path,
         fileName: 'app-release.apk',
         showNotification: true,
         openFileFromNotification: false,
-        saveInPublicStorage: true,
+        saveInPublicStorage: false,
       );
 
-      print('下载任务ID: $_taskId');
       
-      if (_taskId != null) {
+      if (_taskId != null && _taskId!.isNotEmpty) {
         setState(() {
           _status = DownloadTaskStatus.running.index;
+          _isDownloadStarted = true;
         });
       } else {
+        setState(() {
+          _status = DownloadTaskStatus.failed.index;
+        });
         _showError('无法创建下载任务');
       }
 
     } catch (e) {
-      print('下载启动失败: $e');
+      setState(() {
+        _status = DownloadTaskStatus.failed.index;
+      });
       _showError('下载启动失败: $e');
     }
   }
 
   Future<Directory?> _getDownloadDirectory() async {
     try {
-      // 尝试获取外部存储目录
       if (Platform.isAndroid) {
-        // 方法1: 使用 getExternalStorageDirectory
         final externalDir = await getExternalStorageDirectory();
         if (externalDir != null) {
-          print('使用外部存储目录: ${externalDir.path}');
-          return externalDir;
+          final downloadDir = Directory('${externalDir.path}/Download');
+          if (!await downloadDir.exists()) {
+            await downloadDir.create(recursive: true);
+          }
+          return downloadDir;
         }
       }
       
-      // 方法2: 回退到应用文档目录
       final docDir = await getApplicationDocumentsDirectory();
-      print('使用应用文档目录: ${docDir.path}');
-      return docDir;
+      final downloadDir = Directory('${docDir.path}/Download');
+      if (!await downloadDir.exists()) {
+        await downloadDir.create(recursive: true);
+      }
+      return downloadDir;
     } catch (e) {
-      print('获取目录失败: $e');
       return null;
     }
   }
@@ -290,25 +273,20 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       final file = File(filePath);
 
       if (await file.exists()) {
-        print('开始安装APK: $filePath');
         final result = await OpenFile.open(filePath);
-        print('安装结果: ${result.type}');
         
         if (result.type != ResultType.done) {
           _showError('无法自动安装，请手动打开APK文件');
         }
       } else {
-        print('APK文件不存在: $filePath');
         _showError('APK文件不存在');
       }
     } catch (e) {
-      print('安装失败: $e');
       _showError('安装失败: $e');
     }
   }
 
   void _showError(String message) {
-    print('错误: $message');
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -325,6 +303,11 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
     if (_isRequestingPermission) {
       return '正在请求权限...';
+    }
+
+    // 如果下载还没真正开始，显示准备状态
+    if (!_isDownloadStarted && _status == DownloadTaskStatus.enqueued.index) {
+      return '准备下载...';
     }
 
     switch (_status) {
@@ -404,8 +387,9 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
               ),
               SizedBox(height: 24.h),
 
-              if (_status == DownloadTaskStatus.running.index ||
-                  _status == DownloadTaskStatus.complete.index) ...[
+              // 只有在下载真正开始后才显示进度条
+              if ((_status == DownloadTaskStatus.running.index ||
+                  _status == DownloadTaskStatus.complete.index) && _isDownloadStarted) ...[
                 _buildProgressBar(),
                 SizedBox(height: 16.h),
                 Text(
@@ -428,5 +412,12 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _spinnerController.dispose();
+    _downloadSubscription?.cancel();
+    super.dispose();
   }
 }

@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <!-- 基础权限 -->
+    <!-- 必需权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
-    <!-- 下载和存储权限 -->
+    <!-- Android 9 及以下需要存储权限 -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
-                     android:maxSdkVersion="29" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        android:maxSdkVersion="28" />
     
-    <!-- Android 13+ 通知权限 -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 下载管理器权限 -->
+    <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
     
-    <!-- 安装 APK 权限 -->
+    <!-- Android 10+ 访问媒体位置 -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
+    
+    <!-- 安装未知应用权限 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    
+    <!-- 通知权限（Android 13+） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <application
         android:label="tourism_in_norway"
