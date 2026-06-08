@@ -13,7 +13,8 @@ class ServiceProductDetailPage extends StatefulWidget {
   const ServiceProductDetailPage({super.key, required this.goods});
 
   @override
-  State<ServiceProductDetailPage> createState() => _ServiceProductDetailPageState();
+  State<ServiceProductDetailPage> createState() =>
+      _ServiceProductDetailPageState();
 }
 
 class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
@@ -27,8 +28,8 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
 
   final PageController _pageController = PageController();
   final ScrollController _scrollController = ScrollController();
-  double _imageOffset = 0.0;
-  double _maxOffset = 150.0;  // 图片最大移动距离
+  final double _imageOffset = 0.0;
+  final double _maxOffset = 150.0; // 图片最大移动距离
 
   @override
   void initState() {
@@ -68,7 +69,7 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
       _showLoginRequired();
       return;
     }
-    
+
     HapticFeedback.mediumImpact();
     final success = await ServiceApi.toggleLike(_goods.id, _currentUserId!);
     if (success) {
@@ -88,46 +89,50 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
       _showLoginRequired();
       return;
     }
-    
+
     HapticFeedback.mediumImpact();
-    final success = await ServiceApi.addToCart(_currentUserId!, _goods.id, quantity: _quantity);
+    final success = await ServiceApi.addToCart(
+      _currentUserId!,
+      _goods.id,
+      quantity: _quantity,
+    );
     if (success) {
       _showSuccess('已添加到购物车');
     } else {
       _showError('添加失败');
     }
   }
-// service_product_detail.dart - 修复后的 _buyNow 方法
+  // service_product_detail.dart - 修复后的 _buyNow 方法
 
-void _buyNow() async {
-  if (_currentUserId == null) {
-    _showLoginRequired();
-    return;
-  }
-  
-  // 修复：正确构建 checkoutItems
-  final checkoutItems = [
-    {
-      'goods_id': _goods.id,
-      'quantity': _quantity,
+  void _buyNow() async {
+    if (_currentUserId == null) {
+      _showLoginRequired();
+      return;
     }
-  ];
-  
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ServiceCheckoutPage(
-        directBuyItems: checkoutItems,  // 使用 directBuyItems 参数
-        directBuyGoods: _goods,
-        quantity: _quantity, checkoutItems: [],
+
+    // 修复：正确构建 checkoutItems
+    final checkoutItems = [
+      {'goods_id': _goods.id, 'quantity': _quantity},
+    ];
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (_) => ServiceCheckoutPage(
+              directBuyItems: checkoutItems, // 使用 directBuyItems 参数
+              directBuyGoods: _goods,
+              quantity: _quantity,
+              checkoutItems: [],
+            ),
       ),
-    ),
-  );
-}
-  void _showLoginRequired() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('请先登录')),
     );
+  }
+
+  void _showLoginRequired() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('请先登录')));
   }
 
   void _showSuccess(String message) {
@@ -145,14 +150,20 @@ void _buyNow() async {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+              backgroundColor:
+                  isDark
+                      ? theme.ServiceMetalColors.darkBg
+                      : theme.ServiceMetalColors.lightBg,
               elevation: 0,
               pinned: true,
               floating: true,
@@ -163,12 +174,19 @@ void _buyNow() async {
               ),
               title: Text(
                 '商品详情',
-                style: TextStyle(color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
+                style: TextStyle(
+                  color:
+                      isDark
+                          ? theme.ServiceMetalColors.darkText
+                          : theme.ServiceMetalColors.lightText,
+                ),
               ),
               actions: [
                 IconButton(
-                  icon: Icon(_isLiked ? Icons.favorite : Icons.favorite_border,
-                      color: _isLiked ? Colors.red : null),
+                  icon: Icon(
+                    _isLiked ? Icons.favorite : Icons.favorite_border,
+                    color: _isLiked ? Colors.red : null,
+                  ),
                   onPressed: _toggleLike,
                 ),
               ],
@@ -179,7 +197,10 @@ void _buyNow() async {
           child: Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              color: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+              color:
+                  isDark
+                      ? theme.ServiceMetalColors.darkBg
+                      : theme.ServiceMetalColors.lightBg,
             ),
             padding: EdgeInsets.all(20.w),
             child: Column(
@@ -188,14 +209,14 @@ void _buyNow() async {
                 _buildProductInfo(isDark),
                 SizedBox(height: 16.h),
                 _buildMetalDivider(isDark),
-                      SizedBox(height: 16.h),
-                      _buildQuantitySelector(isDark),
-                      SizedBox(height: 16.h),
-                      _buildMetalDivider(isDark),
-                      SizedBox(height: 16.h),
-                      _buildProductDescription(isDark),
-                      SizedBox(height: 16.h),
-                      _buildMetalDivider(isDark),
+                SizedBox(height: 16.h),
+                _buildQuantitySelector(isDark),
+                SizedBox(height: 16.h),
+                _buildMetalDivider(isDark),
+                SizedBox(height: 16.h),
+                _buildProductDescription(isDark),
+                SizedBox(height: 16.h),
+                _buildMetalDivider(isDark),
                 SizedBox(height: 16.h),
                 _buildCommentsSection(isDark),
                 SizedBox(height: 16.h),
@@ -211,17 +232,21 @@ void _buyNow() async {
   }
 
   Widget _buildImageCarousel(bool isDark) {
-    final images = _goods.images.isEmpty && _goods.mainImage != null
-        ? [_goods.mainImage!]
-        : (_goods.images.isEmpty ? ['https://picsum.photos/id/0/400/400'] : _goods.images);
-    
-    return Container(
+    final images =
+        _goods.images.isEmpty && _goods.mainImage != null
+            ? [_goods.mainImage!]
+            : (_goods.images.isEmpty
+                ? ['https://picsum.photos/id/0/400/400']
+                : _goods.images);
+
+    return SizedBox(
       height: 350.h,
       child: Stack(
         children: [
           PageView.builder(
             controller: _pageController,
-            onPageChanged: (index) => setState(() => _currentImageIndex = index),
+            onPageChanged:
+                (index) => setState(() => _currentImageIndex = index),
             itemCount: images.length,
             itemBuilder: (context, index) {
               return Image.network(
@@ -229,10 +254,11 @@ void _buyNow() async {
                 width: double.infinity,
                 height: 350.h,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.grey[200],
-                  child: const Icon(Icons.broken_image, size: 50),
-                ),
+                errorBuilder:
+                    (_, __, ___) => Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.broken_image, size: 50),
+                    ),
               );
             },
           ),
@@ -250,9 +276,12 @@ void _buyNow() async {
                   height: 8.w,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _currentImageIndex == index
-                        ? (isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary)
-                        : Colors.white.withOpacity(0.5),
+                    color:
+                        _currentImageIndex == index
+                            ? (isDark
+                                ? theme.ServiceMetalColors.primary
+                                : theme.ServiceMetalColors.primary)
+                            : Colors.white.withOpacity(0.5),
                   ),
                 );
               }),
@@ -273,24 +302,41 @@ void _buyNow() async {
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+                  colors: [
+                    theme.ServiceMetalColors.primary,
+                    theme.ServiceMetalColors.accent,
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(
                 _goods.categoryName ?? '商品',
-                style: const TextStyle(fontSize: 10, color: Colors.black, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             SizedBox(width: 8.w),
             if (_goods.score > 0)
               Row(
                 children: [
-                  Icon(Icons.star, size: 14.sp, color: theme.ServiceMetalColors.gold),
+                  Icon(
+                    Icons.star,
+                    size: 14.sp,
+                    color: theme.ServiceMetalColors.gold,
+                  ),
                   SizedBox(width: 4.w),
                   Text(
                     '${_goods.score}',
-                    style: TextStyle(fontSize: 12.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color:
+                          isDark
+                              ? theme.ServiceMetalColors.darkText
+                              : theme.ServiceMetalColors.lightText,
+                    ),
                   ),
                 ],
               ),
@@ -302,14 +348,23 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 20.sp,
             fontWeight: FontWeight.bold,
-            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.darkText
+                    : theme.ServiceMetalColors.lightText,
           ),
         ),
         SizedBox(height: 8.h),
         if (_goods.nameEn != null)
           Text(
             _goods.nameEn!,
-            style: TextStyle(fontSize: 14.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
+            style: TextStyle(
+              fontSize: 14.sp,
+              color:
+                  isDark
+                      ? theme.ServiceMetalColors.darkTextSecondary
+                      : theme.ServiceMetalColors.lightTextSecondary,
+            ),
           ),
         SizedBox(height: 12.h),
         Row(
@@ -319,35 +374,63 @@ void _buyNow() async {
               style: TextStyle(
                 fontSize: 28.sp,
                 fontWeight: FontWeight.bold,
-                color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
-                shadows: isDark ? [Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 10)] : null,
+                color:
+                    isDark
+                        ? theme.ServiceMetalColors.primary
+                        : theme.ServiceMetalColors.primary,
+                shadows:
+                    isDark
+                        ? [
+                          Shadow(
+                            color: theme.ServiceMetalColors.primary,
+                            blurRadius: 10,
+                          ),
+                        ]
+                        : null,
               ),
             ),
             if (_goods.originalPrice != null)
-                  Padding(
+              Padding(
                 padding: EdgeInsets.only(left: 12.w),
                 child: Text(
                   '¥${_goods.originalPrice!.toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 16.sp,
                     decoration: TextDecoration.lineThrough,
-                    color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary,
+                    color:
+                        isDark
+                            ? theme.ServiceMetalColors.darkTextTertiary
+                            : theme.ServiceMetalColors.lightTextTertiary,
                   ),
                 ),
               ),
             const Spacer(),
             Text(
               '库存 ${_goods.stock}',
-              style: TextStyle(fontSize: 12.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
+              style: TextStyle(
+                fontSize: 12.sp,
+                color:
+                    isDark
+                        ? theme.ServiceMetalColors.darkTextSecondary
+                        : theme.ServiceMetalColors.lightTextSecondary,
+              ),
             ),
           ],
         ),
         SizedBox(height: 12.h),
         Row(
           children: [
-            _buildInfoChip(Icons.remove_red_eye_outlined, '${_goods.viewCount} 浏览', isDark),
+            _buildInfoChip(
+              Icons.remove_red_eye_outlined,
+              '${_goods.viewCount} 浏览',
+              isDark,
+            ),
             SizedBox(width: 12.w),
-            _buildInfoChip(Icons.shopping_bag_outlined, '${_goods.salesCount} 销量', isDark),
+            _buildInfoChip(
+              Icons.shopping_bag_outlined,
+              '${_goods.salesCount} 销量',
+              isDark,
+            ),
           ],
         ),
       ],
@@ -358,15 +441,36 @@ void _buyNow() async {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
       decoration: BoxDecoration(
-        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurfaceElevated,
+        color:
+            isDark
+                ? theme.ServiceMetalColors.darkSurface
+                : theme.ServiceMetalColors.lightSurfaceElevated,
         borderRadius: BorderRadius.circular(20.r),
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                )
+                : null,
       ),
       child: Row(
         children: [
-          Icon(icon, size: 14.sp, color: isDark ? theme.ServiceMetalColors.primary : Colors.grey),
+          Icon(
+            icon,
+            size: 14.sp,
+            color: isDark ? theme.ServiceMetalColors.primary : Colors.grey,
+          ),
           SizedBox(width: 6.w),
-          Text(label, style: TextStyle(fontSize: 11.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.sp,
+              color:
+                  isDark
+                      ? theme.ServiceMetalColors.darkText
+                      : theme.ServiceMetalColors.lightText,
+            ),
+          ),
         ],
       ),
     );
@@ -380,13 +484,21 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 16.sp,
             fontWeight: FontWeight.w600,
-            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.darkText
+                    : theme.ServiceMetalColors.lightText,
           ),
         ),
         const Spacer(),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[300]!),
+            border: Border.all(
+              color:
+                  isDark
+                      ? theme.ServiceMetalColors.primary.withOpacity(0.5)
+                      : Colors.grey[300]!,
+            ),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Row(
@@ -399,7 +511,13 @@ void _buyNow() async {
                 alignment: Alignment.center,
                 child: Text(
                   '$_quantity',
-                  style: TextStyle(fontSize: 16.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color:
+                        isDark
+                            ? theme.ServiceMetalColors.darkText
+                            : theme.ServiceMetalColors.lightText,
+                  ),
                 ),
               ),
               _buildQuantityButton(Icons.add, () {
@@ -418,10 +536,20 @@ void _buyNow() async {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurfaceElevated,
+          color:
+              isDark
+                  ? theme.ServiceMetalColors.darkSurface
+                  : theme.ServiceMetalColors.lightSurfaceElevated,
           borderRadius: BorderRadius.circular(8.r),
         ),
-        child: Icon(icon, size: 18.sp, color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
+        child: Icon(
+          icon,
+          size: 18.sp,
+          color:
+              isDark
+                  ? theme.ServiceMetalColors.primary
+                  : theme.ServiceMetalColors.lightText,
+        ),
       ),
     );
   }
@@ -435,7 +563,10 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.darkText
+                    : theme.ServiceMetalColors.lightText,
           ),
         ),
         SizedBox(height: 12.h),
@@ -444,7 +575,10 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 14.sp,
             height: 1.6,
-            color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.darkTextSecondary
+                    : theme.ServiceMetalColors.lightTextSecondary,
           ),
         ),
       ],
@@ -460,7 +594,10 @@ void _buyNow() async {
           style: TextStyle(
             fontSize: 18.sp,
             fontWeight: FontWeight.bold,
-            color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.darkText
+                    : theme.ServiceMetalColors.lightText,
           ),
         ),
         SizedBox(height: 12.h),
@@ -472,7 +609,12 @@ void _buyNow() async {
               padding: EdgeInsets.symmetric(vertical: 32.h),
               child: Text(
                 '暂无评价',
-                style: TextStyle(color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
+                style: TextStyle(
+                  color:
+                      isDark
+                          ? theme.ServiceMetalColors.darkTextSecondary
+                          : theme.ServiceMetalColors.lightTextSecondary,
+                ),
               ),
             ),
           )
@@ -505,9 +647,17 @@ void _buyNow() async {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
+        color:
+            isDark
+                ? theme.ServiceMetalColors.darkSurface
+                : theme.ServiceMetalColors.lightSurface,
         borderRadius: BorderRadius.circular(12.r),
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.2)) : null,
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.2),
+                )
+                : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -516,16 +666,26 @@ void _buyNow() async {
             children: [
               CircleAvatar(
                 radius: 16.r,
-                backgroundColor: theme.ServiceMetalColors.primary.withOpacity(0.2),
+                backgroundColor: theme.ServiceMetalColors.primary.withOpacity(
+                  0.2,
+                ),
                 child: Text(
                   comment.userName.isNotEmpty ? comment.userName[0] : 'U',
-                  style: const TextStyle(color: theme.ServiceMetalColors.primary),
+                  style: const TextStyle(
+                    color: theme.ServiceMetalColors.primary,
+                  ),
                 ),
               ),
               SizedBox(width: 8.w),
               Text(
                 comment.userName,
-                style: TextStyle(fontSize: 14.sp, color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color:
+                      isDark
+                          ? theme.ServiceMetalColors.darkText
+                          : theme.ServiceMetalColors.lightText,
+                ),
               ),
               const Spacer(),
               Row(
@@ -542,12 +702,24 @@ void _buyNow() async {
           SizedBox(height: 8.h),
           Text(
             comment.content,
-            style: TextStyle(fontSize: 13.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
+            style: TextStyle(
+              fontSize: 13.sp,
+              color:
+                  isDark
+                      ? theme.ServiceMetalColors.darkTextSecondary
+                      : theme.ServiceMetalColors.lightTextSecondary,
+            ),
           ),
           SizedBox(height: 6.h),
           Text(
             _formatDate(comment.createdAt),
-            style: TextStyle(fontSize: 10.sp, color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary),
+            style: TextStyle(
+              fontSize: 10.sp,
+              color:
+                  isDark
+                      ? theme.ServiceMetalColors.darkTextTertiary
+                      : theme.ServiceMetalColors.lightTextTertiary,
+            ),
           ),
         ],
       ),
@@ -560,10 +732,18 @@ void _buyNow() async {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            isDark ? theme.ServiceMetalColors.primary.withOpacity(0) : Colors.transparent,
-            isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
-            isDark ? theme.ServiceMetalColors.accent : theme.ServiceMetalColors.accent,
-            isDark ? theme.ServiceMetalColors.accent.withOpacity(0) : Colors.transparent,
+            isDark
+                ? theme.ServiceMetalColors.primary.withOpacity(0)
+                : Colors.transparent,
+            isDark
+                ? theme.ServiceMetalColors.primary
+                : theme.ServiceMetalColors.primary,
+            isDark
+                ? theme.ServiceMetalColors.accent
+                : theme.ServiceMetalColors.accent,
+            isDark
+                ? theme.ServiceMetalColors.accent.withOpacity(0)
+                : Colors.transparent,
           ],
         ),
       ),
@@ -574,14 +754,33 @@ void _buyNow() async {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
       decoration: BoxDecoration(
-        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
+        color:
+            isDark
+                ? theme.ServiceMetalColors.darkSurface
+                : theme.ServiceMetalColors.lightSurface,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
-        boxShadow: isDark ? [
-          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.2), blurRadius: 12, spreadRadius: -4),
-        ] : [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, spreadRadius: 2),
-        ],
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                )
+                : null,
+        boxShadow:
+            isDark
+                ? [
+                  BoxShadow(
+                    color: theme.ServiceMetalColors.primary.withOpacity(0.2),
+                    blurRadius: 12,
+                    spreadRadius: -4,
+                  ),
+                ]
+                : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                    spreadRadius: 2,
+                  ),
+                ],
       ),
       child: Row(
         children: [
@@ -591,7 +790,10 @@ void _buyNow() async {
               _addToCart,
               isDark,
               gradient: const LinearGradient(
-                colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+                colors: [
+                  theme.ServiceMetalColors.primary,
+                  theme.ServiceMetalColors.accent,
+                ],
               ),
             ),
           ),
@@ -602,7 +804,10 @@ void _buyNow() async {
               _buyNow,
               isDark,
               gradient: const LinearGradient(
-                colors: [theme.ServiceMetalColors.accent, theme.ServiceMetalColors.primary],
+                colors: [
+                  theme.ServiceMetalColors.accent,
+                  theme.ServiceMetalColors.primary,
+                ],
               ),
             ),
           ),
@@ -611,21 +816,48 @@ void _buyNow() async {
     );
   }
 
-  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark, {Gradient? gradient}) {
+  Widget _buildMetalButton(
+    String text,
+    VoidCallback onTap,
+    bool isDark, {
+    Gradient? gradient,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 48.h,
         decoration: BoxDecoration(
-          gradient: gradient ??
+          gradient:
+              gradient ??
               (isDark
-                  ? const LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent])
-                  : const LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.primary])),
+                  ? const LinearGradient(
+                    colors: [
+                      theme.ServiceMetalColors.primary,
+                      theme.ServiceMetalColors.accent,
+                    ],
+                  )
+                  : const LinearGradient(
+                    colors: [
+                      theme.ServiceMetalColors.primary,
+                      theme.ServiceMetalColors.primary,
+                    ],
+                  )),
           borderRadius: BorderRadius.circular(24.r),
-          boxShadow: isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 15, spreadRadius: 2),
-            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 10, spreadRadius: 1),
-          ] : null,
+          boxShadow:
+              isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary,
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.accent,
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

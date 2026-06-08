@@ -1,9 +1,6 @@
 // service_checkout.dart
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:http/http.dart' as http;
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
@@ -20,7 +17,8 @@ class ServiceCheckoutPage extends StatefulWidget {
     this.cartItems,
     this.directBuyItems,
     this.directBuyGoods,
-    this.quantity, required List<Map<String, int>> checkoutItems,
+    this.quantity,
+    required List<Map<String, int>> checkoutItems,
   });
 
   @override
@@ -34,7 +32,7 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   bool _isLoading = true;
   bool _isCreatingOrder = false;
   int? _currentUserId;
-  
+
   // 物流信息
   final String _logisticsCompany = '顺丰速运';
   final int _estimatedDays = 3;
@@ -54,73 +52,73 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   }
 
   void _initCheckoutItems() {
-  // 优先从购物车获取
-  if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
-    _checkoutItems = widget.cartItems!;
-  } 
-  // 其次从直接购买获取
-  else if (widget.directBuyItems != null && widget.directBuyItems!.isNotEmpty) {
-    _loadDirectBuyItems();
-  } 
-  // 最后从单个商品获取
-  else if (widget.directBuyGoods != null && widget.quantity != null) {
-    final item = ServiceCartItem(
-      id: 0,
-      goodsId: widget.directBuyGoods!.id,
-      goodsNo: widget.directBuyGoods!.goodsNo,
-      name: widget.directBuyGoods!.name,
-      mainImage: widget.directBuyGoods!.mainImage,
-      price: widget.directBuyGoods!.price,
-      quantity: widget.quantity!,
-      selected: true,
-      stock: widget.directBuyGoods!.stock,
-    );
-    _checkoutItems = [item];
-  }
-}
-
-Future<void> _loadDirectBuyItems() async {
-  if (widget.directBuyItems == null) return;
-  
-  _checkoutItems = [];
-  for (var item in widget.directBuyItems!) {
-    // 获取商品详情
-    try {
-      final goods = await ServiceApi.getGoodsDetail(item['goods_id']);
-      if (goods != null) {
-        final cartItem = ServiceCartItem(
-          id: 0,
-          goodsId: goods.id,
-          goodsNo: goods.goodsNo,
-          name: goods.name,
-          mainImage: goods.mainImage,
-          price: goods.price,
-          quantity: item['quantity'],
-          selected: true,
-          stock: goods.stock,
-        );
-        _checkoutItems.add(cartItem);
-      }
-    } catch (e) {
-      print('加载商品失败: $e');
+    // 优先从购物车获取
+    if (widget.cartItems != null && widget.cartItems!.isNotEmpty) {
+      _checkoutItems = widget.cartItems!;
+    }
+    // 其次从直接购买获取
+    else if (widget.directBuyItems != null &&
+        widget.directBuyItems!.isNotEmpty) {
+      _loadDirectBuyItems();
+    }
+    // 最后从单个商品获取
+    else if (widget.directBuyGoods != null && widget.quantity != null) {
+      final item = ServiceCartItem(
+        id: 0,
+        goodsId: widget.directBuyGoods!.id,
+        goodsNo: widget.directBuyGoods!.goodsNo,
+        name: widget.directBuyGoods!.name,
+        mainImage: widget.directBuyGoods!.mainImage,
+        price: widget.directBuyGoods!.price,
+        quantity: widget.quantity!,
+        selected: true,
+        stock: widget.directBuyGoods!.stock,
+      );
+      _checkoutItems = [item];
     }
   }
-  setState(() {});
-}
 
+  Future<void> _loadDirectBuyItems() async {
+    if (widget.directBuyItems == null) return;
+
+    _checkoutItems = [];
+    for (var item in widget.directBuyItems!) {
+      // 获取商品详情
+      try {
+        final goods = await ServiceApi.getGoodsDetail(item['goods_id']);
+        if (goods != null) {
+          final cartItem = ServiceCartItem(
+            id: 0,
+            goodsId: goods.id,
+            goodsNo: goods.goodsNo,
+            name: goods.name,
+            mainImage: goods.mainImage,
+            price: goods.price,
+            quantity: item['quantity'],
+            selected: true,
+            stock: goods.stock,
+          );
+          _checkoutItems.add(cartItem);
+        }
+      } catch (e) {
+        print('加载商品失败: $e');
+      }
+    }
+    setState(() {});
+  }
 
   Future<void> _loadAddresses() async {
     if (_currentUserId == null) return;
-    
+
     final addresses = await ServiceApi.getAddresses(_currentUserId!);
     setState(() {
       _addresses = addresses;
       // 修复后的代码
-try {
-  _selectedAddress = addresses.firstWhere((addr) => addr.isDefault);
-} catch (e) {
-  _selectedAddress = addresses.isNotEmpty ? addresses.first : null;
-}
+      try {
+        _selectedAddress = addresses.firstWhere((addr) => addr.isDefault);
+      } catch (e) {
+        _selectedAddress = addresses.isNotEmpty ? addresses.first : null;
+      }
       _isLoading = false;
     });
   }
@@ -130,27 +128,29 @@ try {
       _showError('请选择收货地址');
       return;
     }
-    
+
     if (_checkoutItems.isEmpty) {
       _showError('没有商品');
       return;
     }
-    
+
     setState(() => _isCreatingOrder = true);
-    
-    final items = _checkoutItems.map((item) => {
-      'goods_id': item.goodsId,
-      'quantity': item.quantity,
-    }).toList();
-    
+
+    final items =
+        _checkoutItems
+            .map(
+              (item) => {'goods_id': item.goodsId, 'quantity': item.quantity},
+            )
+            .toList();
+
     final result = await ServiceApi.createOrder(
       userId: _currentUserId!,
       addressId: _selectedAddress!.id,
       items: items,
     );
-    
+
     setState(() => _isCreatingOrder = false);
-    
+
     if (result['code'] == 200) {
       final orderId = result['data']['order_id'];
       final orderNo = result['data']['order_no'];
@@ -163,45 +163,60 @@ try {
 
   void _showPaymentDialog(int orderId, String orderNo) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
-        backgroundColor: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
-        title: const Text('选择支付方式'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildPaymentMethod(
-              'PayPal',
-              'https://www.paypal.com/webapps/mpp/paypal-popup',
-              Icons.payment,
-              () => _processPayPalPayment(orderId, orderNo),
-              isDark,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.r),
             ),
-            SizedBox(height: 12.h),
-            _buildPaymentMethod(
-              '模拟支付（测试）',
-              '',
-              Icons.code,
-              () => _processMockPayment(orderId, orderNo),
-              isDark,
+            backgroundColor:
+                isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+            title: const Text('选择支付方式'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildPaymentMethod(
+                  'PayPal',
+                  'https://www.paypal.com/webapps/mpp/paypal-popup',
+                  Icons.payment,
+                  () => _processPayPalPayment(orderId, orderNo),
+                  isDark,
+                ),
+                SizedBox(height: 12.h),
+                _buildPaymentMethod(
+                  '模拟支付（测试）',
+                  '',
+                  Icons.code,
+                  () => _processMockPayment(orderId, orderNo),
+                  isDark,
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
-  Widget _buildPaymentMethod(String name, String url, IconData icon, VoidCallback onTap, bool isDark) {
+  Widget _buildPaymentMethod(
+    String name,
+    String url,
+    IconData icon,
+    VoidCallback onTap,
+    bool isDark,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: EdgeInsets.all(16.w),
         decoration: BoxDecoration(
-          border: Border.all(color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.3) : Colors.grey[300]!),
+          border: Border.all(
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary.withOpacity(0.3)
+                    : Colors.grey[300]!,
+          ),
           borderRadius: BorderRadius.circular(12.r),
         ),
         child: Row(
@@ -216,7 +231,11 @@ try {
               ),
             ),
             const Spacer(),
-            Icon(Icons.arrow_forward_ios, size: 16.sp, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16.sp,
+              color: isDark ? Colors.grey[500] : Colors.grey[400],
+            ),
           ],
         ),
       ),
@@ -226,12 +245,12 @@ try {
   Future<void> _processPayPalPayment(int orderId, String orderNo) async {
     // 模拟PayPal支付跳转
     Navigator.pop(context); // 关闭支付方式对话框
-    
+
     _showSuccess('正在跳转到PayPal...');
-    
+
     // 实际项目中，这里应该跳转到PayPal支付页面
     // 可以使用url_launcher包打开PayPal支付链接
-    
+
     // 模拟支付成功
     await Future.delayed(const Duration(seconds: 2));
     _showSuccess('支付成功！');
@@ -240,12 +259,12 @@ try {
 
   Future<void> _processMockPayment(int orderId, String orderNo) async {
     Navigator.pop(context); // 关闭支付方式对话框
-    
+
     setState(() => _isCreatingOrder = true);
-    
+
     // 模拟支付请求
     await Future.delayed(const Duration(seconds: 1));
-    
+
     setState(() => _isCreatingOrder = false);
     _showSuccess('支付成功！');
     _navigateToOrderResult(orderId, orderNo);
@@ -255,11 +274,12 @@ try {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(
-        builder: (context) => ServiceOrderResultPage(
-          orderId: orderId,
-          orderNo: orderNo,
-          estimatedDays: _estimatedDays,
-        ),
+        builder:
+            (context) => ServiceOrderResultPage(
+              orderId: orderId,
+              orderNo: orderNo,
+              estimatedDays: _estimatedDays,
+            ),
       ),
       (route) => route.isFirst,
     );
@@ -286,42 +306,51 @@ try {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           '确认订单',
-          style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
+          style: TextStyle(
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary
+                    : theme.ServiceMetalColors.lightText,
+          ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.all(16.w),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 收货地址
-                        _buildAddressSection(isDark),
-                        SizedBox(height: 16.h),
-                        // 商品列表
-                        _buildProductsSection(isDark),
-                        SizedBox(height: 16.h),
-                        // 物流信息
-                        _buildLogisticsSection(isDark),
-                        SizedBox(height: 16.h),
-                        // 订单信息
-                        _buildOrderInfoSection(isDark),
-                      ],
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(16.w),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 收货地址
+                          _buildAddressSection(isDark),
+                          SizedBox(height: 16.h),
+                          // 商品列表
+                          _buildProductsSection(isDark),
+                          SizedBox(height: 16.h),
+                          // 物流信息
+                          _buildLogisticsSection(isDark),
+                          SizedBox(height: 16.h),
+                          // 订单信息
+                          _buildOrderInfoSection(isDark),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // 底部结算栏
-                _buildBottomBar(isDark),
-              ],
-            ),
+                  // 底部结算栏
+                  _buildBottomBar(isDark),
+                ],
+              ),
     );
   }
 
@@ -331,7 +360,9 @@ try {
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => ServiceAddressPage(selectedAddressId: _selectedAddress?.id),
+            builder:
+                (_) =>
+                    ServiceAddressPage(selectedAddressId: _selectedAddress?.id),
           ),
         );
         if (result != null) {
@@ -343,44 +374,66 @@ try {
         decoration: BoxDecoration(
           color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(16.r),
-          border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
-          boxShadow: isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.1), blurRadius: 8),
-          ] : null,
+          border:
+              isDark
+                  ? Border.all(
+                    color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                  )
+                  : null,
+          boxShadow:
+              isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary.withOpacity(0.1),
+                      blurRadius: 8,
+                    ),
+                  ]
+                  : null,
         ),
         child: Row(
           children: [
-            Icon(Icons.location_on, color: theme.ServiceMetalColors.primary, size: 24.sp),
+            Icon(
+              Icons.location_on,
+              color: theme.ServiceMetalColors.primary,
+              size: 24.sp,
+            ),
             SizedBox(width: 12.w),
             Expanded(
-              child: _selectedAddress == null
-                  ? Text(
-                      '请选择收货地址',
-                      style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${_selectedAddress!.receiverName}  ${_selectedAddress!.receiverPhone}',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
+              child:
+                  _selectedAddress == null
+                      ? Text(
+                        '请选择收货地址',
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
                         ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          _selectedAddress!.fullAddress,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      )
+                      : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_selectedAddress!.receiverName}  ${_selectedAddress!.receiverPhone}',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            _selectedAddress!.fullAddress,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
             ),
-            Icon(Icons.chevron_right, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+            Icon(
+              Icons.chevron_right,
+              color: isDark ? Colors.grey[500] : Colors.grey[400],
+            ),
           ],
         ),
       ),
@@ -393,7 +446,12 @@ try {
       decoration: BoxDecoration(
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                )
+                : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -432,12 +490,17 @@ try {
             width: 60.w,
             height: 60.h,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(
-              width: 60.w,
-              height: 60.h,
-              color: Colors.grey[200],
-              child: Icon(Icons.image_not_supported, size: 30, color: Colors.grey[400]),
-            ),
+            errorBuilder:
+                (_, __, ___) => Container(
+                  width: 60.w,
+                  height: 60.h,
+                  color: Colors.grey[200],
+                  child: Icon(
+                    Icons.image_not_supported,
+                    size: 30,
+                    color: Colors.grey[400],
+                  ),
+                ),
           ),
         ),
         SizedBox(width: 12.w),
@@ -457,7 +520,10 @@ try {
               SizedBox(height: 4.h),
               Text(
                 '数量: ${item.quantity}',
-                style: TextStyle(fontSize: 12.sp, color: isDark ? Colors.grey[500] : Colors.grey[500]),
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: isDark ? Colors.grey[500] : Colors.grey[500],
+                ),
               ),
             ],
           ),
@@ -465,10 +531,13 @@ try {
         Text(
           '¥${item.totalPrice.toStringAsFixed(2)}',
           style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
-                  ),
+            fontSize: 16.sp,
+            fontWeight: FontWeight.bold,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary
+                    : theme.ServiceMetalColors.primary,
+          ),
         ),
       ],
     );
@@ -480,11 +549,20 @@ try {
       decoration: BoxDecoration(
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                )
+                : null,
       ),
       child: Row(
         children: [
-          Icon(Icons.local_shipping, color: theme.ServiceMetalColors.primary, size: 24.sp),
+          Icon(
+            Icons.local_shipping,
+            color: theme.ServiceMetalColors.primary,
+            size: 24.sp,
+          ),
           SizedBox(width: 12.w),
           Expanded(
             child: Column(
@@ -520,7 +598,12 @@ try {
       decoration: BoxDecoration(
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                )
+                : null,
       ),
       child: Column(
         children: [
@@ -543,7 +626,12 @@ try {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, bool isDark, {bool isTotal = false}) {
+  Widget _buildInfoRow(
+    String label,
+    String value,
+    bool isDark, {
+    bool isTotal = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -559,12 +647,21 @@ try {
           style: TextStyle(
             fontSize: isTotal ? 20.sp : 16.sp,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-            color: isTotal
-                ? (isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary)
-                : (isDark ? Colors.white : Colors.black87),
-            shadows: isTotal && isDark ? [
-              Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8),
-            ] : null,
+            color:
+                isTotal
+                    ? (isDark
+                        ? theme.ServiceMetalColors.primary
+                        : theme.ServiceMetalColors.primary)
+                    : (isDark ? Colors.white : Colors.black87),
+            shadows:
+                isTotal && isDark
+                    ? [
+                      Shadow(
+                        color: theme.ServiceMetalColors.primary,
+                        blurRadius: 8,
+                      ),
+                    ]
+                    : null,
           ),
         ),
       ],
@@ -577,10 +674,14 @@ try {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            isDark ? theme.ServiceMetalColors.primary.withOpacity(0) : Colors.transparent,
+            isDark
+                ? theme.ServiceMetalColors.primary.withOpacity(0)
+                : Colors.transparent,
             isDark ? theme.ServiceMetalColors.primary : Colors.grey[300]!,
             isDark ? theme.ServiceMetalColors.accent : Colors.grey[300]!,
-            isDark ? theme.ServiceMetalColors.accent.withOpacity(0) : Colors.transparent,
+            isDark
+                ? theme.ServiceMetalColors.accent.withOpacity(0)
+                : Colors.transparent,
           ],
         ),
       ),
@@ -594,7 +695,10 @@ try {
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.2) : Colors.black.withOpacity(0.05),
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -618,8 +722,19 @@ try {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
-                    shadows: isDark ? [Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8)] : null,
+                    color:
+                        isDark
+                            ? theme.ServiceMetalColors.primary
+                            : theme.ServiceMetalColors.primary,
+                    shadows:
+                        isDark
+                            ? [
+                              Shadow(
+                                color: theme.ServiceMetalColors.primary,
+                                blurRadius: 8,
+                              ),
+                            ]
+                            : null,
                   ),
                 ),
               ],
@@ -627,24 +742,24 @@ try {
             const Spacer(),
             _isCreatingOrder
                 ? Container(
-                    width: 120.w,
-                    height: 48.h,
-                    alignment: Alignment.center,
-                    child: const CircularProgressIndicator(),
-                  )
-                : _buildMetalButton(
-                    '提交订单',
-                    _createOrder,
-                    isDark,
-                    width: 120.w,
-                  ),
+                  width: 120.w,
+                  height: 48.h,
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                )
+                : _buildMetalButton('提交订单', _createOrder, isDark, width: 120.w),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark, {double? width}) {
+  Widget _buildMetalButton(
+    String text,
+    VoidCallback onTap,
+    bool isDark, {
+    double? width,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -652,13 +767,27 @@ try {
         height: 48.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+            colors: [
+              theme.ServiceMetalColors.primary,
+              theme.ServiceMetalColors.accent,
+            ],
           ),
           borderRadius: BorderRadius.circular(24.r),
-          boxShadow: isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 12, spreadRadius: 1),
-            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 8, spreadRadius: 1),
-          ] : null,
+          boxShadow:
+              isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary,
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.accent,
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : null,
         ),
         alignment: Alignment.center,
         child: Text(
@@ -692,7 +821,10 @@ class ServiceOrderResultPage extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(32.w),
@@ -705,12 +837,24 @@ class ServiceOrderResultPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+                    colors: [
+                      theme.ServiceMetalColors.primary,
+                      theme.ServiceMetalColors.accent,
+                    ],
                   ),
-                  boxShadow: isDark ? [
-                    BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 20),
-                    BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 15),
-                  ] : null,
+                  boxShadow:
+                      isDark
+                          ? [
+                            BoxShadow(
+                              color: theme.ServiceMetalColors.primary,
+                              blurRadius: 20,
+                            ),
+                            BoxShadow(
+                              color: theme.ServiceMetalColors.accent,
+                              blurRadius: 15,
+                            ),
+                          ]
+                          : null,
                 ),
                 child: Icon(Icons.check, size: 50.sp, color: Colors.black),
               ),
@@ -727,9 +871,19 @@ class ServiceOrderResultPage extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16.w),
                 decoration: BoxDecoration(
-                  color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+                  color:
+                      isDark
+                          ? theme.ServiceMetalColors.darkSurface
+                          : Colors.white,
                   borderRadius: BorderRadius.circular(12.r),
-                  border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+                  border:
+                      isDark
+                          ? Border.all(
+                            color: theme.ServiceMetalColors.primary.withOpacity(
+                              0.3,
+                            ),
+                          )
+                          : null,
                 ),
                 child: Column(
                   children: [
@@ -766,7 +920,8 @@ class ServiceOrderResultPage extends StatelessWidget {
                   Expanded(
                     child: _buildButton(
                       '继续购物',
-                      () => Navigator.popUntil(context, (route) => route.isFirst),
+                      () =>
+                          Navigator.popUntil(context, (route) => route.isFirst),
                       isDark,
                     ),
                   ),
@@ -779,18 +934,37 @@ class ServiceOrderResultPage extends StatelessWidget {
     );
   }
 
-  Widget _buildButton(String text, VoidCallback onTap, bool isDark, {bool outlined = false}) {
+  Widget _buildButton(
+    String text,
+    VoidCallback onTap,
+    bool isDark, {
+    bool outlined = false,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 48.h,
         decoration: BoxDecoration(
-          gradient: outlined
-              ? null
-              : const LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent]),
-          color: outlined ? (isDark ? theme.ServiceMetalColors.darkSurface : Colors.white) : null,
+          gradient:
+              outlined
+                  ? null
+                  : const LinearGradient(
+                    colors: [
+                      theme.ServiceMetalColors.primary,
+                      theme.ServiceMetalColors.accent,
+                    ],
+                  ),
+          color:
+              outlined
+                  ? (isDark
+                      ? theme.ServiceMetalColors.darkSurface
+                      : Colors.white)
+                  : null,
           borderRadius: BorderRadius.circular(24.r),
-          border: outlined ? Border.all(color: theme.ServiceMetalColors.primary) : null,
+          border:
+              outlined
+                  ? Border.all(color: theme.ServiceMetalColors.primary)
+                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

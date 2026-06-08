@@ -1,53 +1,44 @@
 // service.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import 'service_home.dart';
 import 'service_theme.dart' as theme;
 import 'service_cart.dart';
 import 'service_address.dart';
 
-// 主题管理 Provider
-class ThemeProvider extends ChangeNotifier {
-  bool _isDarkMode = true;
-
-  bool get isDarkMode => _isDarkMode;
-
-  void toggleTheme() {
-    _isDarkMode = !_isDarkMode;
-    notifyListeners();
-  }
-}
-
 class ServiceApp extends StatelessWidget {
-  const ServiceApp({super.key});
+  final ThemeMode themeMode;
+
+  const ServiceApp({super.key, required this.themeMode});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
-          return ScreenUtilInit(
-            designSize: const Size(375, 812),
-            minTextAdapt: true,
-            splitScreenMode: true,
-            builder: (context, child) {
-              return MaterialApp(
-                title: 'Norway Service',
-                debugShowCheckedModeBanner: false,
-                theme: themeProvider.isDarkMode ? theme.ServiceTheme.darkTheme : theme.ServiceTheme.lightTheme,
-                home: const ServiceMainPage(),
-                routes: {
-                  '/home': (context) => const ServiceHomePage(),
-                  '/cart': (context) => const ServiceCartPage(),
-                  '/address': (context) => const ServiceAddressPage(),
-                },
-              );
-            },
-          );
-        },
-      ),
+    // 从主应用获取主题状态
+    final isDarkMode =
+        themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
+    return ScreenUtilInit(
+      designSize: const Size(375, 812),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Norway Service',
+          debugShowCheckedModeBanner: false,
+          theme:
+              isDarkMode
+                  ? theme.ServiceTheme.darkTheme
+                  : theme.ServiceTheme.lightTheme,
+          home: const ServiceMainPage(),
+          routes: {
+            '/home': (context) => const ServiceHomePage(),
+            '/cart': (context) => const ServiceCartPage(),
+            '/address': (context) => const ServiceAddressPage(),
+          },
+        );
+      },
     );
   }
 }
@@ -69,7 +60,11 @@ class _ServiceMainPageState extends State<ServiceMainPage> {
 
   final List<Map<String, dynamic>> _navItems = [
     {'icon': Icons.shop_outlined, 'activeIcon': Icons.shop, 'label': '商城'},
-    {'icon': Icons.shopping_cart_outlined, 'activeIcon': Icons.shopping_cart, 'label': '购物车'},
+    {
+      'icon': Icons.shopping_cart_outlined,
+      'activeIcon': Icons.shopping_cart,
+      'label': '购物车',
+    },
     {'icon': Icons.person_outline, 'activeIcon': Icons.person, 'label': '我的'},
   ];
 
@@ -89,7 +84,6 @@ class _ServiceMainPageState extends State<ServiceMainPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       body: _pages[_currentIndex],
@@ -115,15 +109,21 @@ class _ServiceMainPageState extends State<ServiceMainPage> {
                     child: FloatingActionButton(
                       heroTag: 'nav_$index',
                       onPressed: () => _navigateToPage(index),
-                      backgroundColor: isDark ? theme.ServiceMetalColors.darkSurface : Colors.yellow.shade200,
-                      foregroundColor: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText,
+                      backgroundColor:
+                          isDark
+                              ? theme.ServiceMetalColors.darkSurface
+                              : Colors.yellow.shade200,
+                      foregroundColor:
+                          isDark
+                              ? theme.ServiceMetalColors.primary
+                              : theme.ServiceMetalColors.lightText,
                       elevation: 8,
                       child: Icon(item['icon']),
                     ),
                   ),
                 ),
               );
-            }).toList(),
+            }),
           // 主题切换按钮（首页显示）
           if (_currentIndex == 0)
             // Positioned(
@@ -138,23 +138,23 @@ class _ServiceMainPageState extends State<ServiceMainPage> {
             //     child: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
             //   ),
             // ),
-          // 主菜单按钮
-          Positioned(
-            left: 20.w,
-            bottom: 0,
-            child: FloatingActionButton(
-              heroTag: 'menu',
-              onPressed: _toggleMenu,
-              backgroundColor: theme.ServiceMetalColors.accent,
-              foregroundColor: Colors.white,
-              elevation: 8,
-              child: AnimatedRotation(
-                turns: _isMenuOpen ? 0.25 : 0,
-                duration: const Duration(milliseconds: 300),
-                child: const Icon(Icons.menu),
+            // 主菜单按钮
+            Positioned(
+              left: 20.w,
+              bottom: 0,
+              child: FloatingActionButton(
+                heroTag: 'menu',
+                onPressed: _toggleMenu,
+                backgroundColor: theme.ServiceMetalColors.accent,
+                foregroundColor: Colors.white,
+                elevation: 8,
+                child: AnimatedRotation(
+                  turns: _isMenuOpen ? 0.25 : 0,
+                  duration: const Duration(milliseconds: 300),
+                  child: const Icon(Icons.menu),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -168,14 +168,21 @@ class ServiceProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           '我的',
-          style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
+          style: TextStyle(
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary
+                    : theme.ServiceMetalColors.lightText,
+          ),
         ),
       ),
       body: ListView(
@@ -185,9 +192,17 @@ class ServiceProfilePage extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(24.w),
             decoration: BoxDecoration(
-              color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+              color:
+                  isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
               borderRadius: BorderRadius.circular(20.r),
-              border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+              border:
+                  isDark
+                      ? Border.all(
+                        color: theme.ServiceMetalColors.primary.withOpacity(
+                          0.3,
+                        ),
+                      )
+                      : null,
             ),
             child: Row(
               children: [
@@ -197,7 +212,10 @@ class ServiceProfilePage extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+                      colors: [
+                        theme.ServiceMetalColors.primary,
+                        theme.ServiceMetalColors.accent,
+                      ],
                     ),
                   ),
                   child: const Center(
@@ -228,7 +246,10 @@ class ServiceProfilePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                Icon(
+                  Icons.chevron_right,
+                  color: isDark ? Colors.grey[500] : Colors.grey[400],
+                ),
               ],
             ),
           ),
@@ -237,9 +258,17 @@ class ServiceProfilePage extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
-              color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+              color:
+                  isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
               borderRadius: BorderRadius.circular(16.r),
-              border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+              border:
+                  isDark
+                      ? Border.all(
+                        color: theme.ServiceMetalColors.primary.withOpacity(
+                          0.3,
+                        ),
+                      )
+                      : null,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,9 +298,17 @@ class ServiceProfilePage extends StatelessWidget {
           // 功能列表
           Container(
             decoration: BoxDecoration(
-              color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+              color:
+                  isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
               borderRadius: BorderRadius.circular(16.r),
-              border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+              border:
+                  isDark
+                      ? Border.all(
+                        color: theme.ServiceMetalColors.primary.withOpacity(
+                          0.3,
+                        ),
+                      )
+                      : null,
             ),
             child: Column(
               children: [
@@ -280,43 +317,19 @@ class ServiceProfilePage extends StatelessWidget {
                   '收货地址管理',
                   () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const ServiceAddressPage()),
+                    MaterialPageRoute(
+                      builder: (_) => const ServiceAddressPage(),
+                    ),
                   ),
                   isDark,
                 ),
                 _buildDivider(isDark),
-                _buildMenuItem(
-                  Icons.favorite_border,
-                  '我的收藏',
-                  () {},
-                  isDark,
-                ),
+                _buildMenuItem(Icons.favorite_border, '我的收藏', () {}, isDark),
                 _buildDivider(isDark),
-                _buildMenuItem(
-                  Icons.message_outlined,
-                  '消息通知',
-                  () {},
-                  isDark,
-                ),
+                _buildMenuItem(Icons.message_outlined, '消息通知', () {}, isDark),
                 _buildDivider(isDark),
-                _buildMenuItem(
-                  Icons.help_outline,
-                  '帮助中心',
-                  () {},
-                  isDark,
-                ),
+                _buildMenuItem(Icons.help_outline, '帮助中心', () {}, isDark),
                 _buildDivider(isDark),
-                _buildMenuItem(
-                  Icons.dark_mode,
-                  '深色模式',
-                  () => themeProvider.toggleTheme(),
-                  isDark,
-                  trailing: Switch(
-                    value: themeProvider.isDarkMode,
-                    onChanged: (_) => themeProvider.toggleTheme(),
-                    activeColor: theme.ServiceMetalColors.primary,
-                  ),
-                ),
               ],
             ),
           ),
@@ -341,14 +354,25 @@ class ServiceProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, VoidCallback onTap, bool isDark, {Widget? trailing}) {
+  Widget _buildMenuItem(
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+    bool isDark, {
+    Widget? trailing,
+  }) {
     return ListTile(
       leading: Icon(icon, color: theme.ServiceMetalColors.primary),
       title: Text(
         title,
         style: TextStyle(color: isDark ? Colors.white : Colors.black87),
       ),
-      trailing: trailing ?? Icon(Icons.chevron_right, color: isDark ? Colors.grey[500] : Colors.grey[400]),
+      trailing:
+          trailing ??
+          Icon(
+            Icons.chevron_right,
+            color: isDark ? Colors.grey[500] : Colors.grey[400],
+          ),
       onTap: onTap,
     );
   }

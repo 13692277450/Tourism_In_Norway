@@ -17,18 +17,18 @@ class ServiceHomePage extends StatefulWidget {
 class _ServiceHomePageState extends State<ServiceHomePage> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   List<ServiceCategory> _categories = [];
   int _selectedCategoryId = 0;
   List<ServiceGoods> _goodsList = [];
-  
+
   int _currentPage = 1;
   final int _pageSize = 10;
   bool _hasMore = true;
   bool _isLoading = false;
   bool _isLoadingMore = false;
   String? _errorMessage;
-  
+
   int? _currentUserId;
 
   @override
@@ -37,9 +37,9 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     _loadUser();
     _loadCategories();
     _loadGoods();
-    
+
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >= 
+      if (_scrollController.position.pixels >=
           _scrollController.position.maxScrollExtent - 200) {
         _loadMoreGoods();
       }
@@ -55,92 +55,91 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   Future<void> _loadCategories() async {
     final categories = await ServiceApi.getCategories();
     setState(() {
-      _categories = [
-        ServiceCategory(id: 0, name: '全部'),
-        ...categories,
-      ];
+      _categories = [ServiceCategory(id: 0, name: '全部'), ...categories];
     });
-     if (mounted) {
-    setState(() {});
-  }
-  }
-// service_home.dart - 修改 _loadGoods 方法
-
-Future<void> _loadGoods({bool isRefresh = false}) async {
-  if (_isLoadingMore && !isRefresh) return;
-  if (!_hasMore && !isRefresh) return;
-
-  setState(() {
-    if (isRefresh) {
-      _isLoading = true;
-      _currentPage = 1;
-      _hasMore = true;
-      _goodsList = [];
-      _errorMessage = null;
-    } else {
-      _isLoadingMore = true;
+    if (mounted) {
+      setState(() {});
     }
-  });
+  }
+  // service_home.dart - 修改 _loadGoods 方法
 
-  try {
-    print('🔄 开始加载商品，页码: $_currentPage, 分类: $_selectedCategoryId');
-    
-    final result = await ServiceApi.getGoods(
-      page: _currentPage,
-      limit: _pageSize,
-      keyword: _searchController.text.isNotEmpty ? _searchController.text : null,
-      categoryId: _selectedCategoryId > 0 ? _selectedCategoryId : null,
-    );
+  Future<void> _loadGoods({bool isRefresh = false}) async {
+    if (_isLoadingMore && !isRefresh) return;
+    if (!_hasMore && !isRefresh) return;
 
-    print('📦 API返回结果: $result');
-
-    // 检查返回结果的格式
-    if (result.containsKey('code') && result['code'] == 200) {
-      final data = result['data'];
-      final List<dynamic> list = data['list'] ?? [];
-      final total = data['total'] ?? 0;
-      
-      print('✅ 获取到 ${list.length} 条商品，总计 $total 条');
-      
-      final newGoods = list.map((item) => ServiceGoods.fromJson(item)).toList();
-      
-      setState(() {
-        if (isRefresh) {
-          _goodsList = newGoods;
-        } else {
-          _goodsList.addAll(newGoods);
-        }
-        
-        _hasMore = _goodsList.length < total;
-        _currentPage++;
-        _isLoading = false;
-        _isLoadingMore = false;
-        
-        if (_goodsList.isEmpty) {
-          _errorMessage = '暂无商品';
-        }
-      });
-    } else {
-      // 处理错误响应
-      final errorMsg = result['message'] ?? '加载失败，请稍后重试';
-      print('❌ API返回错误: $errorMsg');
-      setState(() {
-        _isLoading = false;
-        _isLoadingMore = false;
-        _errorMessage = errorMsg;
-      });
-    }
-  } catch (e, stackTrace) {
-    // 捕获异常并打印详细堆栈
-    print('❌ 网络请求异常: $e');
-    print('📚 堆栈信息: $stackTrace');
     setState(() {
-      _isLoading = false;
-      _isLoadingMore = false;
-      _errorMessage = '网络错误: $e';
+      if (isRefresh) {
+        _isLoading = true;
+        _currentPage = 1;
+        _hasMore = true;
+        _goodsList = [];
+        _errorMessage = null;
+      } else {
+        _isLoadingMore = true;
+      }
     });
+
+    try {
+      // print('🔄 开始加载商品，页码: $_currentPage, 分类: $_selectedCategoryId');
+
+      final result = await ServiceApi.getGoods(
+        page: _currentPage,
+        limit: _pageSize,
+        keyword:
+            _searchController.text.isNotEmpty ? _searchController.text : null,
+        categoryId: _selectedCategoryId > 0 ? _selectedCategoryId : null,
+      );
+
+      print('📦 API返回结果: $result');
+
+      // 检查返回结果的格式
+      if (result.containsKey('code') && result['code'] == 200) {
+        final data = result['data'];
+        final List<dynamic> list = data['list'] ?? [];
+        final total = data['total'] ?? 0;
+
+        // print('✅ 获取到 ${list.length} 条商品，总计 $total 条');
+
+        final newGoods =
+            list.map((item) => ServiceGoods.fromJson(item)).toList();
+
+        setState(() {
+          if (isRefresh) {
+            _goodsList = newGoods;
+          } else {
+            _goodsList.addAll(newGoods);
+          }
+
+          _hasMore = _goodsList.length < total;
+          _currentPage++;
+          _isLoading = false;
+          _isLoadingMore = false;
+
+          if (_goodsList.isEmpty) {
+            _errorMessage = '暂无商品';
+          }
+        });
+      } else {
+        // 处理错误响应
+        final errorMsg = result['message'] ?? '加载失败，请稍后重试';
+        // print('❌ API返回错误: $errorMsg');
+        setState(() {
+          _isLoading = false;
+          _isLoadingMore = false;
+          _errorMessage = errorMsg;
+        });
+      }
+    } catch (e, stackTrace) {
+      // 捕获异常并打印详细堆栈
+      // print('❌ 网络请求异常: $e');
+      // print('📚 堆栈信息: $stackTrace');
+      setState(() {
+        _isLoading = false;
+        _isLoadingMore = false;
+        _errorMessage = '网络错误: $e';
+      });
+    }
   }
-}
 
   void _loadMoreGoods() {
     if (!_isLoadingMore && _hasMore && !_isLoading) {
@@ -182,16 +181,22 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       body: NestedScrollView(
         key: ValueKey(_categories.length), // 添加 key，当分类数量变化时强制重建
         controller: _scrollController,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+              backgroundColor:
+                  isDark
+                      ? theme.ServiceMetalColors.darkBg
+                      : theme.ServiceMetalColors.lightBg,
               elevation: 0,
               pinned: true,
               expandedHeight: 100.h,
@@ -199,8 +204,13 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.pin,
                 background: Container(
-                  padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 10.h),
-                  color: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 10.h,
+                  ),
+                  color:
+                      isDark
+                          ? theme.ServiceMetalColors.darkBg
+                          : theme.ServiceMetalColors.lightBg,
                   child: Column(
                     children: [
                       // 搜索栏
@@ -214,7 +224,10 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
               pinned: true,
               delegate: _SliverCategoryDelegate(
                 categoryBar: _buildCategoryBar(isDark),
-                backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+                backgroundColor:
+                    isDark
+                        ? theme.ServiceMetalColors.darkBg
+                        : theme.ServiceMetalColors.lightBg,
               ),
             ),
           ];
@@ -228,20 +241,43 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     return Container(
       margin: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
+        color:
+            isDark
+                ? theme.ServiceMetalColors.darkSurface
+                : theme.ServiceMetalColors.lightSurface,
         borderRadius: BorderRadius.circular(30.r),
-        boxShadow: isDark ? [
-          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.3), blurRadius: 10),
-          BoxShadow(color: theme.ServiceMetalColors.accent.withOpacity(0.2), blurRadius: 5),
-        ] : [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8),
-        ],
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.5)) : null,
+        boxShadow:
+            isDark
+                ? [
+                  BoxShadow(
+                    color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                    blurRadius: 10,
+                  ),
+                  BoxShadow(
+                    color: theme.ServiceMetalColors.accent.withOpacity(0.2),
+                    blurRadius: 5,
+                  ),
+                ]
+                : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 8,
+                  ),
+                ],
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.5),
+                )
+                : null,
       ),
       child: Row(
         children: [
           SizedBox(width: 16.w),
-          Icon(Icons.search, color: isDark ? theme.ServiceMetalColors.primary : Colors.grey),
+          Icon(
+            Icons.search,
+            color: isDark ? theme.ServiceMetalColors.primary : Colors.grey,
+          ),
           SizedBox(width: 12.w),
           Expanded(
             child: TextField(
@@ -249,15 +285,33 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
               decoration: InputDecoration(
                 hintText: 'Search Service...',
                 border: InputBorder.none,
-                hintStyle: TextStyle(color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
+                hintStyle: TextStyle(
+                  color:
+                      isDark
+                          ? theme.ServiceMetalColors.darkTextSecondary
+                          : theme.ServiceMetalColors.lightTextSecondary,
+                ),
               ),
-              style: TextStyle(color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
+              style: TextStyle(
+                color:
+                    isDark
+                        ? theme.ServiceMetalColors.darkText
+                        : theme.ServiceMetalColors.lightText,
+              ),
               onSubmitted: (_) => _searchGoods(),
             ),
           ),
           TextButton(
             onPressed: _searchGoods,
-            child: Text('Search', style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary)),
+            child: Text(
+              'Search',
+              style: TextStyle(
+                color:
+                    isDark
+                        ? theme.ServiceMetalColors.primary
+                        : theme.ServiceMetalColors.primary,
+              ),
+            ),
           ),
         ],
       ),
@@ -274,7 +328,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = _selectedCategoryId == category.id;
-          
+
           return Padding(
             padding: EdgeInsets.only(right: 12.w),
             child: _buildCategoryButton(
@@ -289,7 +343,12 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     );
   }
 
-  Widget _buildCategoryButton(String title, bool isSelected, bool isDark, VoidCallback onTap) {
+  Widget _buildCategoryButton(
+    String title,
+    bool isSelected,
+    bool isDark,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -297,29 +356,57 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24.r),
-          gradient: isSelected && isDark
-              ? LinearGradient(colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent])
-              : null,
-          color: isSelected && !isDark
-              ? theme.ServiceMetalColors.primary
-              : (isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface),
+          gradient:
+              isSelected && isDark
+                  ? LinearGradient(
+                    colors: [
+                      theme.ServiceMetalColors.primary,
+                      theme.ServiceMetalColors.accent,
+                    ],
+                  )
+                  : null,
+          color:
+              isSelected && !isDark
+                  ? theme.ServiceMetalColors.primary
+                  : (isDark
+                      ? theme.ServiceMetalColors.darkSurface
+                      : theme.ServiceMetalColors.lightSurface),
           border: Border.all(
-            color: isSelected
-                ? (isDark ? theme.ServiceMetalColors.silver : theme.ServiceMetalColors.primary)
-                : (isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[300]!),
+            color:
+                isSelected
+                    ? (isDark
+                        ? theme.ServiceMetalColors.silver
+                        : theme.ServiceMetalColors.primary)
+                    : (isDark
+                        ? theme.ServiceMetalColors.primary.withOpacity(0.5)
+                        : Colors.grey[300]!),
             width: 1.5,
           ),
-          boxShadow: isSelected && isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 15, spreadRadius: 2),
-            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 10, spreadRadius: 1),
-          ] : null,
+          boxShadow:
+              isSelected && isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary,
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.accent,
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : null,
         ),
         child: Text(
           title,
           style: TextStyle(
-            color: isSelected
-                ? (isDark ? Colors.black : Colors.white)
-                : (isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText),
+            color:
+                isSelected
+                    ? (isDark ? Colors.black : Colors.white)
+                    : (isDark
+                        ? theme.ServiceMetalColors.darkText
+                        : theme.ServiceMetalColors.lightText),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -331,15 +418,22 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
     if (_isLoading && _goodsList.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
-    
+
     if (_errorMessage != null && _goodsList.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 48, color: isDark ? theme.ServiceMetalColors.primary : Colors.grey),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: isDark ? theme.ServiceMetalColors.primary : Colors.grey,
+            ),
             SizedBox(height: 16.h),
-            Text(_errorMessage!, style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+            Text(
+              _errorMessage!,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
+            ),
             SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () => _loadGoods(isRefresh: true),
@@ -353,7 +447,7 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
         ),
       );
     }
-    
+
     return GridView.builder(
       padding: EdgeInsets.all(12.w),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -368,9 +462,15 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
           return Center(
             child: Padding(
               padding: EdgeInsets.all(16.w),
-              child: _isLoadingMore
-                  ? const CircularProgressIndicator()
-                  : Text('—— 加载更多 ——', style: TextStyle(color: isDark ? Colors.grey : Colors.grey[400])),
+              child:
+                  _isLoadingMore
+                      ? const CircularProgressIndicator()
+                      : Text(
+                        '—— 加载更多 ——',
+                        style: TextStyle(
+                          color: isDark ? Colors.grey : Colors.grey[400],
+                        ),
+                      ),
             ),
           );
         }
@@ -386,13 +486,32 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
-          color: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.lightSurface,
-          boxShadow: isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.2), blurRadius: 12, spreadRadius: -4),
-          ] : [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, spreadRadius: 2),
-          ],
-          border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
+          color:
+              isDark
+                  ? theme.ServiceMetalColors.darkSurface
+                  : theme.ServiceMetalColors.lightSurface,
+          boxShadow:
+              isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary.withOpacity(0.2),
+                      blurRadius: 12,
+                      spreadRadius: -4,
+                    ),
+                  ]
+                  : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ],
+          border:
+              isDark
+                  ? Border.all(
+                    color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                  )
+                  : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,11 +526,16 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                     height: 180.h,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      height: 180.h,
-                      color: Colors.grey[200],
-                      child: Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
-                    ),
+                    errorBuilder:
+                        (_, __, ___) => Container(
+                          height: 180.h,
+                          color: Colors.grey[200],
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 40,
+                            color: Colors.grey,
+                          ),
+                        ),
                   ),
                   // 评分标签
                   if (goods.score > 0)
@@ -419,10 +543,16 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                       top: 8.w,
                       right: 8.w,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 10.h,
+                        ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [theme.ServiceMetalColors.gold, theme.ServiceMetalColors.bronze],
+                            colors: [
+                              theme.ServiceMetalColors.gold,
+                              theme.ServiceMetalColors.bronze,
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(20.r),
                         ),
@@ -433,7 +563,11 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                             SizedBox(width: 4.w),
                             Text(
                               '${goods.score}',
-                              style: TextStyle(fontSize: 10.sp, color: Colors.white, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -455,7 +589,10 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
-                      color: isDark ? theme.ServiceMetalColors.darkText : theme.ServiceMetalColors.lightText,
+                      color:
+                          isDark
+                              ? theme.ServiceMetalColors.darkText
+                              : theme.ServiceMetalColors.lightText,
                     ),
                   ),
                   SizedBox(height: 4.h),
@@ -465,7 +602,10 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 11.sp,
-                      color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary,
+                      color:
+                          isDark
+                              ? theme.ServiceMetalColors.darkTextSecondary
+                              : theme.ServiceMetalColors.lightTextSecondary,
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -476,10 +616,19 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.normal,
-                          color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
-                          shadows: isDark ? [
-                            Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8),
-                          ] : null,
+                          color:
+                              isDark
+                                  ? theme.ServiceMetalColors.primary
+                                  : theme.ServiceMetalColors.primary,
+                          shadows:
+                              isDark
+                                  ? [
+                                    Shadow(
+                                      color: theme.ServiceMetalColors.primary,
+                                      blurRadius: 8,
+                                    ),
+                                  ]
+                                  : null,
                         ),
                       ),
                       if (goods.originalPrice != null)
@@ -490,7 +639,14 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                             style: TextStyle(
                               fontSize: 12.sp,
                               decoration: TextDecoration.lineThrough,
-                              color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary,
+                              color:
+                                  isDark
+                                      ? theme
+                                          .ServiceMetalColors
+                                          .darkTextTertiary
+                                      : theme
+                                          .ServiceMetalColors
+                                          .lightTextTertiary,
                             ),
                           ),
                         ),
@@ -502,9 +658,19 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
                     children: [
                       Text(
                         '销量 ${goods.salesCount}',
-                        style: TextStyle(fontSize: 10.sp, color: isDark ? theme.ServiceMetalColors.darkTextTertiary : theme.ServiceMetalColors.lightTextTertiary),
+                        style: TextStyle(
+                          fontSize: 10.sp,
+                          color:
+                              isDark
+                                  ? theme.ServiceMetalColors.darkTextTertiary
+                                  : theme.ServiceMetalColors.lightTextTertiary,
+                        ),
                       ),
-                      _buildMetalIcon(Icons.favorite_border, goods.likeCount, isDark),
+                      _buildMetalIcon(
+                        Icons.favorite_border,
+                        goods.likeCount,
+                        isDark,
+                      ),
                     ],
                   ),
                 ],
@@ -519,11 +685,21 @@ Future<void> _loadGoods({bool isRefresh = false}) async {
   Widget _buildMetalIcon(IconData icon, int count, bool isDark) {
     return Row(
       children: [
-        Icon(icon, size: 14.sp, color: isDark ? theme.ServiceMetalColors.accent : Colors.grey),
+        Icon(
+          icon,
+          size: 14.sp,
+          color: isDark ? theme.ServiceMetalColors.accent : Colors.grey,
+        ),
         SizedBox(width: 4.w),
         Text(
           count.toString(),
-          style: TextStyle(fontSize: 10.sp, color: isDark ? theme.ServiceMetalColors.darkTextSecondary : theme.ServiceMetalColors.lightTextSecondary),
+          style: TextStyle(
+            fontSize: 10.sp,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.darkTextSecondary
+                    : theme.ServiceMetalColors.lightTextSecondary,
+          ),
         ),
       ],
     );
@@ -548,11 +724,12 @@ class _SliverCategoryDelegate extends SliverPersistentHeaderDelegate {
   });
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
-    return Container(
-      color: backgroundColor,
-      child: categoryBar,
-    );
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(color: backgroundColor, child: categoryBar);
   }
 
   @override

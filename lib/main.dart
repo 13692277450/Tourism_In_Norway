@@ -60,11 +60,7 @@ class _UpdateCheckWrapperState extends State<UpdateCheckWrapper> {
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return widget.child;
@@ -303,7 +299,7 @@ class MainScreen extends StatelessWidget {
       case 2:
         return const BbsPage();
       case 3:
-        return const ServiceApp();
+        return ServiceApp(themeMode: themeMode);
       case 4:
         return SettingsPage(
           locale: locale,
@@ -333,9 +329,10 @@ class MainScreen extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: isDark
-                    ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
-                    : [const Color(0xFFF1F6FF), const Color(0xFFFFFFFF)],
+                colors:
+                    isDark
+                        ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
+                        : [const Color(0xFFF1F6FF), const Color(0xFFFFFFFF)],
               ),
             ),
           ),
@@ -370,10 +367,7 @@ class MainScreen extends StatelessWidget {
         ],
       ),
       bottomNavigationBar: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: 14.w,
-          vertical: 12.h,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         child: PhysicalModel(
           color: Colors.transparent,
           elevation: 3,
@@ -385,7 +379,9 @@ class MainScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(32.w),
               boxShadow: [
                 BoxShadow(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.06),
+                  color: (isDark ? Colors.white : Colors.black).withOpacity(
+                    0.06,
+                  ),
                   blurRadius: 6,
                   offset: Offset(0, 4.h),
                 ),
@@ -393,51 +389,57 @@ class MainScreen extends StatelessWidget {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: _navItems.map((item) {
-                final selected = _navItems.indexOf(item) == selectedIndex;
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => onTabSelected(_navItems.indexOf(item)),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
-                      padding: EdgeInsets.symmetric(vertical: 10.h),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? item.activeColor.withOpacity(isDark ? 0.20 : 0.10)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(20.w),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            selected ? item.activeIcon : item.icon,
-                            size: 26.r,
-                            color: selected
-                                ? item.activeColor
-                                : (isDark
-                                    ? const Color(0xFF9E9E9E)
-                                    : item.inactiveColor),
+              children:
+                  _navItems.map((item) {
+                    final selected = _navItems.indexOf(item) == selectedIndex;
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => onTabSelected(_navItems.indexOf(item)),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 260),
+                          padding: EdgeInsets.symmetric(vertical: 10.h),
+                          decoration: BoxDecoration(
+                            color:
+                                selected
+                                    ? item.activeColor.withOpacity(
+                                      isDark ? 0.20 : 0.10,
+                                    )
+                                    : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20.w),
                           ),
-                          SizedBox(height: 4.h),
-                          Text(
-                            loc.translate(item.label),
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                              color: selected
-                                  ? item.activeColor
-                                  : (isDark
-                                      ? const Color(0xFF9E9E9E)
-                                      : item.inactiveColor),
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                selected ? item.activeIcon : item.icon,
+                                size: 26.r,
+                                color:
+                                    selected
+                                        ? item.activeColor
+                                        : (isDark
+                                            ? const Color(0xFF9E9E9E)
+                                            : item.inactiveColor),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                loc.translate(item.label),
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      selected
+                                          ? item.activeColor
+                                          : (isDark
+                                              ? const Color(0xFF9E9E9E)
+                                              : item.inactiveColor),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              }).toList(),
+                    );
+                  }).toList(),
             ),
           ),
         ),
@@ -507,10 +509,7 @@ class _HeaderCard extends StatelessWidget {
               SizedBox(height: 4.h),
               Text(
                 loc.appTagline,
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12.sp,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 12.sp),
               ),
             ],
           ),
