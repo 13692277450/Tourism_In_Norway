@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tourism_in_norway/service.dart';
+import 'package:tourism_in_norway/service_settings.dart';
 
 import 'home.dart';
 import 'view.dart';
-import 'bbs.dart';
-import 'settings.dart';
-import 'version_checker.dart';
-import 'update_dialog.dart';
+import 'bbs_home.dart';
+import 'settings_home.dart';
+import 'settings_version_checker.dart';
+import 'settings_update_dialog.dart';
 
 import 'app_shared.dart' as shared;
 
@@ -299,7 +299,7 @@ class MainScreen extends StatelessWidget {
       case 2:
         return const BbsPage();
       case 3:
-        return ServiceApp(themeMode: themeMode);
+        return ServiceSettings(themeMode: themeMode);
       case 4:
         return SettingsPage(
           locale: locale,

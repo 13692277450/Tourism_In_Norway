@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
 
 import 'app_shared.dart' as shared;
-import 'place_detail.dart';
+import 'service_place_detail.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,23 +17,24 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Place> places = [];
-  
+
   // 分页相关状态
   int _currentPage = 1;
   final int _pageSize = 20;
   bool _hasMore = true;
   bool _isLoadingMore = false;
-  
+
   bool isLoading = true; // 仅用于首次加载
   String? errorMessage;
   String? _selectedScenicTag;
 
   List<String> get _scenicTagNames {
-    final names = places
-        .map((place) => place.name.trim())
-        .where((name) => name.isNotEmpty)
-        .toSet()
-        .toList();
+    final names =
+        places
+            .map((place) => place.name.trim())
+            .where((name) => name.isNotEmpty)
+            .toSet()
+            .toList();
     return names.take(12).toList();
   }
 
@@ -53,7 +54,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchScenicData({bool isRefresh = false}) async {
     // 如果正在加载更多，且不是刷新操作，则防止重复请求
     if (_isLoadingMore && !isRefresh) return;
-    
+
     // 如果没有更多数据且不是刷新操作，直接返回
     if (!_hasMore && !isRefresh) return;
 
@@ -73,7 +74,9 @@ class _HomePageState extends State<HomePage> {
 
     try {
       // 构建带分页参数的 URL
-      final uri = Uri.parse('http://www.pavogroup.top:3004/norwaytravelscenic').replace(
+      final uri = Uri.parse(
+        'http://www.pavogroup.top:3004/norwaytravelscenic',
+      ).replace(
         queryParameters: {
           'page': _currentPage.toString(),
           'limit': _pageSize.toString(),
@@ -89,52 +92,53 @@ class _HomePageState extends State<HomePage> {
         // 解析数据逻辑
         List<dynamic> dataList = [];
         int total = 0; // 总数
-        
+
         if (decoded is List) {
           dataList = decoded;
         } else if (decoded is Map<String, dynamic>) {
           // 后端返回 { data: { list: [...], total: ... } } 结构
           final dataMap = decoded['data'] as Map<String, dynamic>?;
           dataList = dataMap?['list'] as List<dynamic>? ?? const <dynamic>[];
-          
+
           // 获取总数用于准确判断是否有更多数据
           total = dataMap?['total'] as int? ?? 0;
         }
 
         // 解析 Place 对象
-        final newPlaces = dataList.map((item) {
-          final map = item as Map<String, dynamic>? ?? const <String, dynamic>{};
-          final name = map['name'] ?? '';
-          final location = map['address'] ?? map['location'] ?? '';
-          final description = map['description'] ?? map['desc'] ?? '';
-          final phone = map['telephone'] ?? map['phone'] ?? '';
-          final rating = (map['grade'] ?? map['rating'] ?? 0);
-          // 尝试多种可能的图片字段名
-          final imageUrl = 
-            map['picture']?.toString().trim() ?? 
-            map['img']?.toString().trim() ?? 
-            map['image']?.toString().trim() ??
-            map['image_url']?.toString().trim() ??
-            map['photo']?.toString().trim() ??
-            map['photos']?.toString().trim() ??
-            map['imageUrl']?.toString().trim() ??
-            '';
-          final website = map['website'] ?? '';
-          final highlights = map['attend'] ?? map['highlights'] ?? '';
+        final newPlaces =
+            dataList.map((item) {
+              final map =
+                  item as Map<String, dynamic>? ?? const <String, dynamic>{};
+              final name = map['name'] ?? '';
+              final location = map['address'] ?? map['location'] ?? '';
+              final description = map['description'] ?? map['desc'] ?? '';
+              final phone = map['telephone'] ?? map['phone'] ?? '';
+              final rating = (map['grade'] ?? map['rating'] ?? 0);
+              // 尝试多种可能的图片字段名
+              final imageUrl =
+                  map['picture']?.toString().trim() ??
+                  map['img']?.toString().trim() ??
+                  map['image']?.toString().trim() ??
+                  map['image_url']?.toString().trim() ??
+                  map['photo']?.toString().trim() ??
+                  map['photos']?.toString().trim() ??
+                  map['imageUrl']?.toString().trim() ??
+                  '';
+              final website = map['website'] ?? '';
+              final highlights = map['attend'] ?? map['highlights'] ?? '';
 
-          return Place(
-            name: name,
-            location: location,
-            description: description,
-            phone: phone,
-            rating: rating,
-            imageUrl: imageUrl,
-            website: website,
-            highlights: highlights,
-            address: location,  // 添加 address 参数
-
-          );
-        }).toList();
+              return Place(
+                name: name,
+                location: location,
+                description: description,
+                phone: phone,
+                rating: rating,
+                imageUrl: imageUrl,
+                website: website,
+                highlights: highlights,
+                address: location, // 添加 address 参数
+              );
+            }).toList();
 
         setState(() {
           if (isRefresh) {
@@ -142,7 +146,7 @@ class _HomePageState extends State<HomePage> {
           } else {
             places.addAll(newPlaces);
           }
-          
+
           // 判断是否还有更多数据
           // 使用后端返回的total进行准确判断
           if (newPlaces.length < _pageSize || places.length >= total) {
@@ -153,7 +157,7 @@ class _HomePageState extends State<HomePage> {
 
           isLoading = false;
           _isLoadingMore = false;
-          
+
           if (places.isEmpty) {
             errorMessage = '未找到景点数据，请稍后重试。';
           }
@@ -270,22 +274,27 @@ class _HomePageState extends State<HomePage> {
               duration: const Duration(milliseconds: 250),
               padding: EdgeInsets.symmetric(horizontal: 18.w, vertical: 10.h),
               decoration: BoxDecoration(
-                gradient: selected
-                    ? const LinearGradient(
-                        colors: [Color(0xFF5B86E5), Color(0xFF36D1DC)],
-                      )
-                    : const LinearGradient(
-                        colors: [Color(0xFF334155), Color(0xFF1E293B)],
-                      ),
+                gradient:
+                    selected
+                        ? const LinearGradient(
+                          colors: [Color(0xFF5B86E5), Color(0xFF36D1DC)],
+                        )
+                        : const LinearGradient(
+                          colors: [Color(0xFF334155), Color(0xFF1E293B)],
+                        ),
                 borderRadius: BorderRadius.circular(999.w),
                 border: Border.all(
-                  color: selected ? Colors.transparent : Colors.white.withOpacity(0.14),
+                  color:
+                      selected
+                          ? Colors.transparent
+                          : Colors.white.withOpacity(0.14),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: selected
-                        ? const Color(0xFF36D1DC).withOpacity(0.25)
-                        : Colors.black.withOpacity(0.12),
+                    color:
+                        selected
+                            ? const Color(0xFF36D1DC).withOpacity(0.25)
+                            : Colors.black.withOpacity(0.12),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -349,7 +358,7 @@ class _HomePageState extends State<HomePage> {
             //     ),
             //   ),
             // ),
-            
+
             // 首次加载状态
             if (isLoading && places.isEmpty)
               SliverFillRemaining(
@@ -361,7 +370,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               )
-            
             // 错误状态
             else if (errorMessage != null && places.isEmpty)
               SliverFillRemaining(
@@ -372,12 +380,14 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       errorMessage!,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14.sp, color: Colors.redAccent),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.redAccent,
+                      ),
                     ),
                   ),
                 ),
               )
-            
             // 正常列表内容
             else ...[
               SliverToBoxAdapter(child: _buildScenicTagArea()),
@@ -392,7 +402,10 @@ class _HomePageState extends State<HomePage> {
                             ? '暂无景点数据，请稍后重试。'
                             : '暂无匹配 "$_selectedScenicTag" 的景点。',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14.sp, color: Colors.grey[300]),
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.grey[300],
+                        ),
                       ),
                     ),
                   ),
@@ -414,7 +427,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-              
+
               // 底部加载状态指示器
               if (_isLoadingMore)
                 SliverToBoxAdapter(
@@ -429,7 +442,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 )
-              
               // 没有更多数据提示
               else if (!_hasMore && places.isNotEmpty)
                 SliverToBoxAdapter(
@@ -502,7 +514,7 @@ class _StaggeredTwoColumnGrid extends StatelessWidget {
                     place: rightColumn[i],
                     shortDesc: shortDesc(rightColumn[i].description),
                     onTap: () => onTap(rightColumn[i]),
-                    marginTop: i == 0 ? 0: 16.h, // 40.h : 16.h,
+                    marginTop: i == 0 ? 0 : 16.h, // 40.h : 16.h,
                   ),
               ],
             ),
@@ -551,38 +563,48 @@ class _StaggeredCard extends StatelessWidget {
             children: [
               // 图片部分：宽度固定，高度自适应
               ClipRRect(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(12.w),
-                ),
-                child: place.imageUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: place.imageUrl,
-                        width: double.infinity, // 宽度填满列宽
-                        fit: BoxFit.fitWidth,   // 关键：保持宽高比，高度自动调整
-                        errorWidget: (context, url, error) {
-                          return Container(
-                            height: 180.h, // 错误时给一个默认高度
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(12.w)),
+                child:
+                    place.imageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                          imageUrl: place.imageUrl,
+                          width: double.infinity, // 宽度填满列宽
+                          fit: BoxFit.fitWidth, // 关键：保持宽高比，高度自动调整
+                          errorWidget: (context, url, error) {
+                            return Container(
+                              height: 180.h, // 错误时给一个默认高度
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Icon(
+                                  Icons.broken_image,
+                                  size: 48,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            );
+                          },
+                          placeholder:
+                              (context, url) => Container(
+                                height: 180.h, // 加载时给一个占位高度，避免布局跳动太大
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                        )
+                        : Container(
+                          height: 180.h,
+                          color: Colors.grey[300],
+                          child: const Center(
+                            child: Icon(
+                              Icons.image_not_supported,
+                              size: 48,
+                              color: Colors.grey,
                             ),
-                          );
-                        },
-                        placeholder: (context, url) => Container(
-                          height: 180.h, // 加载时给一个占位高度，避免布局跳动太大
-                          color: Colors.grey[200],
-                          child: const Center(child: CircularProgressIndicator()),
+                          ),
                         ),
-                      )
-                    : Container(
-                        height: 180.h,
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
-                        ),
-                      ),
               ),
-              
+
               Padding(
                 padding: EdgeInsets.all(12.w),
                 child: Column(
@@ -611,7 +633,11 @@ class _StaggeredCard extends StatelessWidget {
                           ),
                         ),
                         SizedBox(width: 8.w),
-                        Icon(Icons.location_on, size: 12.sp, color: Colors.grey),
+                        Icon(
+                          Icons.location_on,
+                          size: 12.sp,
+                          color: Colors.grey,
+                        ),
                         Expanded(
                           child: Text(
                             place.location,

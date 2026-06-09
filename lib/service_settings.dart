@@ -6,10 +6,10 @@ import 'service_theme.dart' as theme;
 import 'service_cart.dart';
 import 'service_address.dart';
 
-class ServiceApp extends StatelessWidget {
+class ServiceSettings extends StatelessWidget {
   final ThemeMode themeMode;
 
-  const ServiceApp({super.key, required this.themeMode});
+  const ServiceSettings({super.key, required this.themeMode});
 
   @override
   Widget build(BuildContext context) {

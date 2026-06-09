@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
 import 'app_shared.dart' as shared;
-import 'bbs.dart';
+import 'bbs_home.dart';
 
 class BbsDetailsPage extends StatefulWidget {
   final Post post;
@@ -34,13 +34,15 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
   Future<void> _fetchComments() async {
     try {
       final response = await http.get(
-        Uri.parse('http://www.pavogroup.top:3004/api/posts/${_post.id}/comments'),
+        Uri.parse(
+          'http://www.pavogroup.top:3004/api/posts/${_post.id}/comments',
+        ),
       );
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         final dataList = decoded['data'] as List<dynamic>? ?? [];
-        
+
         setState(() {
           _comments = dataList.map((item) => Comment.fromJson(item)).toList();
           _isLoading = false;
@@ -65,7 +67,9 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://www.pavogroup.top:3004/api/posts/${_post.id}/like/status?user_id=${currentUser.user_id}'),
+        Uri.parse(
+          'http://www.pavogroup.top:3004/api/posts/${_post.id}/like/status?user_id=${currentUser.user_id}',
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -133,26 +137,25 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://www.pavogroup.top:3004/api/posts/${_post.id}/comments'),
+        Uri.parse(
+          'http://www.pavogroup.top:3004/api/posts/${_post.id}/comments',
+        ),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'user_id': currentUser.user_id,
-          'content': content,
-        }),
+        body: json.encode({'user_id': currentUser.user_id, 'content': content}),
       );
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         _commentController.clear();
-        
+
         // 更新评论数和评论列表
         setState(() {
           _post = _post.copyWith(commentsCount: _post.commentsCount + 1);
         });
-        
+
         // 重新获取评论列表
         await _fetchComments();
-        
+
         _showSuccess(decoded['message'] ?? '评论成功');
       } else {
         _showError('评论失败，请稍后重试');
@@ -168,9 +171,9 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
   }
 
   void _showLoginRequired() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('请先登录')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('请先登录')));
     // 可以选择跳转到登录页
     // Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
   }
@@ -192,10 +195,12 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('帖子详情'),
-        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+        backgroundColor:
+            isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         foregroundColor: isDark ? Colors.white : Colors.black,
         elevation: isDark ? 0 : 4,
         shadowColor: isDark ? const Color(0xFF4F46E5).withOpacity(0.3) : null,
@@ -219,7 +224,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  
+
                   // 作者和分类信息
                   Row(
                     children: [
@@ -229,7 +234,10 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                         _post.authorName,
                         style: TextStyle(
                           fontSize: 13.sp,
-                          color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                          color:
+                              isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : Colors.grey[600],
                         ),
                       ),
                       const Spacer(),
@@ -237,13 +245,16 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                         _formatDate(_post.createdAt),
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: isDark ? const Color(0xFF64748B) : Colors.grey[500],
+                          color:
+                              isDark
+                                  ? const Color(0xFF64748B)
+                                  : Colors.grey[500],
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   // 内容
                   Text(
                     _post.content,
@@ -254,52 +265,66 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   // 图片展示
                   if (_post.images.isNotEmpty) ...[
                     Wrap(
                       spacing: 8.w,
                       runSpacing: 8.h,
-                      children: _post.images.map((imageUrl) {
-                        return GestureDetector(
-                          onTap: () => _showImagePreview(imageUrl),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8.r),
-                            child: Image.network(
-                              imageUrl,
-                              width: (MediaQuery.of(context).size.width - 48.w) / 3,
-                              height: 120.h,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  width: (MediaQuery.of(context).size.width - 48.w) / 3,
+                      children:
+                          _post.images.map((imageUrl) {
+                            return GestureDetector(
+                              onTap: () => _showImagePreview(imageUrl),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8.r),
+                                child: Image.network(
+                                  imageUrl,
+                                  width:
+                                      (MediaQuery.of(context).size.width -
+                                          48.w) /
+                                      3,
                                   height: 120.h,
-                                  color: Colors.grey[300],
-                                  child: const Icon(Icons.broken_image),
-                               );
-                              },
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width:
+                                          (MediaQuery.of(context).size.width -
+                                              48.w) /
+                                          3,
+                                      height: 120.h,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.broken_image),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          }).toList(),
                     ),
                     SizedBox(height: 16.h),
                   ],
-                  
+
                   // 点赞和评论统计
                   Container(
                     padding: EdgeInsets.symmetric(vertical: 16.h),
                     decoration: BoxDecoration(
                       border: Border(
-                        top: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
-                        bottom: BorderSide(color: isDark ? Colors.grey[800]! : Colors.grey[200]!),
+                        top: BorderSide(
+                          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                        ),
+                        bottom: BorderSide(
+                          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                        ),
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _buildActionButton(
-                          icon: _isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                          icon:
+                              _isLiked
+                                  ? Icons.thumb_up
+                                  : Icons.thumb_up_outlined,
                           label: '${_post.likesCount}',
                           onTap: _toggleLike,
                           isActive: _isLiked,
@@ -315,7 +340,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  
+
                   // 评论标题
                   Text(
                     '评论 (${_comments.length})',
@@ -326,7 +351,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     ),
                   ),
                   SizedBox(height: 12.h),
-                  
+
                   // 评论列表
                   if (_isLoading && _comments.isEmpty)
                     const Center(child: CircularProgressIndicator())
@@ -339,14 +364,18 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                             Icon(
                               Icons.chat_bubble_outline,
                               size: 48,
-                              color: isDark ? Colors.grey[600] : Colors.grey[400],
+                              color:
+                                  isDark ? Colors.grey[600] : Colors.grey[400],
                             ),
                             SizedBox(height: 8.h),
                             Text(
                               '暂无评论，快来抢沙发吧～',
                               style: TextStyle(
                                 fontSize: 14.sp,
-                                color: isDark ? Colors.grey[500] : Colors.grey[500],
+                                color:
+                                    isDark
+                                        ? Colors.grey[500]
+                                        : Colors.grey[500],
                               ),
                             ),
                           ],
@@ -368,7 +397,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
               ),
             ),
           ),
-          
+
           // 底部评论输入框
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
@@ -390,16 +419,26 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                     maxLines: null,
                     decoration: InputDecoration(
                       hintText: '写下你的评论...',
-                      hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[400]),
+                      hintStyle: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24.r),
                         borderSide: BorderSide.none,
                       ),
                       filled: true,
-                      fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFEEF2FF),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                      fillColor:
+                          isDark
+                              ? const Color(0xFF0F172A)
+                              : const Color(0xFFEEF2FF),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16.w,
+                        vertical: 10.h,
+                      ),
                     ),
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                   ),
                 ),
                 SizedBox(width: 8.w),
@@ -411,11 +450,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
                       color: const Color(0xFF4F46E5),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.send,
-                      size: 20.sp,
-                      color: Colors.white,
-                    ),
+                    child: Icon(Icons.send, size: 20.sp, color: Colors.white),
                   ),
                 ),
               ],
@@ -432,17 +467,11 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEEF2FF),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(
-          color: const Color(0xFF4F46E5),
-          width: 1.5,
-        ),
+        border: Border.all(color: const Color(0xFF4F46E5), width: 1.5),
       ),
       child: Text(
         _post.categoryName,
-        style: TextStyle(
-          fontSize: 12.sp,
-          color: const Color(0xFF4F46E5),
-        ),
+        style: TextStyle(fontSize: 12.sp, color: const Color(0xFF4F46E5)),
       ),
     );
   }
@@ -459,20 +488,22 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
       child: Column(
         children: [
           Icon(
-              icon,
-              color: isActive
-                  ? const Color(0xFF4F46E5)
-                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
-              size: 24.sp,
-            ),
+            icon,
+            color:
+                isActive
+                    ? const Color(0xFF4F46E5)
+                    : (isDark ? Colors.grey[400] : Colors.grey[600]),
+            size: 24.sp,
+          ),
           SizedBox(height: 4.h),
           Text(
             label,
             style: TextStyle(
               fontSize: 12.sp,
-              color: isActive
-                  ? const Color(0xFF4F46E5)
-                  : (isDark ? Colors.grey[400] : Colors.grey[600]),
+              color:
+                  isActive
+                      ? const Color(0xFF4F46E5)
+                      : (isDark ? Colors.grey[400] : Colors.grey[600]),
             ),
           ),
         ],
@@ -488,7 +519,10 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: isDark ? const Color(0xFF4F46E5).withOpacity(0.5) : Colors.grey[200]!,
+          color:
+              isDark
+                  ? const Color(0xFF4F46E5).withOpacity(0.5)
+                  : Colors.grey[200]!,
         ),
       ),
       child: Column(
@@ -498,9 +532,14 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
             children: [
               CircleAvatar(
                 radius: 16.r,
-                backgroundColor: isDark ? const Color(0xFF3D5AFE).withOpacity(0.2) : const Color(0xFF3D5AFE).withOpacity(0.1),
+                backgroundColor:
+                    isDark
+                        ? const Color(0xFF3D5AFE).withOpacity(0.2)
+                        : const Color(0xFF3D5AFE).withOpacity(0.1),
                 child: Text(
-                  comment.userName.isNotEmpty ? comment.userName[0].toUpperCase() : 'U',
+                  comment.userName.isNotEmpty
+                      ? comment.userName[0].toUpperCase()
+                      : 'U',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: const Color(0xFF3D5AFE),
@@ -543,30 +582,37 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
   void _showImagePreview(String imageUrl) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.9,
-              maxHeight: MediaQuery.of(context).size.height * 0.8,
-            ),
-            child: InteractiveViewer(
-              child: Image.network(
-                imageUrl,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.black54,
-                    child: const Center(child: Icon(Icons.broken_image, size: 48, color: Colors.white)),
-                  );
-                },
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                ),
+                child: InteractiveViewer(
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.black54,
+                        child: const Center(
+                          child: Icon(
+                            Icons.broken_image,
+                            size: 48,
+                            color: Colors.white,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 
@@ -578,7 +624,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
   String _formatDate(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    
+
     if (diff.inMinutes < 1) return '刚刚';
     if (diff.inHours < 1) return '${diff.inMinutes}分钟前';
     if (diff.inDays < 1) return '${diff.inHours}小时前';

@@ -369,10 +369,10 @@ packages:
     dependency: "direct main"
     description:
       name: fluwx
-      sha256: "7e92d2000ee49c5262a88c51ea2d22b91a753d5b29df27cc264bb0a115d65373"
+      sha256: "247ed1fa2902c197a1dbb7f6f9954d2c6e6e06b8ca2dc1c7feeaec4e7ac5e17f"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "5.7.5"
+    version: "5.0.0"
   go_router:
     dependency: "direct main"
     description:

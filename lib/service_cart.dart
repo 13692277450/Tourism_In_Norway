@@ -5,6 +5,7 @@ import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_checkout.dart';
+import 'service_home.dart';
 
 class ServiceCartPage extends StatefulWidget {
   const ServiceCartPage({super.key});
@@ -35,7 +36,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
 
   Future<void> _loadCart() async {
     if (_currentUserId == null) return;
-    
+
     setState(() => _isLoading = true);
     final items = await ServiceApi.getCart(_currentUserId!);
     setState(() {
@@ -61,7 +62,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
         item.selected = newSelected;
       }
     });
-    
+
     // 更新服务器
     for (var item in _cartItems) {
       await ServiceApi.updateCart(cartId: item.id, selected: item.selected);
@@ -78,7 +79,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
 
   Future<void> _updateQuantity(ServiceCartItem item, int newQuantity) async {
     if (newQuantity < 1 || newQuantity > item.stock) return;
-    
+
     setState(() {
       item.quantity = newQuantity;
     });
@@ -88,24 +89,27 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
   Future<void> _removeItem(ServiceCartItem item) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: const Text('确定要删除该商品吗？'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('确认删除'),
+            content: const Text('确定要删除该商品吗？'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('删除'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
     );
-    
+
     if (confirmed == true) {
       setState(() {
         _cartItems.removeWhere((i) => i.id == item.id);
@@ -122,19 +126,22 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       _showError('请选择要结算的商品');
       return;
     }
-    
-    final checkoutItems = selectedItems.map((item) => {
-      'goods_id': item.goodsId,
-      'quantity': item.quantity,
-    }).toList();
-    
+
+    final checkoutItems =
+        selectedItems
+            .map(
+              (item) => {'goods_id': item.goodsId, 'quantity': item.quantity},
+            )
+            .toList();
+
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ServiceCheckoutPage(
-          cartItems: selectedItems,
-          checkoutItems: checkoutItems,
-        ),
+        builder:
+            (_) => ServiceCheckoutPage(
+              cartItems: selectedItems,
+              checkoutItems: checkoutItems,
+            ),
       ),
     ).then((_) => _loadCart());
   }
@@ -166,34 +173,41 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           '购物车',
           style: TextStyle(
-            color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText,
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary
+                    : theme.ServiceMetalColors.lightText,
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _cartItems.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _cartItems.isEmpty
               ? _buildEmptyCart(isDark)
               : Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        padding: EdgeInsets.all(12.w),
-                        itemCount: _cartItems.length,
-                        itemBuilder: (context, index) {
-                          final item = _cartItems[index];
-                          return _buildCartItem(item, isDark);
-                        },
-                      ),
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      padding: EdgeInsets.all(12.w),
+                      itemCount: _cartItems.length,
+                      itemBuilder: (context, index) {
+                        final item = _cartItems[index];
+                        return _buildCartItem(item, isDark);
+                      },
                     ),
-                    _buildBottomBar(isDark),
-                  ],
-                ),
+                  ),
+                  _buildBottomBar(isDark),
+                ],
+              ),
     );
   }
 
@@ -205,7 +219,10 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
           Icon(
             Icons.shopping_cart_outlined,
             size: 80.sp,
-            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[400],
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary.withOpacity(0.5)
+                    : Colors.grey[400],
           ),
           SizedBox(height: 16.h),
           Text(
@@ -218,7 +235,10 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
           SizedBox(height: 16.h),
           _buildMetalButton(
             '去逛逛',
-            () => Navigator.pop(context),
+            () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const ServiceHomePage()),
+            ),
             isDark,
           ),
         ],
@@ -233,12 +253,26 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       decoration: BoxDecoration(
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border: isDark ? Border.all(color: theme.ServiceMetalColors.primary.withOpacity(0.3)) : null,
-        boxShadow: isDark ? [
-          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.1), blurRadius: 8),
-        ] : [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4),
-        ],
+        border:
+            isDark
+                ? Border.all(
+                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                )
+                : null,
+        boxShadow:
+            isDark
+                ? [
+                  BoxShadow(
+                    color: theme.ServiceMetalColors.primary.withOpacity(0.1),
+                    blurRadius: 8,
+                  ),
+                ]
+                : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                  ),
+                ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,15 +287,21 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: item.selected
-                      ? theme.ServiceMetalColors.primary
-                      : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
+                  color:
+                      item.selected
+                          ? theme.ServiceMetalColors.primary
+                          : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
                   width: 2,
                 ),
               ),
-              child: item.selected
-                  ? Icon(Icons.check, size: 16.sp, color: theme.ServiceMetalColors.primary)
-                  : null,
+              child:
+                  item.selected
+                      ? Icon(
+                        Icons.check,
+                        size: 16.sp,
+                        color: theme.ServiceMetalColors.primary,
+                      )
+                      : null,
             ),
           ),
           // 商品图片
@@ -272,12 +312,16 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
               width: 80.w,
               height: 80.h,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
-                width: 80.w,
-                height: 80.h,
-                color: Colors.grey[200],
-                child: Icon(Icons.image_not_supported, color: Colors.grey[400]),
-              ),
+              errorBuilder:
+                  (_, __, ___) => Container(
+                    width: 80.w,
+                    height: 80.h,
+                    color: Colors.grey[200],
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey[400],
+                    ),
+                  ),
             ),
           ),
           SizedBox(width: 12.w),
@@ -311,25 +355,42 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                     Text(
                       '¥${item.price.toStringAsFixed(2)}',
                       style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
-                    shadows: isDark ? [
-                      Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 5),
-                    ] : null,
-                  ),
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color:
+                            isDark
+                                ? theme.ServiceMetalColors.primary
+                                : theme.ServiceMetalColors.primary,
+                        shadows:
+                            isDark
+                                ? [
+                                  Shadow(
+                                    color: theme.ServiceMetalColors.primary,
+                                    blurRadius: 5,
+                                  ),
+                                ]
+                                : null,
+                      ),
                     ),
                     // 数量选择器
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[300]!,
+                          color:
+                              isDark
+                                  ? theme.ServiceMetalColors.primary
+                                      .withOpacity(0.5)
+                                  : Colors.grey[300]!,
                         ),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Row(
                         children: [
-                          _buildQuantityButton(Icons.remove, () => _updateQuantity(item, item.quantity - 1), isDark),
+                          _buildQuantityButton(
+                            Icons.remove,
+                            () => _updateQuantity(item, item.quantity - 1),
+                            isDark,
+                          ),
                           Container(
                             width: 40.w,
                             alignment: Alignment.center,
@@ -341,7 +402,11 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                               ),
                             ),
                           ),
-                          _buildQuantityButton(Icons.add, () => _updateQuantity(item, item.quantity + 1), isDark),
+                          _buildQuantityButton(
+                            Icons.add,
+                            () => _updateQuantity(item, item.quantity + 1),
+                            isDark,
+                          ),
                         ],
                       ),
                     ),
@@ -373,10 +438,15 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
         decoration: BoxDecoration(
-          color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.grey[100],
+          color:
+              isDark ? theme.ServiceMetalColors.darkSurface : Colors.grey[100],
           borderRadius: BorderRadius.circular(8.r),
         ),
-        child: Icon(icon, size: 16.sp, color: isDark ? theme.ServiceMetalColors.primary : Colors.black87),
+        child: Icon(
+          icon,
+          size: 16.sp,
+          color: isDark ? theme.ServiceMetalColors.primary : Colors.black87,
+        ),
       ),
     );
   }
@@ -388,7 +458,10 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         boxShadow: [
           BoxShadow(
-            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.2) : Colors.black.withOpacity(0.05),
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -408,15 +481,23 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: _isAllSelected
-                            ? theme.ServiceMetalColors.primary
-                            : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
+                        color:
+                            _isAllSelected
+                                ? theme.ServiceMetalColors.primary
+                                : (isDark
+                                    ? Colors.grey[600]!
+                                    : Colors.grey[400]!),
                         width: 2,
                       ),
                     ),
-                    child: _isAllSelected
-                        ? Icon(Icons.check, size: 14.sp, color: theme.ServiceMetalColors.primary)
-                        : null,
+                    child:
+                        _isAllSelected
+                            ? Icon(
+                              Icons.check,
+                              size: 14.sp,
+                              color: theme.ServiceMetalColors.primary,
+                            )
+                            : null,
                   ),
                   SizedBox(width: 8.w),
                   Text(
@@ -438,8 +519,19 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.primary,
-                    shadows: isDark ? [Shadow(color: theme.ServiceMetalColors.primary, blurRadius: 8)] : null,
+                    color:
+                        isDark
+                            ? theme.ServiceMetalColors.primary
+                            : theme.ServiceMetalColors.primary,
+                    shadows:
+                        isDark
+                            ? [
+                              Shadow(
+                                color: theme.ServiceMetalColors.primary,
+                                blurRadius: 8,
+                              ),
+                            ]
+                            : null,
                   ),
                 ),
                 Text(
@@ -452,19 +544,19 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
               ],
             ),
             SizedBox(width: 12.w),
-            _buildMetalButton(
-              '结算',
-              _checkout,
-              isDark,
-              width: 100.w,
-            ),
+            _buildMetalButton('结算', _checkout, isDark, width: 100.w),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMetalButton(String text, VoidCallback onTap, bool isDark, {double? width}) {
+  Widget _buildMetalButton(
+    String text,
+    VoidCallback onTap,
+    bool isDark, {
+    double? width,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -472,13 +564,27 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
         height: 44.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+            colors: [
+              theme.ServiceMetalColors.primary,
+              theme.ServiceMetalColors.accent,
+            ],
           ),
           borderRadius: BorderRadius.circular(22.r),
-          boxShadow: isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 12, spreadRadius: 1),
-            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 8, spreadRadius: 1),
-          ] : null,
+          boxShadow:
+              isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary,
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.accent,
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

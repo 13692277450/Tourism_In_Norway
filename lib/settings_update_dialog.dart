@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'version_checker.dart';
-import 'upgrade.dart';
+import 'settings_version_checker.dart';
+import 'settings_upgrade.dart';
 
 class UpdateDialog extends StatelessWidget {
   final VersionInfo versionInfo;
 
-  const UpdateDialog({
-    super.key,
-    required this.versionInfo,
-  });
+  const UpdateDialog({super.key, required this.versionInfo});
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +75,10 @@ class UpdateDialog extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 10.h,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE0E7FF),
                       borderRadius: BorderRadius.circular(12.w),
@@ -116,7 +116,10 @@ class UpdateDialog extends StatelessWidget {
                   ),
                   SizedBox(width: 20.w),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 10.h,
+                    ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
                         colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
@@ -253,8 +256,7 @@ class UpdateDialog extends StatelessWidget {
                         ),
                       ),
                     ),
-                  if (!versionInfo.isMandatory)
-                    SizedBox(width: 12.w),
+                  if (!versionInfo.isMandatory) SizedBox(width: 12.w),
                   Expanded(
                     flex: versionInfo.isMandatory ? 1 : 1,
                     child: ElevatedButton(
@@ -263,7 +265,9 @@ class UpdateDialog extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => Upgrade(apkUrl: versionInfo.apkUrl),
+                            builder:
+                                (context) =>
+                                    Upgrade(apkUrl: versionInfo.apkUrl),
                             maintainState: false,
                           ),
                         );

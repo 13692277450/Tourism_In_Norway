@@ -7,7 +7,7 @@ import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_product_detail.dart';
-import 'auth.dart';
+import 'user_auth.dart';
 import 'app_shared.dart' as shared;
 
 class ServiceLikePage extends StatefulWidget {

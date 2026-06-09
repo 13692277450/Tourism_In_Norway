@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'app_shared.dart' as shared;
-import 'upgrade.dart';
-import 'register.dart';
-import 'auth.dart';
+import 'settings_upgrade.dart';
+import 'user_register.dart';
+import 'user_auth.dart';
 
 enum UpdateState { idle, checking, available, latest, updating, completed }
 
@@ -71,10 +71,7 @@ class _SettingsPageState extends State<SettingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 20.h),
-          _InfoCard(
-            title: '用户账户',
-            child: _buildUserAccountSection(isDark),
-          ),
+          _InfoCard(title: '用户账户', child: _buildUserAccountSection(isDark)),
           SizedBox(height: 40.h),
           Row(
             children: [
@@ -91,9 +88,10 @@ class _SettingsPageState extends State<SettingsPage> {
               // 快速主题切换按钮
               Container(
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF2A2A3E)
-                      : const Color(0xFFE0E7FF),
+                  color:
+                      isDark
+                          ? const Color(0xFF2A2A3E)
+                          : const Color(0xFFE0E7FF),
                   borderRadius: BorderRadius.circular(30.w),
                 ),
                 child: Row(
@@ -127,10 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
           SizedBox(height: 24.h),
 
           // 主题设置卡片
-          _InfoCard(
-            title: '主题设置',
-            child: _buildThemeSection(isDark),
-          ),
+          _InfoCard(title: '主题设置', child: _buildThemeSection(isDark)),
           SizedBox(height: 20.h),
 
           // 语言选择卡片
@@ -144,20 +139,20 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 fillColor: isDark ? const Color(0xFF2A2A3E) : Colors.white,
               ),
-              style: TextStyle(
-                color: isDark ? const Color(0xFFE0E0E0) : null,
-              ),
+              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
               dropdownColor: isDark ? const Color(0xFF1E1E2E) : null,
-              items: locales
-                  .map(
-                    (locale) => DropdownMenuItem<Locale>(
-                      value: locale,
-                      child: Text(
-                        localeNames[locale.languageCode] ?? locale.languageCode,
-                      ),
-                    ),
-                  )
-                  .toList(),
+              items:
+                  locales
+                      .map(
+                        (locale) => DropdownMenuItem<Locale>(
+                          value: locale,
+                          child: Text(
+                            localeNames[locale.languageCode] ??
+                                locale.languageCode,
+                          ),
+                        ),
+                      )
+                      .toList(),
               onChanged: (value) {
                 final newLocale = value;
                 if (newLocale != null) widget.onLocaleChanged(newLocale);
@@ -288,16 +283,20 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Container(
         padding: EdgeInsets.all(14.w),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark
-                  ? const Color(0xFF3D5AFE).withOpacity(0.2)
-                  : const Color(0xFFE0E7FF))
-              : Colors.transparent,
+          color:
+              isSelected
+                  ? (isDark
+                      ? const Color(0xFF3D5AFE).withOpacity(0.2)
+                      : const Color(0xFFE0E7FF))
+                  : Colors.transparent,
           borderRadius: BorderRadius.circular(12.w),
           border: Border.all(
-            color: isSelected
-                ? const Color(0xFF3D5AFE)
-                : (isDark ? const Color(0xFF444444) : const Color(0xFFE0E0E0)),
+            color:
+                isSelected
+                    ? const Color(0xFF3D5AFE)
+                    : (isDark
+                        ? const Color(0xFF444444)
+                        : const Color(0xFFE0E0E0)),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -305,9 +304,12 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Icon(
               icon,
-              color: isSelected
-                  ? const Color(0xFF3D5AFE)
-                  : (isDark ? const Color(0xFF9E9E9E) : const Color(0xFF6A78A4)),
+              color:
+                  isSelected
+                      ? const Color(0xFF3D5AFE)
+                      : (isDark
+                          ? const Color(0xFF9E9E9E)
+                          : const Color(0xFF6A78A4)),
               size: 24.r,
             ),
             SizedBox(width: 12.w),
@@ -320,18 +322,22 @@ class _SettingsPageState extends State<SettingsPage> {
                     style: TextStyle(
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? const Color(0xFF3D5AFE)
-                          : (isDark
-                              ? const Color(0xFFE0E0E0)
-                              : const Color(0xFF1A1A2E)),
+                      color:
+                          isSelected
+                              ? const Color(0xFF3D5AFE)
+                              : (isDark
+                                  ? const Color(0xFFE0E0E0)
+                                  : const Color(0xFF1A1A2E)),
                     ),
                   ),
                   Text(
                     subtitle,
                     style: TextStyle(
                       fontSize: 11.sp,
-                      color: isDark ? const Color(0xFF9E9E9E) : const Color(0xFF6A78A4),
+                      color:
+                          isDark
+                              ? const Color(0xFF9E9E9E)
+                              : const Color(0xFF6A78A4),
                     ),
                   ),
                 ],
@@ -388,17 +394,19 @@ class _SettingsPageState extends State<SettingsPage> {
                   width: 56.w,
                   height: 56.w,
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF2A2A3E)
-                        : const Color(0xFFE0E7FF),
+                    color:
+                        isDark
+                            ? const Color(0xFF2A2A3E)
+                            : const Color(0xFFE0E7FF),
                     borderRadius: BorderRadius.circular(28.w),
                   ),
                   child: Icon(
                     Icons.person,
                     size: 28,
-                    color: isDark
-                        ? const Color(0xFF64B5F6)
-                        : const Color(0xFF4338CA),
+                    color:
+                        isDark
+                            ? const Color(0xFF64B5F6)
+                            : const Color(0xFF4338CA),
                   ),
                 ),
                 SizedBox(width: 16.w),
@@ -418,9 +426,10 @@ class _SettingsPageState extends State<SettingsPage> {
                         user.email,
                         style: TextStyle(
                           fontSize: 12.sp,
-                          color: isDark
-                              ? const Color(0xFF9E9E9E)
-                              : Colors.grey[500],
+                          color:
+                              isDark
+                                  ? const Color(0xFF9E9E9E)
+                                  : Colors.grey[500],
                         ),
                       ),
                     ],
@@ -447,9 +456,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
             title: Text(
               '登录',
-              style: TextStyle(
-                color: isDark ? const Color(0xFFE0E0E0) : null,
-              ),
+              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
             ),
             trailing: Icon(
               Icons.arrow_forward_ios,
@@ -459,22 +466,15 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const LoginPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const LoginPage()),
               ).then((_) => setState(() {}));
             },
           ),
-          Divider(
-            height: 1,
-            color: isDark ? const Color(0xFF333333) : null,
-          ),
+          Divider(height: 1, color: isDark ? const Color(0xFF333333) : null),
           ListTile(
             title: Text(
               '注册',
-              style: TextStyle(
-                color: isDark ? const Color(0xFFE0E0E0) : null,
-              ),
+              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
             ),
             trailing: Icon(
               Icons.arrow_forward_ios,
@@ -484,9 +484,7 @@ class _SettingsPageState extends State<SettingsPage> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const RegisterPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const RegisterPage()),
               ).then((_) => setState(() {}));
             },
           ),
@@ -520,9 +518,7 @@ class _ThemeIconButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF3D5AFE)
-              : Colors.transparent,
+          color: isSelected ? const Color(0xFF3D5AFE) : Colors.transparent,
           borderRadius: BorderRadius.circular(30.w),
         ),
         child: Row(
@@ -531,9 +527,12 @@ class _ThemeIconButton extends StatelessWidget {
             Icon(
               icon,
               size: 18.r,
-              color: isSelected
-                  ? Colors.white
-                  : (isDark ? const Color(0xFF9E9E9E) : const Color(0xFF6A78A4)),
+              color:
+                  isSelected
+                      ? Colors.white
+                      : (isDark
+                          ? const Color(0xFF9E9E9E)
+                          : const Color(0xFF6A78A4)),
             ),
             if (isSelected) SizedBox(width: 4.w),
             if (isSelected)
@@ -556,10 +555,7 @@ class _InfoCard extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _InfoCard({
-    required this.title,
-    required this.child,
-  });
+  const _InfoCard({required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {

@@ -1,15 +1,17 @@
 // service_home.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:tourism_in_norway/service_settings.dart';
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_product_detail.dart';
 import 'service_cart.dart';
 import 'service_like.dart';
-import 'auth.dart';
+import 'user_auth.dart';
 import 'app_shared.dart' as shared;
 import 'app_shared.dart'; // 确保引入了 userManager
+import 'service_settings.dart';
 
 class ServiceHomePage extends StatefulWidget {
   const ServiceHomePage({super.key});
@@ -196,6 +198,17 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     ).then((_) => _loadGoods(isRefresh: true));
   }
 
+  void _navigateToSettings() {
+    // 获取当前主题模式
+    final brightness = MediaQuery.platformBrightnessOf(context);
+    final themeMode =
+        brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ServiceSettings(themeMode: themeMode)),
+    );
+  }
+
   void _goLogin() {
     Navigator.push(
       context,
@@ -233,21 +246,12 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                       : theme.ServiceMetalColors.lightBg,
               elevation: 0,
               pinned: true,
-              expandedHeight: 100.h,
-              leading: IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.pop(context),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.favorite_border),
-                  onPressed: _navigateToLike,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.shopping_cart),
-                  onPressed: _navigateToCart,
-                ),
-              ],
+              expandedHeight: 80.h,
+              // leading: IconButton(
+              //   icon: const Icon(Icons.arrow_back),
+              //   onPressed: () => Navigator.pop(context),
+              // ),
+              actions: [],
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.pin,
                 background: Container(
@@ -258,10 +262,26 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                       isDark
                           ? theme.ServiceMetalColors.darkBg
                           : theme.ServiceMetalColors.lightBg,
-                  child: Column(
+                  child: Row(
                     children: [
-                      // 搜索栏
-                      _buildSearchBar(isDark),
+                      // 搜索栏 - 60% 宽度
+                      Expanded(flex: 6, child: _buildSearchBar(isDark)),
+                      // 收藏按钮 - 20% 宽度
+                      Expanded(
+                        flex: 2,
+                        child: IconButton(
+                          icon: const Icon(Icons.shopping_cart),
+                          onPressed: _navigateToCart,
+                        ),
+                      ),
+                      // 设置按钮 - 20% 宽度
+                      Expanded(
+                        flex: 2,
+                        child: IconButton(
+                          icon: const Icon(Icons.settings),
+                          onPressed: _navigateToSettings,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -500,9 +520,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
-        crossAxisSpacing: 12.w,
-        mainAxisSpacing: 37.h,
+        crossAxisSpacing: 27.w,
+        mainAxisSpacing: 50.h,
       ),
+      shrinkWrap: true,
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: _goodsList.length + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _goodsList.length) {
@@ -655,7 +677,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                               : theme.ServiceMetalColors.lightTextSecondary,
                     ),
                   ),
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 12.h),
                   Row(
                     children: [
                       Text(
@@ -699,7 +721,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                         ),
                     ],
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 10.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [

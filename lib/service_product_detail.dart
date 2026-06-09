@@ -6,7 +6,7 @@ import 'package:tourism_in_norway/service_checkout.dart';
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
-import 'auth.dart';
+import 'user_auth.dart';
 import 'app_shared.dart' as shared;
 
 class ServiceProductDetailPage extends StatefulWidget {

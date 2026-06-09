@@ -48,7 +48,7 @@ dependencies:
   cached_network_image: ^3.4.1
   image_picker: ^1.2.1
   package_info_plus: ^4.0.0
-  fluwx: 5.7.5
+  fluwx: 5.0.0
   flutter_map: ^8.3.0
   latlong2: ^0.9.1
   url_launcher: ^6.3.2
