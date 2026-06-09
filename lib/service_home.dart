@@ -6,6 +6,10 @@ import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_product_detail.dart';
 import 'service_cart.dart';
+import 'service_like.dart';
+import 'auth.dart';
+import 'app_shared.dart' as shared;
+import 'app_shared.dart'; // 确保引入了 userManager
 
 class ServiceHomePage extends StatefulWidget {
   const ServiceHomePage({super.key});
@@ -47,9 +51,12 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   void _loadUser() {
-    // 从您的UserManager获取当前用户ID
-    // 这里需要根据您的实际Auth实现来获取
-    // 示例：_currentUserId = userManager.currentUser?.id;
+    // 从 UserManager 获取当前用户 ID
+    try {
+      _currentUserId = UserManager().currentUser?.user_id ?? 0;
+    } catch (_) {
+      _currentUserId = 0;
+    }
   }
 
   Future<void> _loadCategories() async {
@@ -90,7 +97,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         categoryId: _selectedCategoryId > 0 ? _selectedCategoryId : null,
       );
 
-      print('📦 API返回结果: $result');
+      //print('📦 API返回结果: $result');
 
       // 检查返回结果的格式
       if (result.containsKey('code') && result['code'] == 200) {
@@ -102,6 +109,20 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
         final newGoods =
             list.map((item) => ServiceGoods.fromJson(item)).toList();
+
+        // 检查收藏状态
+        if (_currentUserId != null &&
+            _currentUserId! > 0 &&
+            newGoods.isNotEmpty) {
+          final goodsIds = newGoods.map((g) => g.id).toList();
+          final likeStatus = await ServiceApi.batchCheckLikeStatus(
+            goodsIds,
+            _currentUserId!,
+          );
+          for (var goods in newGoods) {
+            goods.isLiked = likeStatus[goods.id] ?? false;
+          }
+        }
 
         setState(() {
           if (isRefresh) {
@@ -129,7 +150,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           _errorMessage = errorMsg;
         });
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       // 捕获异常并打印详细堆栈
       // print('❌ 网络请求异常: $e');
       // print('📚 堆栈信息: $stackTrace');
@@ -150,6 +171,8 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   void _searchGoods() {
     FocusScope.of(context).unfocus();
     _loadGoods(isRefresh: true);
+    // 搜索完成后清除输入框内容，避免影响下次刷新
+    _searchController.clear();
   }
 
   void _onCategorySelected(int categoryId) {
@@ -160,15 +183,26 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   void _navigateToCart() {
-    // 检查登录状态
-    // if (!isLoggedIn) {
-    //   Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
-    //   return;
-    // }
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ServiceCartPage()),
     ).then((_) => _loadGoods(isRefresh: true));
+  }
+
+  void _navigateToLike() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ServiceLikePage()),
+    ).then((_) => _loadGoods(isRefresh: true));
+  }
+
+  void _goLogin() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    ).then((_) {
+      _loadUser();
+    });
   }
 
   void _navigateToDetail(ServiceGoods goods) {
@@ -200,7 +234,20 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
               elevation: 0,
               pinned: true,
               expandedHeight: 100.h,
-              toolbarHeight: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.favorite_border),
+                  onPressed: _navigateToLike,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart),
+                  onPressed: _navigateToCart,
+                ),
+              ],
               flexibleSpace: FlexibleSpaceBar(
                 collapseMode: CollapseMode.pin,
                 background: Container(
@@ -454,7 +501,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         crossAxisCount: 2,
         childAspectRatio: 0.7,
         crossAxisSpacing: 12.w,
-        mainAxisSpacing: 27.w,
+        mainAxisSpacing: 37.h,
       ),
       itemCount: _goodsList.length + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
@@ -666,10 +713,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                                   : theme.ServiceMetalColors.lightTextTertiary,
                         ),
                       ),
-                      _buildMetalIcon(
-                        Icons.favorite_border,
+                      _buildLikeButton(
                         goods.likeCount,
+                        goods.isLiked,
                         isDark,
+                        () => _toggleLike(goods),
                       ),
                     ],
                   ),
@@ -682,27 +730,90 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     );
   }
 
-  Widget _buildMetalIcon(IconData icon, int count, bool isDark) {
-    return Row(
-      children: [
-        Icon(
-          icon,
-          size: 14.sp,
-          color: isDark ? theme.ServiceMetalColors.accent : Colors.grey,
-        ),
-        SizedBox(width: 4.w),
-        Text(
-          count.toString(),
-          style: TextStyle(
-            fontSize: 10.sp,
+  Widget _buildLikeButton(
+    int count,
+    bool isLiked,
+    bool isDark,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(
+            isLiked ? Icons.favorite : Icons.favorite_border,
+            size: 14.sp,
             color:
-                isDark
-                    ? theme.ServiceMetalColors.darkTextSecondary
-                    : theme.ServiceMetalColors.lightTextSecondary,
+                isLiked
+                    ? theme.ServiceMetalColors.accent
+                    : (isDark
+                        ? theme.ServiceMetalColors.darkTextSecondary
+                        : Colors.grey),
           ),
-        ),
-      ],
+          SizedBox(width: 4.w),
+          Text(
+            count.toString(),
+            style: TextStyle(
+              fontSize: 10.sp,
+              color:
+                  isDark
+                      ? theme.ServiceMetalColors.darkTextSecondary
+                      : theme.ServiceMetalColors.lightTextSecondary,
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  void _toggleLike(ServiceGoods goods) {
+    if (_currentUserId == null) {
+      // 用户未登录，提示登录
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请先登录')));
+      return;
+    }
+
+    final index = _goodsList.indexWhere((g) => g.id == goods.id);
+    if (index == -1) return;
+
+    setState(() {
+      _goodsList[index] = _goodsList[index].copyWith(
+        isLiked: !_goodsList[index].isLiked,
+      );
+    });
+
+    // 调用 API 更新收藏状态
+    ServiceApi.toggleLike(goods.id, _currentUserId!)
+        .then((success) {
+          if (success) {
+            setState(() {
+              final currentGoods = _goodsList[index];
+              _goodsList[index] = currentGoods.copyWith(
+                likeCount:
+                    currentGoods.isLiked
+                        ? currentGoods.likeCount + 1
+                        : currentGoods.likeCount - 1,
+              );
+            });
+          } else {
+            // API 失败，恢复状态
+            setState(() {
+              _goodsList[index] = _goodsList[index].copyWith(
+                isLiked: !_goodsList[index].isLiked,
+              );
+            });
+          }
+        })
+        .catchError((_) {
+          // 网络错误，恢复状态
+          setState(() {
+            _goodsList[index] = _goodsList[index].copyWith(
+              isLiked: !_goodsList[index].isLiked,
+            );
+          });
+        });
   }
 
   @override
@@ -739,7 +850,8 @@ class _SliverCategoryDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => 35.h;
 
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
-    return false;
+  bool shouldRebuild(covariant _SliverCategoryDelegate oldDelegate) {
+    return backgroundColor != oldDelegate.backgroundColor ||
+        categoryBar != oldDelegate.categoryBar;
   }
 }

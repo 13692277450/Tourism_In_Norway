@@ -94,7 +94,10 @@ class ServiceGoods {
       name: json['name'] ?? '',
       nameEn: json['name_en'],
       price: _toDouble(json['price']),
-      originalPrice: json['original_price'] != null ? _toDouble(json['original_price']) : null,
+      originalPrice:
+          json['original_price'] != null
+              ? _toDouble(json['original_price'])
+              : null,
       stock: json['stock'] ?? 0,
       score: json['score'] ?? 0,
       shortDescription: json['short_description'],
@@ -108,7 +111,7 @@ class ServiceGoods {
     );
   }
 
-  ServiceGoods copyWith({bool? isLiked}) {
+  ServiceGoods copyWith({bool? isLiked, int? likeCount}) {
     return ServiceGoods(
       id: id,
       goodsNo: goodsNo,
@@ -124,7 +127,7 @@ class ServiceGoods {
       images: images,
       salesCount: salesCount,
       viewCount: viewCount,
-      likeCount: likeCount,
+      likeCount: likeCount ?? this.likeCount,
       categoryName: categoryName,
       isLiked: isLiked ?? this.isLiked,
     );

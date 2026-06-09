@@ -1,10 +1,12 @@
 // service_checkout.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:tourism_in_norway/service_wechat.dart';
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_address.dart';
+import 'service_paypal.dart';
 
 class ServiceCheckoutPage extends StatefulWidget {
   final List<ServiceCartItem>? cartItems;
@@ -179,22 +181,33 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildPaymentMethod(
+                  '微信支付',
+                  '',
+                  Icons.account_balance_wallet,
+                  () => _processWeChatPayment(orderId, orderNo),
+                  isDark,
+                ),
+                SizedBox(height: 12.h),
+                _buildPaymentMethod(
                   'PayPal',
                   'https://www.paypal.com/webapps/mpp/paypal-popup',
                   Icons.payment,
                   () => _processPayPalPayment(orderId, orderNo),
                   isDark,
                 ),
-                SizedBox(height: 12.h),
-                _buildPaymentMethod(
-                  '模拟支付（测试）',
-                  '',
-                  Icons.code,
-                  () => _processMockPayment(orderId, orderNo),
-                  isDark,
-                ),
               ],
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ),
+            ],
           ),
     );
   }
@@ -243,31 +256,42 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   }
 
   Future<void> _processPayPalPayment(int orderId, String orderNo) async {
-    // 模拟PayPal支付跳转
     Navigator.pop(context); // 关闭支付方式对话框
 
     _showSuccess('正在跳转到PayPal...');
 
-    // 实际项目中，这里应该跳转到PayPal支付页面
-    // 可以使用url_launcher包打开PayPal支付链接
+    // 使用 PayPal 支付服务处理支付
+    final success = await ServicePayPalService.processPayment(
+      context,
+      _totalPrice,
+      orderNo,
+    );
 
-    // 模拟支付成功
-    await Future.delayed(const Duration(seconds: 2));
-    _showSuccess('支付成功！');
-    _navigateToOrderResult(orderId, orderNo);
+    if (success) {
+      _showSuccess('PayPal 支付成功！');
+      _navigateToOrderResult(orderId, orderNo);
+    } else {
+      _showError('PayPal 支付失败或已取消');
+    }
   }
 
-  Future<void> _processMockPayment(int orderId, String orderNo) async {
+  Future<void> _processWeChatPayment(int orderId, String orderNo) async {
     Navigator.pop(context); // 关闭支付方式对话框
 
-    setState(() => _isCreatingOrder = true);
+    _showSuccess('正在跳转到微信支付...');
 
-    // 模拟支付请求
-    await Future.delayed(const Duration(seconds: 1));
+    // 使用微信支付服务处理支付
+    final success = await ServiceWeChatService.processPayment(
+      _totalPrice,
+      orderNo,
+    );
 
-    setState(() => _isCreatingOrder = false);
-    _showSuccess('支付成功！');
-    _navigateToOrderResult(orderId, orderNo);
+    if (success) {
+      _showSuccess('微信支付成功！');
+      _navigateToOrderResult(orderId, orderNo);
+    } else {
+      _showError('微信支付失败或已取消');
+    }
   }
 
   void _navigateToOrderResult(int orderId, String orderNo) {

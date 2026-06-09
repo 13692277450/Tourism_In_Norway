@@ -6,6 +6,8 @@ import 'package:tourism_in_norway/service_checkout.dart';
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
+import 'auth.dart';
+import 'app_shared.dart' as shared;
 
 class ServiceProductDetailPage extends StatefulWidget {
   final ServiceGoods goods;
@@ -41,8 +43,9 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
   }
 
   void _loadUser() {
-    // 从您的UserManager获取当前用户ID
-    // _currentUserId = userManager.currentUser?.id;
+    // 从UserManager获取当前用户ID
+    final userManager = shared.UserManager();
+    _currentUserId = userManager.currentUser?.user_id;
   }
 
   Future<void> _loadComments() async {
@@ -60,8 +63,12 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
 
   Future<void> _checkLikeStatus() async {
     if (_currentUserId == null) return;
-    // 实际应该调用API检查点赞状态
-    setState(() => _isLiked = _goods.isLiked);
+    // 调用API检查点赞状态
+    final isLiked = await ServiceApi.checkLikeStatus(
+      _goods.id,
+      _currentUserId!,
+    );
+    setState(() => _isLiked = isLiked);
   }
 
   Future<void> _toggleLike() async {
@@ -130,9 +137,13 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
   }
 
   void _showLoginRequired() {
-    ScaffoldMessenger.of(
+    Navigator.push(
       context,
-    ).showSnackBar(const SnackBar(content: Text('请先登录')));
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    ).then((_) {
+      // 登录成功后刷新用户信息
+      _loadUser();
+    });
   }
 
   void _showSuccess(String message) {

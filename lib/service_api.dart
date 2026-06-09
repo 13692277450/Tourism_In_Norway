@@ -12,11 +12,11 @@ class ServiceApi {
     try {
       final url = Uri.parse('$baseUrl/categories');
       print('📡 请求分类URL: $url');
-      
+
       final response = await http.get(url);
       print('📡 分类响应状态码: ${response.statusCode}');
       print('📡 分类响应内容: ${response.body}');
-      
+
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         final list = decoded['data'] as List? ?? [];
@@ -37,27 +37,38 @@ class ServiceApi {
     int? categoryId,
   }) async {
     try {
-      final uri = Uri.parse('$baseUrl/goods').replace(queryParameters: {
-        'page': page.toString(),
-        'limit': limit.toString(),
-        if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
-        if (categoryId != null && categoryId > 0) 'category_id': categoryId.toString(),
-      });
-      
+      final uri = Uri.parse('$baseUrl/goods').replace(
+        queryParameters: {
+          'page': page.toString(),
+          'limit': limit.toString(),
+          if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+          if (categoryId != null && categoryId > 0)
+            'category_id': categoryId.toString(),
+        },
+      );
+
       print('📡 请求商品URL: $uri');
-      
+
       final response = await http.get(uri);
       print('📡 商品响应状态码: ${response.statusCode}');
-      print('📡 商品响应内容前200字符: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}');
-      
+      print(
+        '📡 商品响应内容前200字符: ${response.body.substring(0, response.body.length > 200 ? 200 : response.body.length)}',
+      );
+
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         return decoded;
       }
-      return {'code': response.statusCode, 'data': {'list': [], 'total': 0}};
+      return {
+        'code': response.statusCode,
+        'data': {'list': [], 'total': 0},
+      };
     } catch (e) {
       print('❌ 获取商品失败: $e');
-      return {'code': 500, 'data': {'list': [], 'total': 0}};
+      return {
+        'code': 500,
+        'data': {'list': [], 'total': 0},
+      };
     }
   }
 
@@ -66,10 +77,10 @@ class ServiceApi {
     try {
       final url = Uri.parse('$baseUrl/goods/$id');
       print('📡 请求商品详情URL: $url');
-      
+
       final response = await http.get(url);
       print('📡 商品详情响应状态码: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         return ServiceGoods.fromJson(decoded['data']);
@@ -82,19 +93,27 @@ class ServiceApi {
   }
 
   // 获取商品评论
-  static Future<Map<String, dynamic>> getComments(int goodsId, {int page = 1, int limit = 10}) async {
+  static Future<Map<String, dynamic>> getComments(
+    int goodsId, {
+    int page = 1,
+    int limit = 10,
+  }) async {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/goods/$goodsId/comments?page=$page&limit=$limit'),
       );
-      
+
       if (response.statusCode == 200) {
         return json.decode(response.body);
       }
-      return {'data': {'list': [], 'total': 0}};
+      return {
+        'data': {'list': [], 'total': 0},
+      };
     } catch (e) {
       print('❌ 获取评论失败: $e');
-      return {'data': {'list': [], 'total': 0}};
+      return {
+        'data': {'list': [], 'total': 0},
+      };
     }
   }
 
@@ -106,11 +125,55 @@ class ServiceApi {
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'user_id': userId}),
       );
-      
+
       return response.statusCode == 200;
     } catch (e) {
       print('❌ 点赞失败: $e');
       return false;
+    }
+  }
+
+  // 检查商品是否已被用户收藏
+  static Future<bool> checkLikeStatus(int goodsId, int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/goods/$goodsId/liked?user_id=$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        return decoded['data']?['liked'] ?? false;
+      }
+      return false;
+    } catch (e) {
+      print('❌ 检查收藏状态失败: $e');
+      return false;
+    }
+  }
+
+  // 批量检查商品收藏状态
+  static Future<Map<int, bool>> batchCheckLikeStatus(
+    List<int> goodsIds,
+    int userId,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/goods/liked/batch'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'user_id': userId, 'goods_ids': goodsIds}),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final data = decoded['data'] as Map? ?? {};
+        return data.map(
+          (key, value) => MapEntry(int.parse(key), value as bool),
+        );
+      }
+      return {};
+    } catch (e) {
+      print('❌ 批量检查收藏状态失败: $e');
+      return {};
     }
   }
 
@@ -120,7 +183,7 @@ class ServiceApi {
       final response = await http.get(
         Uri.parse('$baseUrl/cart?user_id=$userId'),
       );
-      
+
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         final list = decoded['data']['list'] as List? ?? [];
@@ -134,7 +197,11 @@ class ServiceApi {
   }
 
   // 添加购物车
-  static Future<bool> addToCart(int userId, int goodsId, {int quantity = 1}) async {
+  static Future<bool> addToCart(
+    int userId,
+    int goodsId, {
+    int quantity = 1,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/cart/add'),
@@ -145,7 +212,7 @@ class ServiceApi {
           'quantity': quantity,
         }),
       );
-      
+
       final decoded = json.decode(response.body);
       return decoded['code'] == 200;
     } catch (e) {
@@ -155,7 +222,11 @@ class ServiceApi {
   }
 
   // 更新购物车
-  static Future<bool> updateCart({int? cartId, int? quantity, bool? selected}) async {
+  static Future<bool> updateCart({
+    int? cartId,
+    int? quantity,
+    bool? selected,
+  }) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/cart/update'),
@@ -166,7 +237,7 @@ class ServiceApi {
           if (selected != null) 'selected': selected,
         }),
       );
-      
+
       final decoded = json.decode(response.body);
       return decoded['code'] == 200;
     } catch (e) {
@@ -181,7 +252,7 @@ class ServiceApi {
       final response = await http.delete(
         Uri.parse('$baseUrl/cart/remove/$cartId'),
       );
-      
+
       final decoded = json.decode(response.body);
       return decoded['code'] == 200;
     } catch (e) {
@@ -196,7 +267,7 @@ class ServiceApi {
       final response = await http.get(
         Uri.parse('$baseUrl/address?user_id=$userId'),
       );
-      
+
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         final list = decoded['data'] as List? ?? [];
@@ -210,7 +281,11 @@ class ServiceApi {
   }
 
   // 保存地址
-  static Future<bool> saveAddress(ServiceAddress address, int userId, {int? id}) async {
+  static Future<bool> saveAddress(
+    ServiceAddress address,
+    int userId, {
+    int? id,
+  }) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/address'),
@@ -227,7 +302,7 @@ class ServiceApi {
           'is_default': address.isDefault,
         }),
       );
-      
+
       final decoded = json.decode(response.body);
       return decoded['code'] == 200;
     } catch (e) {
@@ -242,7 +317,7 @@ class ServiceApi {
       final response = await http.delete(
         Uri.parse('$baseUrl/address/$addressId'),
       );
-      
+
       final decoded = json.decode(response.body);
       return decoded['code'] == 200;
     } catch (e) {
@@ -269,7 +344,7 @@ class ServiceApi {
           'remark': remark,
         }),
       );
-      
+
       return json.decode(response.body);
     } catch (e) {
       print('❌ 创建订单失败: $e');
@@ -280,15 +355,14 @@ class ServiceApi {
   // 获取订单详情
   static Future<ServiceOrder?> getOrder(int orderId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/order/$orderId'),
-      );
-      
+      final response = await http.get(Uri.parse('$baseUrl/order/$orderId'));
+
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
         final order = ServiceOrder.fromJson(decoded['data']);
         final items = decoded['data']['items'] as List? ?? [];
-        order.items = items.map((item) => ServiceOrderItem.fromJson(item)).toList();
+        order.items =
+            items.map((item) => ServiceOrderItem.fromJson(item)).toList();
         return order;
       }
       return null;
