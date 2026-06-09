@@ -6,51 +6,143 @@ import 'service_theme.dart' as theme;
 import 'service_cart.dart';
 import 'service_address.dart';
 
-class ServiceSettings extends StatelessWidget {
-  final ThemeMode themeMode;
+// class ServiceSettings extends StatelessWidget {
+//   final ThemeMode themeMode;
 
-  const ServiceSettings({super.key, required this.themeMode});
+//   const ServiceSettings({super.key, required this.themeMode});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+//     return Scaffold(
+//       appBar: AppBar(
+//         leading: IconButton(
+//           icon: Icon(
+//             size: 24.sp,
+//             Icons.arrow_back_ios_new_rounded,
+//             color:
+//                 isDark
+//                     ? theme.ServiceMetalColors.primary
+//                     : theme.ServiceMetalColors.lightText,
+//           ),
+//           onPressed: () {
+//             Navigator.pop(context);
+//           },
+//         ),
+//       ),
+//       backgroundColor:
+//           isDark
+//               ? theme.ServiceMetalColors.darkBg
+//               : theme.ServiceMetalColors.lightBg,
+//       body: ListView(
+//         padding: EdgeInsets.all(16.w),
+//         children: [
+//           // 主题切换
+//           Container(
+//             padding: EdgeInsets.all(16.w),
+//             decoration: BoxDecoration(
+//               color:
+//                   isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+//               borderRadius: BorderRadius.circular(16.r),
+//               border:
+//                   isDark
+//                       ? Border.all(
+//                         color: theme.ServiceMetalColors.primary.withOpacity(
+//                           0.3,
+//                         ),
+//                       )
+//                       : null,
+//             ),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [],
+//             ),
+//           ),
+//           SizedBox(height: 16.h),
+//           // 其他设置项
+//           Container(
+//             decoration: BoxDecoration(
+//               color:
+//                   isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+//               borderRadius: BorderRadius.circular(16.r),
+//               border:
+//                   isDark
+//                       ? Border.all(
+//                         color: theme.ServiceMetalColors.primary.withOpacity(
+//                           0.3,
+//                         ),
+//                       )
+//                       : null,
+//             ),
+//             child: Column(
+//               children: [
+//                 _buildSettingsItem(
+//                   Icons.account_circle_outlined,
+//                   '账号管理',
+//                   () {},
+//                   isDark,
+//                 ),
+//                 _buildDivider(isDark),
+//                 _buildSettingsItem(
+//                   Icons.notifications_outlined,
+//                   '通知设置',
+//                   () {},
+//                   isDark,
+//                 ),
+//                 _buildDivider(isDark),
+//                 _buildSettingsItem(
+//                   Icons.security_outlined,
+//                   '隐私设置',
+//                   () {},
+//                   isDark,
+//                 ),
+//                 _buildDivider(isDark),
+//                 _buildSettingsItem(Icons.info_outline, '关于我们', () {}, isDark),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   Widget _buildSettingsItem(
+//     IconData icon,
+//     String title,
+//     VoidCallback onTap,
+//     bool isDark,
+//   ) {
+//     return ListTile(
+//       leading: Icon(icon, color: theme.ServiceMetalColors.primary),
+//       title: Text(
+//         title,
+//         style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+//       ),
+//       trailing: Icon(
+//         Icons.chevron_right,
+//         color: isDark ? Colors.grey[500] : Colors.grey[400],
+//       ),
+//       onTap: onTap,
+//     );
+//   }
+
+//   Widget _buildDivider(bool isDark) {
+//     return Divider(
+//       height: 1,
+//       color: isDark ? Colors.grey[800] : Colors.grey[200],
+//     );
+//   }
+// }
+
+class ServiceSettings extends StatefulWidget {
+  const ServiceSettings({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // 从主应用获取主题状态
-    final isDarkMode =
-        themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system &&
-            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return MaterialApp(
-          title: 'Norway Service',
-          debugShowCheckedModeBanner: false,
-          theme:
-              isDarkMode
-                  ? theme.ServiceTheme.darkTheme
-                  : theme.ServiceTheme.lightTheme,
-          home: const ServiceMainPage(),
-          routes: {
-            '/home': (context) => const ServiceHomePage(),
-            '/cart': (context) => const ServiceCartPage(),
-            '/address': (context) => const ServiceAddressPage(),
-          },
-        );
-      },
-    );
-  }
+  State<ServiceSettings> createState() => _ServiceSettingsState();
 }
 
-class ServiceMainPage extends StatefulWidget {
-  const ServiceMainPage({super.key});
-
-  @override
-  State<ServiceMainPage> createState() => _ServiceMainPageState();
-}
-
-class _ServiceMainPageState extends State<ServiceMainPage> {
+class _ServiceSettingsState extends State<ServiceSettings> {
   int _currentIndex = 0;
   final List<Widget> _pages = [
     const ServiceHomePage(),

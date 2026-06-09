@@ -34,7 +34,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
 
   Future<void> _loadAddresses() async {
     if (_currentUserId == null) return;
-    
+
     final addresses = await ServiceApi.getAddresses(_currentUserId!);
     setState(() {
       _addresses = addresses;
@@ -44,14 +44,14 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
 
   Future<void> _setDefaultAddress(ServiceAddress address) async {
     if (address.isDefault) return;
-    
+
     setState(() {
       for (var a in _addresses) {
         a.isDefault = false;
       }
       address.isDefault = true;
     });
-    
+
     await ServiceApi.saveAddress(address, _currentUserId!, id: address.id);
     await _loadAddresses();
     _showSuccess('已设为默认地址');
@@ -60,24 +60,27 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
   Future<void> _deleteAddress(ServiceAddress address) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: const Text('确定要删除该地址吗？'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('确认删除'),
+            content: const Text('确定要删除该地址吗？'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('删除'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('删除'),
-          ),
-        ],
-      ),
     );
-    
+
     if (confirmed == true) {
       await ServiceApi.deleteAddress(address.id);
       await _loadAddresses();
@@ -89,10 +92,11 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ServiceAddressEditPage(
-          address: address,
-          userId: _currentUserId!,
-        ),
+        builder:
+            (_) => ServiceAddressEditPage(
+              address: address,
+              userId: _currentUserId!,
+            ),
       ),
     ).then((_) => _loadAddresses());
   }
@@ -112,38 +116,62 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           '收货地址',
-          style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
+          style: TextStyle(
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary
+                    : theme.ServiceMetalColors.lightText,
+          ),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.add, color: isDark ? theme.ServiceMetalColors.primary : null),
+            icon: Icon(
+              Icons.add,
+              color: isDark ? theme.ServiceMetalColors.primary : null,
+            ),
             onPressed: () => _addOrEditAddress(),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _addresses.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _addresses.isEmpty
               ? _buildEmptyState(isDark)
               : ListView.builder(
-                  padding: EdgeInsets.all(16.w),
-                  itemCount: _addresses.length,
-                  itemBuilder: (context, index) {
-                    final address = _addresses[index];
-                    return _buildAddressCard(address, isDark);
-                  },
+                padding: EdgeInsets.all(16.w),
+                itemCount: _addresses.length,
+                itemBuilder: (context, index) {
+                  final address = _addresses[index];
+                  return _buildAddressCard(address, isDark);
+                },
+              ),
+      floatingActionButton:
+          _addresses.isNotEmpty
+              ? FloatingActionButton(
+                onPressed: () => _addOrEditAddress(),
+                backgroundColor:
+                    isDark
+                        ? theme.ServiceMetalColors.darkSurface
+                        : theme.ServiceMetalColors.primary,
+                child: Icon(
+                  Icons.add,
+                  color:
+                      isDark ? theme.ServiceMetalColors.primary : Colors.white,
                 ),
-      floatingActionButton: _addresses.isNotEmpty
-          ? FloatingActionButton(
-              onPressed: () => _addOrEditAddress(),
-              backgroundColor: isDark ? theme.ServiceMetalColors.darkSurface : theme.ServiceMetalColors.primary,
-              child: Icon(Icons.add, color: isDark ? theme.ServiceMetalColors.primary : Colors.white),
-            )
-          : null,
+              )
+              : null,
     );
   }
 
@@ -155,7 +183,10 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
           Icon(
             Icons.location_off_outlined,
             size: 80.sp,
-            color: isDark ? theme.ServiceMetalColors.primary.withOpacity(0.5) : Colors.grey[400],
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary.withOpacity(0.5)
+                    : Colors.grey[400],
           ),
           SizedBox(height: 16.h),
           Text(
@@ -166,11 +197,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
             ),
           ),
           SizedBox(height: 16.h),
-          _buildMetalButton(
-            '添加新地址',
-            () => _addOrEditAddress(),
-            isDark,
-          ),
+          _buildMetalButton('添加新地址', () => _addOrEditAddress(), isDark),
         ],
       ),
     );
@@ -178,26 +205,38 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
 
   Widget _buildAddressCard(ServiceAddress address, bool isDark) {
     final isSelected = widget.selectedAddressId == address.id;
-    
+
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       decoration: BoxDecoration(
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: isSelected
-              ? theme.ServiceMetalColors.primary
-              : (isDark ? theme.ServiceMetalColors.primary.withOpacity(0.3) : Colors.grey[200]!),
+          color:
+              isSelected
+                  ? theme.ServiceMetalColors.primary
+                  : (isDark
+                      ? theme.ServiceMetalColors.primary.withOpacity(0.3)
+                      : Colors.grey[200]!),
           width: isSelected ? 2 : 1,
         ),
-        boxShadow: isDark ? [
-          BoxShadow(color: theme.ServiceMetalColors.primary.withOpacity(0.1), blurRadius: 8),
-        ] : null,
+        boxShadow:
+            isDark
+                ? [
+                  BoxShadow(
+                    color: theme.ServiceMetalColors.primary.withOpacity(0.1),
+                    blurRadius: 8,
+                  ),
+                ]
+                : null,
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: widget.selectedAddressId != null ? () => _selectAddress(address) : null,
+          onTap:
+              widget.selectedAddressId != null
+                  ? () => _selectAddress(address)
+                  : null,
           borderRadius: BorderRadius.circular(16.r),
           child: Padding(
             padding: EdgeInsets.all(16.w),
@@ -222,7 +261,8 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
                             address.receiverPhone,
                             style: TextStyle(
                               fontSize: 14.sp,
-                              color: isDark ? Colors.grey[400] : Colors.grey[600],
+                              color:
+                                  isDark ? Colors.grey[400] : Colors.grey[600],
                             ),
                           ),
                         ],
@@ -230,10 +270,16 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
                     ),
                     if (address.isDefault)
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+                            colors: [
+                              theme.ServiceMetalColors.primary,
+                              theme.ServiceMetalColors.accent,
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(12.r),
                         ),
@@ -301,13 +347,27 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
         height: 44.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+            colors: [
+              theme.ServiceMetalColors.primary,
+              theme.ServiceMetalColors.accent,
+            ],
           ),
           borderRadius: BorderRadius.circular(22.r),
-          boxShadow: isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 12, spreadRadius: 1),
-            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 8, spreadRadius: 1),
-          ] : null,
+          boxShadow:
+              isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary,
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.accent,
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : null,
         ),
         alignment: Alignment.center,
         child: Text(
@@ -361,9 +421,9 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
 
   Future<void> _saveAddress() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSaving = true);
-    
+
     final address = ServiceAddress(
       id: widget.address?.id ?? 0,
       receiverName: _nameController.text.trim(),
@@ -374,15 +434,15 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
       detailAddress: _detailController.text.trim(),
       isDefault: _isDefault,
     );
-    
+
     final success = await ServiceApi.saveAddress(
       address,
       widget.userId,
       id: widget.address?.id,
     );
-    
+
     setState(() => _isSaving = false);
-    
+
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('保存成功'), backgroundColor: Colors.green),
@@ -400,11 +460,19 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? theme.ServiceMetalColors.darkBg : theme.ServiceMetalColors.lightBg,
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
         title: Text(
           widget.address == null ? '添加地址' : '编辑地址',
-          style: TextStyle(color: isDark ? theme.ServiceMetalColors.primary : theme.ServiceMetalColors.lightText),
+          style: TextStyle(
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary
+                    : theme.ServiceMetalColors.lightText,
+          ),
         ),
       ),
       body: Form(
@@ -492,11 +560,7 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
             SizedBox(height: 32.h),
             _isSaving
                 ? const Center(child: CircularProgressIndicator())
-                : _buildMetalButton(
-                    '保存地址',
-                    _saveAddress,
-                    isDark,
-                  ),
+                : _buildMetalButton('保存地址', _saveAddress, isDark),
           ],
         ),
       ),
@@ -527,13 +591,19 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: isDark
-              ? BorderSide(color: theme.ServiceMetalColors.primary.withOpacity(0.3))
-              : BorderSide.none,
+          borderSide:
+              isDark
+                  ? BorderSide(
+                    color: theme.ServiceMetalColors.primary.withOpacity(0.3),
+                  )
+                  : BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12.r),
-          borderSide: const BorderSide(color: theme.ServiceMetalColors.primary, width: 2),
+          borderSide: const BorderSide(
+            color: theme.ServiceMetalColors.primary,
+            width: 2,
+          ),
         ),
       ),
       style: TextStyle(color: isDark ? Colors.white : Colors.black),
@@ -550,13 +620,27 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
         height: 50.h,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [theme.ServiceMetalColors.primary, theme.ServiceMetalColors.accent],
+            colors: [
+              theme.ServiceMetalColors.primary,
+              theme.ServiceMetalColors.accent,
+            ],
           ),
           borderRadius: BorderRadius.circular(25.r),
-          boxShadow: isDark ? [
-            BoxShadow(color: theme.ServiceMetalColors.primary, blurRadius: 15, spreadRadius: 2),
-            BoxShadow(color: theme.ServiceMetalColors.accent, blurRadius: 10, spreadRadius: 1),
-          ] : null,
+          boxShadow:
+              isDark
+                  ? [
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.primary,
+                      blurRadius: 15,
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
+                      color: theme.ServiceMetalColors.accent,
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

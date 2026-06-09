@@ -233,14 +233,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
             ),
           ),
           SizedBox(height: 16.h),
-          _buildMetalButton(
-            '去逛逛',
-            () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const ServiceHomePage()),
-            ),
-            isDark,
-          ),
+          _buildMetalButton('去逛逛', () => Navigator.pop(context), isDark),
         ],
       ),
     );

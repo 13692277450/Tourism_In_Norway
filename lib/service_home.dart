@@ -9,9 +9,7 @@ import 'service_product_detail.dart';
 import 'service_cart.dart';
 import 'service_like.dart';
 import 'user_auth.dart';
-import 'app_shared.dart' as shared;
 import 'app_shared.dart'; // 确保引入了 userManager
-import 'service_settings.dart';
 
 class ServiceHomePage extends StatefulWidget {
   const ServiceHomePage({super.key});
@@ -200,13 +198,13 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
   void _navigateToSettings() {
     // 获取当前主题模式
-    final brightness = MediaQuery.platformBrightnessOf(context);
-    final themeMode =
-        brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
+    // final brightness = MediaQuery.platformBrightnessOf(context);
+    // final themeMode =
+    //     brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ServiceSettings(themeMode: themeMode)),
-    );
+      MaterialPageRoute(builder: (_) => ServiceSettings()),
+    ).then((_) => _loadGoods(isRefresh: true));
   }
 
   void _goLogin() {
@@ -265,20 +263,25 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                   child: Row(
                     children: [
                       // 搜索栏 - 60% 宽度
-                      Expanded(flex: 6, child: _buildSearchBar(isDark)),
+                      Expanded(flex: 8, child: _buildSearchBar(isDark)),
                       // 收藏按钮 - 20% 宽度
                       Expanded(
-                        flex: 2,
+                        flex: 1,
                         child: IconButton(
-                          icon: const Icon(Icons.shopping_cart),
+                          icon: const Icon(
+                            Icons.shopping_cart,
+                            color: Colors.deepPurple,
+                          ),
                           onPressed: _navigateToCart,
                         ),
                       ),
                       // 设置按钮 - 20% 宽度
+                      // Expanded(flex: 1, child: SizedBox(width: 2.w)),
+                      SizedBox(width: 5.w),
                       Expanded(
-                        flex: 2,
+                        flex: 1,
                         child: IconButton(
-                          icon: const Icon(Icons.settings),
+                          icon: Icon(Icons.settings, color: Colors.deepPurple),
                           onPressed: _navigateToSettings,
                         ),
                       ),
@@ -516,15 +519,15 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     }
 
     return GridView.builder(
-      padding: EdgeInsets.all(12.w),
+      padding: EdgeInsets.fromLTRB(12.w, 12.w, 12.w, 100.h),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.7,
         crossAxisSpacing: 27.w,
-        mainAxisSpacing: 50.h,
+        mainAxisSpacing: 70.h,
       ),
-      shrinkWrap: true,
-      physics: const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: false,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: _goodsList.length + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
         if (index == _goodsList.length) {

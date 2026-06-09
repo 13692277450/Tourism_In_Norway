@@ -52,10 +52,7 @@ class _PageShell extends StatelessWidget {
           SizedBox(height: 10.h),
           Text(
             subtitle,
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: const Color(0xFF52607D),
-            ),
+            style: TextStyle(fontSize: 16.sp, color: const Color(0xFF52607D)),
           ),
           SizedBox(height: 24.h),
           Expanded(
