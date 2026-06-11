@@ -82,11 +82,10 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
     if (success) {
       setState(() {
         _isLiked = !_isLiked;
-        if (_isLiked) {
-          _goods = _goods.copyWith(isLiked: true);
-        } else {
-          _goods = _goods.copyWith(isLiked: false);
-        }
+        _goods = _goods.copyWith(
+          isLiked: _isLiked,
+          likeCount: _isLiked ? _goods.likeCount + 1 : _goods.likeCount - 1,
+        );
       });
     }
   }

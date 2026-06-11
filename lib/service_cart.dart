@@ -5,6 +5,7 @@ import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_checkout.dart';
+import 'app_shared.dart' as shared;
 
 class ServiceCartPage extends StatefulWidget {
   const ServiceCartPage({super.key});
@@ -27,10 +28,9 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
   }
 
   void _loadUser() {
-    // 从您的UserManager获取当前用户ID
-    // _currentUserId = userManager.currentUser?.id;
-    // 临时使用模拟ID
-    _currentUserId = 1;
+    // 从UserManager获取当前用户ID
+    final userManager = shared.UserManager();
+    _currentUserId = userManager.currentUser?.user_id;
   }
 
   Future<void> _loadCart() async {

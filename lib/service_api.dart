@@ -6,8 +6,7 @@ import 'app_shared.dart';
 
 class ServiceApi {
   // 使用共享的服务器地址配置
-  static const String baseUrl =
-      '${AppConfig.baseWebUrl.replaceFirst('www.', '')}:3005/api/service';
+  static const String baseUrl = '${AppConfig.baseWebUrl}:3005/api/service';
 
   // 获取分类列表
   static Future<List<ServiceCategory>> getCategories() async {
@@ -371,6 +370,30 @@ class ServiceApi {
     } catch (e) {
       print('❌ 获取订单失败: $e');
       return null;
+    }
+  }
+
+  // 获取订单列表
+  static Future<List<ServiceOrder>> getOrders(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/orders?user_id=$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(response.body);
+        final list = decoded['data'] as List? ?? [];
+        return list.map((item) {
+          final order = ServiceOrder.fromJson(item);
+          final items = item['items'] as List? ?? [];
+          order.items = items.map((i) => ServiceOrderItem.fromJson(i)).toList();
+          return order;
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      print('❌ 获取订单列表失败: $e');
+      return [];
     }
   }
 }

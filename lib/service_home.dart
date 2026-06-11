@@ -810,34 +810,33 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     });
 
     // 调用 API 更新收藏状态
+    final currentGoods = _goodsList[index];
+    final newIsLiked = !currentGoods.isLiked;
+
     ServiceApi.toggleLike(goods.id, _currentUserId!)
         .then((success) {
           if (success) {
             setState(() {
-              final currentGoods = _goodsList[index];
               _goodsList[index] = currentGoods.copyWith(
+                isLiked: newIsLiked,
                 likeCount:
-                    currentGoods.isLiked
+                    newIsLiked
                         ? currentGoods.likeCount + 1
                         : currentGoods.likeCount - 1,
               );
             });
           } else {
-            // API 失败，恢复状态
-            setState(() {
-              _goodsList[index] = _goodsList[index].copyWith(
-                isLiked: !_goodsList[index].isLiked,
-              );
-            });
+            // API 失败，状态保持不变
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
           }
         })
         .catchError((_) {
-          // 网络错误，恢复状态
-          setState(() {
-            _goodsList[index] = _goodsList[index].copyWith(
-              isLiked: !_goodsList[index].isLiked,
-            );
-          });
+          // 网络错误，状态保持不变
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('网络错误，请检查连接')));
         });
   }
 
