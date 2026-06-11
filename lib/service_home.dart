@@ -803,37 +803,39 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     final index = _goodsList.indexWhere((g) => g.id == goods.id);
     if (index == -1) return;
 
+    // 先保存当前状态，计算新状态
+    final currentGoods = _goodsList[index];
+    final newIsLiked = !currentGoods.isLiked;
+
+    // 立即更新 UI（乐观更新）
     setState(() {
-      _goodsList[index] = _goodsList[index].copyWith(
-        isLiked: !_goodsList[index].isLiked,
+      _goodsList[index] = currentGoods.copyWith(
+        isLiked: newIsLiked,
+        likeCount:
+            newIsLiked
+                ? currentGoods.likeCount + 1
+                : currentGoods.likeCount - 1,
       );
     });
 
     // 调用 API 更新收藏状态
-    final currentGoods = _goodsList[index];
-    final newIsLiked = !currentGoods.isLiked;
-
     ServiceApi.toggleLike(goods.id, _currentUserId!)
         .then((success) {
-          if (success) {
+          if (!success) {
+            // API 失败，恢复状态
             setState(() {
-              _goodsList[index] = currentGoods.copyWith(
-                isLiked: newIsLiked,
-                likeCount:
-                    newIsLiked
-                        ? currentGoods.likeCount + 1
-                        : currentGoods.likeCount - 1,
-              );
+              _goodsList[index] = currentGoods;
             });
-          } else {
-            // API 失败，状态保持不变
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
           }
         })
         .catchError((_) {
-          // 网络错误，状态保持不变
+          // 网络错误，恢复状态
+          setState(() {
+            _goodsList[index] = currentGoods;
+          });
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(const SnackBar(content: Text('网络错误，请检查连接')));
