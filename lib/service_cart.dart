@@ -5,7 +5,6 @@ import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_checkout.dart';
-import 'service_home.dart';
 
 class ServiceCartPage extends StatefulWidget {
   const ServiceCartPage({super.key});

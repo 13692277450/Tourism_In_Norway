@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'app_shared.dart';
 
 class VersionChecker {
-  static const String _versionUrl = 'http://www.pavogroup.top/tourism/NorwayTravel/version.json';
+  static const String _versionUrl =
+      '${AppConfig.baseWebUrl}/tourism/NorwayTravel/version.json';
 
   static Future<VersionInfo?> checkForUpdate() async {
     try {
@@ -35,9 +37,12 @@ class VersionChecker {
   }
 
   static int _compareVersions(String v1, String v2) {
-    final parts1 = v1.split('.').map((part) => int.tryParse(part) ?? 0).toList();
-    final parts2 = v2.split('.').map((part) => int.tryParse(part) ?? 0).toList();
-    final length = parts1.length > parts2.length ? parts1.length : parts2.length;
+    final parts1 =
+        v1.split('.').map((part) => int.tryParse(part) ?? 0).toList();
+    final parts2 =
+        v2.split('.').map((part) => int.tryParse(part) ?? 0).toList();
+    final length =
+        parts1.length > parts2.length ? parts1.length : parts2.length;
 
     for (int i = 0; i < length; i++) {
       final p1 = i < parts1.length ? parts1[i] : 0;

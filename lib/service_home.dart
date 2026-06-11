@@ -198,12 +198,12 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
   void _navigateToSettings() {
     // 获取当前主题模式
-    // final brightness = MediaQuery.platformBrightnessOf(context);
-    // final themeMode =
-    //     brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
+    final brightness = MediaQuery.platformBrightnessOf(context);
+    final themeMode =
+        brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ServiceSettings()),
+      MaterialPageRoute(builder: (_) => ServiceSettings(themeMode: themeMode)),
     ).then((_) => _loadGoods(isRefresh: true));
   }
 

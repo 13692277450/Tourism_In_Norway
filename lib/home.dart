@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> {
     try {
       // 构建带分页参数的 URL
       final uri = Uri.parse(
-        'http://www.pavogroup.top:3004/norwaytravelscenic',
+        '${shared.AppConfig.baseWebUrl}:3004/norwaytravelscenic',
       ).replace(
         queryParameters: {
           'page': _currentPage.toString(),

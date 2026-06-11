@@ -58,6 +58,8 @@ dependencies:
   permission_handler: ^11.0.1
   provider: ^6.1.5+1
   flutter_paypal_payment: ^1.0.0
+  flutter_paypal_payment_plus: ^1.1.0
+  webview_flutter: ^4.13.0
 
 
 

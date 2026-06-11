@@ -77,7 +77,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://www.pavogroup.top:3004/api/users/register'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/users/register'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'name': _nameController.text,
@@ -98,21 +98,22 @@ class _RegisterPageState extends State<RegisterPage> {
         final decoded = json.decode(response.body);
         final data = decoded['data'] as Map<String, dynamic>?;
         if (data == null || data['id'] == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('注册成功，但未获取到用户ID，请重新登录')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('注册成功，但未获取到用户ID，请重新登录')));
           Navigator.pop(context);
           return;
         }
 
-        final userId = data['id'] is int
-            ? data['id']
-            : int.tryParse(data['id'].toString()) ?? 0;
+        final userId =
+            data['id'] is int
+                ? data['id']
+                : int.tryParse(data['id'].toString()) ?? 0;
 
         if (userId <= 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('注册成功，但获取用户ID失败，请重新登录')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('注册成功，但获取用户ID失败，请重新登录')));
           Navigator.pop(context);
           return;
         }
@@ -207,9 +208,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             SizedBox(height: 12.h),
 
-            _buildCountryDropdown(
-              
-            ),
+            _buildCountryDropdown(),
             SizedBox(height: 12.h),
 
             _buildIconPicker(),

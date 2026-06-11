@@ -8,10 +8,7 @@ class AppScale {
   AppScale(this.width, this.height);
 
   static AppScale of(BuildContext context) {
-    return AppScale(
-      ScreenUtil().screenWidth,
-      ScreenUtil().screenHeight,
-    );
+    return AppScale(ScreenUtil().screenWidth, ScreenUtil().screenHeight);
   }
 
   double get ratio => ScreenUtil().scaleWidth / 390;
@@ -70,16 +67,20 @@ class AppLocalizations {
       'app_tagline': 'Discover modern Nordic journeys',
       'home_title': 'Explore Norway',
       'home_subtitle': 'Your gateway to scenic travel',
-      'home_description': 'Discover fjords, northern lights and unforgettable memories.',
+      'home_description':
+          'Discover fjords, northern lights and unforgettable memories.',
       'view_title': 'Panorama View',
       'view_subtitle': 'Breathtaking vistas at every turn',
-      'view_description': 'Enjoy immersive sightseeing with curated tours and experiences.',
+      'view_description':
+          'Enjoy immersive sightseeing with curated tours and experiences.',
       'group_title': 'Travel Together',
       'group_subtitle': 'Share every moment with friends',
-      'group_description': 'Plan group trips with easy coordination and shared itineraries.',
+      'group_description':
+          'Plan group trips with easy coordination and shared itineraries.',
       'shop_title': 'Travel Shop',
       'shop_subtitle': 'Equip yourself for the journey',
-      'shop_description': 'Find premium travel gear, local souvenirs, and style picks.',
+      'shop_description':
+          'Find premium travel gear, local souvenirs, and style picks.',
       'settings_title': 'Settings & Updates',
       'settings_subtitle': 'Customize the app and keep it fresh',
       'language_selection': 'Language Selection',
@@ -190,16 +191,20 @@ class AppLocalizations {
       'app_tagline': 'Découvrez des voyages nordiques modernes',
       'home_title': 'Explorez la Norvège',
       'home_subtitle': 'Votre entrée vers des voyages pittoresques',
-      'home_description': 'Découvrez fjords, aurores boréales et souvenirs inoubliables.',
+      'home_description':
+          'Découvrez fjords, aurores boréales et souvenirs inoubliables.',
       'view_title': 'Vue panoramique',
       'view_subtitle': 'Des paysages époustouflants à chaque étape',
-      'view_description': 'Profitez d’excursions et d’expériences sélectionnées.',
+      'view_description':
+          'Profitez d’excursions et d’expériences sélectionnées.',
       'group_title': 'Voyage en groupe',
       'group_subtitle': 'Partagez chaque instant avec des amis',
-      'group_description': 'Planifiez des voyages de groupe avec une coordination facile.',
+      'group_description':
+          'Planifiez des voyages de groupe avec une coordination facile.',
       'shop_title': 'Boutique voyage',
       'shop_subtitle': 'Équipez-vous pour votre aventure',
-      'shop_description': 'Trouvez du matériel de voyage premium et des souvenirs.',
+      'shop_description':
+          'Trouvez du matériel de voyage premium et des souvenirs.',
       'settings_title': 'Paramètres et mises à jour',
       'settings_subtitle': 'Personnalisez l’application et restez à jour',
       'language_selection': 'Sélection de la langue',
@@ -219,7 +224,7 @@ class AppLocalizations {
       'update_installing': 'Installation automatique de la mise à jour...',
       'update_completed': 'Application mise à jour avec succès.',
     },
-    
+
     'es': {
       'home': 'INICIO',
       'education': 'EDUCACIÓN',
@@ -308,7 +313,8 @@ class AppLocalizations {
       'app_tagline': 'Löydä modernit pohjoismaiset matkat',
       'home_title': 'Tutustu Norjaan',
       'home_subtitle': 'Porttisi maisemallisiin matkoihin',
-      'home_description': 'Tutustu vuonoihin, revontuliin ja unohtumattomiin muistoihin.',
+      'home_description':
+          'Tutustu vuonoihin, revontuliin ja unohtumattomiin muistoihin.',
       'view_title': 'Panoraamanäkymä',
       'view_subtitle': 'Upeat maisemat joka käänteessä',
       'view_description': 'Nauti valituista kierroksista ja elämyksistä.',
@@ -340,7 +346,7 @@ class AppLocalizations {
     'da': {
       'home': 'HJEM',
       'education': 'EDUCATION',
-      'bbs': 'FORUM', 
+      'bbs': 'FORUM',
       'service': 'SERVICE',
       'setting': 'INDSTILLINGER',
       'app_name': 'Norge Rejser',
@@ -379,14 +385,15 @@ class AppLocalizations {
     'is': {
       'home': 'HEIM',
       'education': 'UTDANNING',
-      'bbs': 'FORUM', 
+      'bbs': 'FORUM',
       'service': 'SERVICIO',
       'setting': 'AJUSTES',
       'app_name': 'Noregur Ferðalög',
       'app_tagline': 'Uppgötvaðu nútímalegar norðurlandsferðir',
       'home_title': 'Könnuðu Noreg',
       'home_subtitle': 'Gáttin þín að fallegum ferðalögum',
-      'home_description': 'Uppgötvaðu fjörð, norðurljós og ógleymanlegar minningar.',
+      'home_description':
+          'Uppgötvaðu fjörð, norðurljós og ógleymanlegar minningar.',
       'view_title': 'Sjónarhorn',
       'view_subtitle': 'Dásamleg útsýni við hverja beygju',
       'view_description': 'Njóttu valinna túra og upplifana.',
@@ -418,14 +425,15 @@ class AppLocalizations {
     'nl': {
       'home': 'HOME',
       'education': 'EDUCATION',
-      'bbs': 'FORUM', 
+      'bbs': 'FORUM',
       'service': 'SERVICE',
       'setting': 'INSTELLINGEN',
       'app_name': 'Noorwegen Reis',
       'app_tagline': 'Ontdek moderne noordelijke reizen',
       'home_title': 'Ontdek Noorwegen',
       'home_subtitle': 'Uw toegang tot schilderachtige reizen',
-      'home_description': 'Ontdek fjorden, noorderlicht en onvergetelijke herinneringen.',
+      'home_description':
+          'Ontdek fjorden, noorderlicht en onvergetelijke herinneringen.',
       'view_title': 'Panoramaweergave',
       'view_subtitle': 'Adembenemende uitzichten bij elke bocht',
       'view_description': 'Geniet van geselecteerde tours en ervaringen.',
@@ -457,14 +465,15 @@ class AppLocalizations {
     'pt': {
       'home': 'INÍCIO',
       'education': 'EDUCATION',
-      'bbs': 'FORUM', 
+      'bbs': 'FORUM',
       'service': 'SERVICE',
       'setting': 'INSTELLINGEN',
       'app_name': 'Viagem Noruega',
       'app_tagline': 'Descubra viagens nórdicas modernas',
       'home_title': 'Explore a Noruega',
       'home_subtitle': 'Sua porta de entrada para viagens cênicas',
-      'home_description': 'Descubra fiordes, auroras e lembranças inesquecíveis.',
+      'home_description':
+          'Descubra fiordes, auroras e lembranças inesquecíveis.',
       'view_title': 'Vista panorâmica',
       'view_subtitle': 'Vistas impressionantes a cada curva',
       'view_description': 'Aproveite passeios e experiências selecionadas.',
@@ -473,7 +482,8 @@ class AppLocalizations {
       'group_description': 'Planeje viagens em grupo com fácil coordenação.',
       'shop_title': 'Loja de viagem',
       'shop_subtitle': 'Equipe-se para a jornada',
-      'shop_description': 'Encontre equipamentos de viagem premium e souvenirs.',
+      'shop_description':
+          'Encontre equipamentos de viagem premium e souvenirs.',
       'settings_title': 'Configurações e atualizações',
       'settings_subtitle': 'Personalize o app e mantenha-o atualizado',
       'language_selection': 'Seleção de idioma',
@@ -496,7 +506,7 @@ class AppLocalizations {
     'it': {
       'home': 'HOME',
       'education': 'EDUCATION',
-      'bbs': 'FORUM', 
+      'bbs': 'FORUM',
       'service': 'SERVICE',
       'setting': 'IMPOSTAZIONI',
       'app_name': 'Viaggio Norvegia',
@@ -509,7 +519,8 @@ class AppLocalizations {
       'view_description': 'Goditi tour ed esperienze selezionate.',
       'group_title': 'Viaggia insieme',
       'group_subtitle': 'Condividi ogni momento con amici',
-      'group_description': 'Pianifica viaggi di gruppo con facile coordinazione.',
+      'group_description':
+          'Pianifica viaggi di gruppo con facile coordinazione.',
       'shop_title': 'Negozio di viaggio',
       'shop_subtitle': 'Preparati al viaggio',
       'shop_description': 'Trova attrezzatura da viaggio premium e souvenir.',
@@ -627,13 +638,15 @@ class AppLocalizations {
       _AppLocalizationsDelegate();
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
   bool isSupported(Locale locale) {
-    return AppLocalizations.supportedLocales.any((supported) =>
-        supported.languageCode == locale.languageCode);
+    return AppLocalizations.supportedLocales.any(
+      (supported) => supported.languageCode == locale.languageCode,
+    );
   }
 
   @override
@@ -644,7 +657,6 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
-
 
 // 国家列表
 const List<String> countryList = [
@@ -680,27 +692,33 @@ const List<String> countryList = [
   '新加坡',
 ];
 
+// 后端服务器基础URL配置
+class AppConfig {
+  // 基础Web服务地址
+  static const String baseWebUrl = 'http://www.pavogroup.top';
+}
+
 // 用户状态管理
 class UserManager {
   static UserManager? _instance;
-  
+
   User? _currentUser;
-  
+
   UserManager._();
-  
+
   factory UserManager() {
     _instance ??= UserManager._();
     return _instance!;
   }
-  
+
   User? get currentUser => _currentUser;
-  
+
   bool get isLoggedIn => _currentUser != null;
-  
+
   void login(User user) {
     _currentUser = user;
   }
-  
+
   void logout() {
     _currentUser = null;
   }
@@ -708,7 +726,7 @@ class UserManager {
 
 class User {
   final int? user_id;
-  
+
   final String name;
   final String email;
   final String password;
@@ -716,7 +734,7 @@ class User {
   final String country;
   final String avatar;
   final String remark;
-  
+
   User({
     required this.user_id,
     required this.name,

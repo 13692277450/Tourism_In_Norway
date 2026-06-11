@@ -7,6 +7,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'app_shared.dart';
 
 class Upgrade extends StatefulWidget {
   final String? apkUrl;
@@ -35,7 +36,7 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
-    
+
     _initializeAndCheckPermissions();
   }
 
@@ -43,9 +44,9 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
     try {
       await FlutterDownloader.initialize(debug: true);
       FlutterDownloader.registerCallback(downloadCallback);
-      
+
       final hasPermission = await _requestAllPermissions();
-      
+
       if (hasPermission) {
         setState(() {
           _isInitialized = true;
@@ -63,36 +64,36 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
     if (!Platform.isAndroid) {
       return true;
     }
-    
+
     setState(() {
       _isRequestingPermission = true;
     });
-    
+
     List<Permission> permissions = [];
 
     // Android 13+ 需要通知权限
     if (await Permission.notification.isDenied) {
       permissions.add(Permission.notification);
     }
-    
+
     // 安装权限（所有版本都需要）
     if (await Permission.requestInstallPackages.isDenied) {
       permissions.add(Permission.requestInstallPackages);
     }
-    
+
     if (permissions.isEmpty) {
       setState(() {
         _isRequestingPermission = false;
       });
       return true;
     }
-    
+
     final results = await permissions.request();
-    
+
     setState(() {
       _isRequestingPermission = false;
     });
-    
+
     bool allGranted = true;
     for (var permission in permissions) {
       final granted = await permission.isGranted;
@@ -100,38 +101,39 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         allGranted = false;
       }
     }
-    
+
     if (!allGranted) {
       _showPermissionDialog();
       return false;
     }
-    
+
     return true;
   }
 
   void _showPermissionDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('需要权限'),
-        content: const Text('应用需要安装权限才能安装更新，请在设置中授予权限。'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text('取消'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('需要权限'),
+            content: const Text('应用需要安装权限才能安装更新，请在设置中授予权限。'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text('取消'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  openAppSettings();
+                },
+                child: const Text('去设置'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              openAppSettings();
-            },
-            child: const Text('去设置'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -144,8 +146,8 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
     });
   }
 
-  static final StreamController<Map<String, dynamic>> _downloadStreamController = 
-      StreamController.broadcast();
+  static final StreamController<Map<String, dynamic>>
+  _downloadStreamController = StreamController.broadcast();
 
   Future<void> _startDownload() async {
     try {
@@ -161,13 +163,12 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       }
 
       final savePath = '${directory.path}/app-release.apk';
-      
+
       // 删除旧文件
       final file = File(savePath);
       if (await file.exists()) {
         await file.delete();
       }
-
 
       // 设置下载状态为准备中
       setState(() {
@@ -186,7 +187,6 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
             _isDownloadStarted = true;
           });
 
-
           if (data['status'] == DownloadTaskStatus.complete.index) {
             _installApk();
           } else if (data['status'] == DownloadTaskStatus.failed.index) {
@@ -196,7 +196,9 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
       });
 
       _taskId = await FlutterDownloader.enqueue(
-        url: apkUrl ?? 'http://www.pavogroup.top/tourism/NorwayTravel/app-release.apk',
+        url:
+            apkUrl ??
+            '${AppConfig.baseWebUrl}/tourism/NorwayTravel/app-release.apk',
         savedDir: directory.path,
         fileName: 'app-release.apk',
         showNotification: true,
@@ -204,7 +206,6 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         saveInPublicStorage: false,
       );
 
-      
       if (_taskId != null && _taskId!.isNotEmpty) {
         setState(() {
           _status = DownloadTaskStatus.running.index;
@@ -216,7 +217,6 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
         });
         _showError('无法创建下载任务');
       }
-
     } catch (e) {
       setState(() {
         _status = DownloadTaskStatus.failed.index;
@@ -237,7 +237,7 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
           return downloadDir;
         }
       }
-      
+
       final docDir = await getApplicationDocumentsDirectory();
       final downloadDir = Directory('${docDir.path}/Download');
       if (!await downloadDir.exists()) {
@@ -251,13 +251,20 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
   String _getStatusText(int status) {
     switch (status) {
-      case 0: return 'enqueued';
-      case 1: return 'running';
-      case 2: return 'complete';
-      case 3: return 'failed';
-      case 4: return 'paused';
-      case 5: return 'canceled';
-      default: return 'unknown';
+      case 0:
+        return 'enqueued';
+      case 1:
+        return 'running';
+      case 2:
+        return 'complete';
+      case 3:
+        return 'failed';
+      case 4:
+        return 'paused';
+      case 5:
+        return 'canceled';
+      default:
+        return 'unknown';
     }
   }
 
@@ -274,7 +281,7 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
       if (await file.exists()) {
         final result = await OpenFile.open(filePath);
-        
+
         if (result.type != ResultType.done) {
           _showError('无法自动安装，请手动打开APK文件');
         }
@@ -288,9 +295,9 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
   void _showError(String message) {
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
@@ -364,13 +371,16 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
                   return Transform.rotate(
                     angle: _spinnerController.value * 2 * 3.14159,
                     child: Icon(
-                      _status == DownloadTaskStatus.complete.index 
-                          ? Icons.center_focus_weak_outlined 
-                          : (_status == DownloadTaskStatus.running.index 
-                              ? Icons.downloading_rounded 
+                      _status == DownloadTaskStatus.complete.index
+                          ? Icons.center_focus_weak_outlined
+                          : (_status == DownloadTaskStatus.running.index
+                              ? Icons.downloading_rounded
                               : Icons.download_done_rounded),
                       size: 64.r,
-                      color: isDark ? const Color.fromARGB(255, 98, 220, 244) : const Color.fromARGB(255, 82, 104, 226),
+                      color:
+                          isDark
+                              ? const Color.fromARGB(255, 98, 220, 244)
+                              : const Color.fromARGB(255, 82, 104, 226),
                     ),
                   );
                 },
@@ -389,7 +399,8 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
 
               // 只有在下载真正开始后才显示进度条
               if ((_status == DownloadTaskStatus.running.index ||
-                  _status == DownloadTaskStatus.complete.index) && _isDownloadStarted) ...[
+                      _status == DownloadTaskStatus.complete.index) &&
+                  _isDownloadStarted) ...[
                 _buildProgressBar(),
                 SizedBox(height: 16.h),
                 Text(
@@ -397,11 +408,14 @@ class _UpgradeState extends State<Upgrade> with SingleTickerProviderStateMixin {
                   style: TextStyle(
                     fontSize: 24.sp,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFF00D4FF) : const Color(0xFF3D5AFE),
+                    color:
+                        isDark
+                            ? const Color(0xFF00D4FF)
+                            : const Color(0xFF3D5AFE),
                   ),
                 ),
               ],
-              
+
               if (_isRequestingPermission)
                 Padding(
                   padding: EdgeInsets.only(top: 24.h),

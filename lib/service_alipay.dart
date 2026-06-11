@@ -1,4 +1,4 @@
-// service_paypal.dart
+// service_alipay.dart
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
@@ -6,17 +6,22 @@ import 'package:http/http.dart' as http;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'app_shared.dart';
 
-class ServicePayPalService {
-  // PayPal 配置
+/// 支付宝沙箱支付服务
+class ServiceAlipayService {
+  // 支付宝沙箱配置
   static const String baseUrl = '${AppConfig.baseWebUrl}:3000'; // 后端服务器地址
+  static const String alipayGateway =
+      'https://openapi.alipaydev.com/gateway.do'; // 沙箱网关
 
-  /// 1. 创建 PayPal 订单
+  /// 1. 创建支付宝订单（后端生成签名后返回支付链接）
   static Future<Map<String, dynamic>?> createOrder(
     String orderNo,
-    double amount,
-  ) async {
+    double amount, {
+    String subject = '挪威旅游服务订单',
+    String body = '订单支付',
+  }) async {
     try {
-      final url = Uri.parse('$baseUrl/api/paypal/create-order');
+      final url = Uri.parse('$baseUrl/api/alipay/create-order');
 
       final response = await http.post(
         url,
@@ -24,110 +29,108 @@ class ServicePayPalService {
         body: json.encode({
           'orderNo': orderNo,
           'amount': amount.toStringAsFixed(2),
+          'subject': subject,
+          'body': body,
         }),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        if (data['success'] == true) {
-          log('✅ 创建 PayPal 订单成功 - 订单号: $orderNo');
-          log('PayPal Order ID: ${data['orderId']}');
+        if (data['success'] == true && data['payUrl'] != null) {
+          log('✅ 创建支付宝订单成功 - 订单号: $orderNo');
           return data;
         }
       }
 
-      log('❌ 创建 PayPal 订单失败: ${response.body}');
+      log('❌ 创建支付宝订单失败: ${response.body}');
       return null;
     } catch (error) {
-      log('❌ 创建 PayPal 订单异常: $error');
+      log('❌ 创建支付宝订单异常: $error');
       return null;
     }
   }
 
-  /// 2. 捕获 PayPal 订单（完成扣款）
-  static Future<bool> captureOrder(String orderId, String orderNo) async {
+  /// 2. 查询支付宝订单状态
+  static Future<Map<String, dynamic>?> queryOrder(String orderNo) async {
     try {
-      final url = Uri.parse('$baseUrl/api/paypal/capture-order');
+      final url = Uri.parse('$baseUrl/api/alipay/query-order');
 
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'orderId': orderId, 'orderNo': orderNo}),
+        body: json.encode({'orderNo': orderNo}),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          log('✅ 捕获 PayPal 订单成功 - 订单号: $orderNo');
-          return true;
+          log('✅ 查询支付宝订单状态成功 - 订单号: $orderNo, 状态: ${data['status']}');
+          return data;
         }
       }
 
-      log('❌ 捕获 PayPal 订单失败: ${response.body}');
-      return false;
+      log('❌ 查询支付宝订单失败: ${response.body}');
+      return null;
     } catch (error) {
-      log('❌ 捕获 PayPal 订单异常: $error');
-      return false;
+      log('❌ 查询支付宝订单异常: $error');
+      return null;
     }
   }
 
-  /// 处理 PayPal 支付（完整流程）
+  /// 处理支付宝支付（完整流程）
   static Future<bool> processPayment(
     BuildContext context,
     double amount,
     String orderNo, {
-    String itemName = '挪威旅游服务订单',
+    String subject = '挪威旅游服务订单',
   }) async {
-    // Step 1: 创建 PayPal 订单
-    final orderResponse = await createOrder(orderNo, amount);
-    if (orderResponse == null || orderResponse['approveUrl'] == null) {
+    // Step 1: 创建支付宝订单
+    final orderResponse = await createOrder(orderNo, amount, subject: subject);
+    if (orderResponse == null || orderResponse['payUrl'] == null) {
       log('❌ 创建订单失败');
       return false;
     }
 
-    final approveUrl = orderResponse['approveUrl'];
-    final paypalOrderId = orderResponse['orderId'];
+    final payUrl = orderResponse['payUrl'];
 
     // Step 2: 在 WebView 中打开支付页面
     final paymentResult = await Navigator.push(
       context,
       MaterialPageRoute(
         builder:
-            (context) => ServicePayPalPage(
-              approveUrl: approveUrl,
-              orderNo: orderNo,
-              paypalOrderId: paypalOrderId,
-            ),
+            (context) => ServiceAlipayPage(payUrl: payUrl, orderNo: orderNo),
       ),
     );
 
-    // Step 3: 如果用户完成审批，执行捕获订单
+    // Step 3: 检查支付结果
     if (paymentResult == true) {
-      return await captureOrder(paypalOrderId, orderNo);
+      // 查询订单最终状态确认
+      final queryResult = await queryOrder(orderNo);
+      if (queryResult != null && queryResult['status'] == 'TRADE_SUCCESS') {
+        return true;
+      }
     }
 
     return false;
   }
 }
 
-/// PayPal 沙盒支付页面组件
-class ServicePayPalPage extends StatefulWidget {
-  final String approveUrl;
+/// 支付宝沙盒支付页面组件
+class ServiceAlipayPage extends StatefulWidget {
+  final String payUrl;
   final String orderNo;
-  final String paypalOrderId;
 
-  const ServicePayPalPage({
+  const ServiceAlipayPage({
     super.key,
-    required this.approveUrl,
+    required this.payUrl,
     required this.orderNo,
-    required this.paypalOrderId,
   });
 
   @override
-  State<ServicePayPalPage> createState() => _ServicePayPalPageState();
+  State<ServiceAlipayPage> createState() => _ServiceAlipayPageState();
 }
 
-class _ServicePayPalPageState extends State<ServicePayPalPage> {
+class _ServiceAlipayPageState extends State<ServiceAlipayPage> {
   late WebViewController _webViewController;
   bool _isLoading = true;
   bool _hasCompleted = false;
@@ -172,24 +175,24 @@ class _ServicePayPalPageState extends State<ServicePayPalPage> {
               },
             ),
           )
-          ..loadRequest(Uri.parse(widget.approveUrl));
+          ..loadRequest(Uri.parse(widget.payUrl));
   }
 
   void _checkPaymentStatus(String url) {
     if (_hasCompleted) return;
 
-    // 检查是否跳转到成功页面（根据后端配置）
-    if (url.contains('/payment/success')) {
-      log('✅ 用户完成支付审批 - 订单号: ${widget.orderNo}');
-      log('PayPal Order ID: ${widget.paypalOrderId}');
+    // 检查是否跳转到成功页面（根据后端配置的同步回调地址）
+    if (url.contains('/alipay/success') ||
+        url.contains('trade_status=TRADE_SUCCESS')) {
+      log('✅ 用户完成支付宝支付 - 订单号: ${widget.orderNo}');
       _hasCompleted = true;
       _handlePaymentSuccess();
       return;
     }
 
     // 检查是否跳转到取消页面
-    if (url.contains('/payment/cancel')) {
-      log('❌ 用户取消支付 - 订单号: ${widget.orderNo}');
+    if (url.contains('/alipay/cancel')) {
+      log('❌ 用户取消支付宝支付 - 订单号: ${widget.orderNo}');
       _hasCompleted = true;
       _handlePaymentFailure();
       return;
@@ -208,7 +211,7 @@ class _ServicePayPalPageState extends State<ServicePayPalPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PayPal 支付'),
+        title: const Text('支付宝支付'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -230,13 +233,39 @@ class _ServicePayPalPageState extends State<ServicePayPalPage> {
   }
 }
 
-/// 简化的 PayPal 支付方法
-class PayPalPayment {
+/// 简化的支付宝支付方法
+class AlipayPayment {
   static Future<bool> pay(
     BuildContext context,
     double amount,
-    String orderNo,
-  ) async {
-    return await ServicePayPalService.processPayment(context, amount, orderNo);
+    String orderNo, {
+    String subject = '挪威旅游服务订单',
+  }) async {
+    return await ServiceAlipayService.processPayment(
+      context,
+      amount,
+      orderNo,
+      subject: subject,
+    );
   }
 }
+
+/// 支付宝沙箱测试配置说明
+/// 
+/// 沙箱环境配置（需要在后端配置）:
+/// 1. APPID: 在支付宝开放平台沙箱环境获取
+/// 2. 商户私钥: 自行生成的RSA私钥
+/// 3. 支付宝公钥: 沙箱环境提供的公钥
+/// 4. 网关地址: https://openapi.alipaydev.com/gateway.do
+/// 
+/// 沙箱测试账号:
+/// - 沙箱商家账号: 在开放平台沙箱环境查看
+/// - 沙箱买家账号: 在开放平台沙箱环境生成（含登录密码和支付密码）
+/// 
+/// 支付流程:
+/// 1. 客户端调用 createOrder 创建订单
+/// 2. 后端生成签名，调用支付宝接口获取支付链接
+/// 3. 客户端通过 WebView 打开支付链接
+/// 4. 用户完成支付后，支付宝同步回调后端
+/// 5. 客户端查询订单状态确认支付结果
+/// 6. 客户端根据支付结果更新订单状态

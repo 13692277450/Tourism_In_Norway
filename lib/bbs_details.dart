@@ -35,7 +35,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://www.pavogroup.top:3004/api/posts/${_post.id}/comments',
+          '${shared.AppConfig.baseWebUrl}:3004/api/posts/${_post.id}/comments',
         ),
       );
 
@@ -68,7 +68,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          'http://www.pavogroup.top:3004/api/posts/${_post.id}/like/status?user_id=${currentUser.user_id}',
+          '${shared.AppConfig.baseWebUrl}:3004/api/posts/${_post.id}/like/status?user_id=${currentUser.user_id}',
         ),
       );
 
@@ -93,7 +93,9 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://www.pavogroup.top:3004/api/posts/${_post.id}/like'),
+        Uri.parse(
+          '${shared.AppConfig.baseWebUrl}:3004/api/posts/${_post.id}/like',
+        ),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'user_id': currentUser.user_id}),
       );

@@ -2,10 +2,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:tourism_in_norway/service_models.dart';
+import 'app_shared.dart';
 
 class ServiceApi {
-  // 使用您的服务器地址
-  static const String baseUrl = 'http://pavogroup.top:3005/api/service';
+  // 使用共享的服务器地址配置
+  static const String baseUrl =
+      '${AppConfig.baseWebUrl.replaceFirst('www.', '')}:3005/api/service';
 
   // 获取分类列表
   static Future<List<ServiceCategory>> getCategories() async {

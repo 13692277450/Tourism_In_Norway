@@ -1,9 +1,7 @@
 // service.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'service_home.dart';
 import 'service_theme.dart' as theme;
-import 'service_cart.dart';
 import 'service_address.dart';
 
 // class ServiceSettings extends StatelessWidget {
@@ -135,120 +133,144 @@ import 'service_address.dart';
 //   }
 // }
 
-class ServiceSettings extends StatefulWidget {
-  const ServiceSettings({super.key});
+class ServiceSettings extends StatelessWidget {
+  final ThemeMode themeMode;
 
-  @override
-  State<ServiceSettings> createState() => _ServiceSettingsState();
-}
-
-class _ServiceSettingsState extends State<ServiceSettings> {
-  int _currentIndex = 0;
-  final List<Widget> _pages = [
-    const ServiceHomePage(),
-    const ServiceCartPage(),
-    const ServiceProfilePage(),
-  ];
-
-  final List<Map<String, dynamic>> _navItems = [
-    {'icon': Icons.shop_outlined, 'activeIcon': Icons.shop, 'label': '商城'},
-    {
-      'icon': Icons.shopping_cart_outlined,
-      'activeIcon': Icons.shopping_cart,
-      'label': '购物车',
-    },
-    {'icon': Icons.person_outline, 'activeIcon': Icons.person, 'label': '我的'},
-  ];
-
-  bool _isMenuOpen = false;
-
-  void _toggleMenu() {
-    setState(() => _isMenuOpen = !_isMenuOpen);
-  }
-
-  void _navigateToPage(int index) {
-    setState(() {
-      _currentIndex = index;
-      _isMenuOpen = false;
-    });
-  }
+  const ServiceSettings({super.key, required this.themeMode});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      body: _pages[_currentIndex],
-      // 主悬浮按钮 - 点击弹出菜单
-      floatingActionButton: Stack(
-        alignment: Alignment.bottomCenter,
+      appBar: AppBar(
+        title: Text(
+          '设置',
+          style: TextStyle(
+            color:
+                isDark
+                    ? theme.ServiceMetalColors.primary
+                    : theme.ServiceMetalColors.lightText,
+          ),
+        ),
+      ),
+      backgroundColor:
+          isDark
+              ? theme.ServiceMetalColors.darkBg
+              : theme.ServiceMetalColors.lightBg,
+      body: ListView(
+        padding: EdgeInsets.all(16.w),
         children: [
-          // 弹出菜单按钮
-          if (_isMenuOpen)
-            ..._navItems.asMap().entries.map((entry) {
-              int index = entry.key;
-              var item = entry.value;
-              return Positioned(
-                bottom: 80.h + (2 - index) * 70.h,
-                right: 20.w,
-                child: AnimatedOpacity(
-                  opacity: _isMenuOpen ? 1 : 0,
-                  duration: const Duration(milliseconds: 200),
-                  child: AnimatedScale(
-                    scale: _isMenuOpen ? 1 : 0.5,
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeOut,
-                    child: FloatingActionButton(
-                      heroTag: 'nav_$index',
-                      onPressed: () => _navigateToPage(index),
-                      backgroundColor:
-                          isDark
-                              ? theme.ServiceMetalColors.darkSurface
-                              : Colors.yellow.shade200,
-                      foregroundColor:
-                          isDark
-                              ? theme.ServiceMetalColors.primary
-                              : theme.ServiceMetalColors.lightText,
-                      elevation: 8,
-                      child: Icon(item['icon']),
-                    ),
+          // 主题切换
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color:
+                  isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border:
+                  isDark
+                      ? Border.all(
+                        color: theme.ServiceMetalColors.primary.withOpacity(
+                          0.3,
+                        ),
+                      )
+                      : null,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '深色模式',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
-              );
-            }),
-          // 主题切换按钮（首页显示）
-          if (_currentIndex == 0)
-            // Positioned(
-            //   right: 0,
-            //   bottom: 0,
-            //   child: FloatingActionButton(
-            //     heroTag: 'theme',
-            //     onPressed: () => themeProvider.toggleTheme(),
-            //     backgroundColor: theme.ServiceMetalColors.primary,
-            //     foregroundColor: Colors.white,
-            //     elevation: 8,
-            //     child: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-            //   ),
-            // ),
-            // 主菜单按钮
-            Positioned(
-              left: 20.w,
-              bottom: 0,
-              child: FloatingActionButton(
-                heroTag: 'menu',
-                onPressed: _toggleMenu,
-                backgroundColor: theme.ServiceMetalColors.accent,
-                foregroundColor: Colors.white,
-                elevation: 8,
-                child: AnimatedRotation(
-                  turns: _isMenuOpen ? 0.25 : 0,
-                  duration: const Duration(milliseconds: 300),
-                  child: const Icon(Icons.menu),
+                Switch(
+                  value: isDark,
+                  onChanged: (value) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(value ? '已切换到深色模式' : '已切换到浅色模式')),
+                    );
+                  },
+                  activeColor: theme.ServiceMetalColors.primary,
                 ),
-              ),
+              ],
             ),
+          ),
+          SizedBox(height: 16.h),
+          // 其他设置项
+          Container(
+            decoration: BoxDecoration(
+              color:
+                  isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
+              borderRadius: BorderRadius.circular(16.r),
+              border:
+                  isDark
+                      ? Border.all(
+                        color: theme.ServiceMetalColors.primary.withOpacity(
+                          0.3,
+                        ),
+                      )
+                      : null,
+            ),
+            child: Column(
+              children: [
+                _buildSettingsItem(
+                  Icons.account_circle_outlined,
+                  '账号管理',
+                  () {},
+                  isDark,
+                ),
+                _buildDivider(isDark),
+                _buildSettingsItem(
+                  Icons.notifications_outlined,
+                  '通知设置',
+                  () {},
+                  isDark,
+                ),
+                _buildDivider(isDark),
+                _buildSettingsItem(
+                  Icons.security_outlined,
+                  '隐私设置',
+                  () {},
+                  isDark,
+                ),
+                _buildDivider(isDark),
+                _buildSettingsItem(Icons.info_outline, '关于我们', () {}, isDark),
+              ],
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSettingsItem(
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+    bool isDark,
+  ) {
+    return ListTile(
+      leading: Icon(icon, color: theme.ServiceMetalColors.primary),
+      title: Text(
+        title,
+        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: isDark ? Colors.grey[500] : Colors.grey[400],
+      ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Divider(
+      height: 1,
+      color: isDark ? Colors.grey[800] : Colors.grey[200],
     );
   }
 }
