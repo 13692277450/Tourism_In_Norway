@@ -9,7 +9,7 @@ import 'service_product_detail.dart';
 import 'service_cart.dart';
 import 'service_like.dart';
 import 'user_auth.dart';
-import 'app_shared.dart'; // 确保引入了 userManager
+import 'app_shared.dart';
 
 class ServiceHomePage extends StatefulWidget {
   const ServiceHomePage({super.key});
@@ -50,12 +50,52 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     });
   }
 
-  void _loadUser() {
-    // 从 UserManager 获取当前用户 ID
+  void _loadUser() async {
     try {
-      _currentUserId = UserManager().currentUser?.user_id ?? 0;
-    } catch (_) {
+      // 等待一小段时间确保 UserManager 已初始化
+      await Future.delayed(Duration.zero);
+      final user = UserManager().currentUser;
+      setState(() {
+        _currentUserId = user?.user_id ?? 0;
+      });
+      print('✅ 当前用户ID: $_currentUserId');
+
+      // 用户加载完成后，刷新商品列表以显示正确的收藏状态
+      if (_currentUserId != null &&
+          _currentUserId! > 0 &&
+          _goodsList.isNotEmpty) {
+        _refreshLikeStatusForCurrentGoods();
+      }
+    } catch (e) {
+      print('加载用户失败: $e');
       _currentUserId = 0;
+    }
+  }
+
+  // 刷新当前商品列表的收藏状态
+  Future<void> _refreshLikeStatusForCurrentGoods() async {
+    if (_currentUserId == null || _currentUserId! <= 0) return;
+    if (_goodsList.isEmpty) return;
+
+    final goodsIds = _goodsList.map((g) => g.id).toList();
+    try {
+      final likeStatus = await ServiceApi.batchCheckLikeStatus(
+        goodsIds,
+        _currentUserId!,
+      );
+
+      setState(() {
+        for (int i = 0; i < _goodsList.length; i++) {
+          final goods = _goodsList[i];
+          final isLiked = likeStatus[goods.id] ?? false;
+          if (goods.isLiked != isLiked) {
+            _goodsList[i] = goods.copyWith(isLiked: isLiked);
+          }
+        }
+      });
+      print('✅ 刷新收藏状态完成');
+    } catch (e) {
+      print('刷新收藏状态失败: $e');
     }
   }
 
@@ -64,11 +104,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     setState(() {
       _categories = [ServiceCategory(id: 0, name: '全部'), ...categories];
     });
-    if (mounted) {
-      setState(() {});
-    }
   }
-  // service_home.dart - 修改 _loadGoods 方法
 
   Future<void> _loadGoods({bool isRefresh = false}) async {
     if (_isLoadingMore && !isRefresh) return;
@@ -87,8 +123,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     });
 
     try {
-      // print('🔄 开始加载商品，页码: $_currentPage, 分类: $_selectedCategoryId');
-
       final result = await ServiceApi.getGoods(
         page: _currentPage,
         limit: _pageSize,
@@ -97,20 +131,15 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         categoryId: _selectedCategoryId > 0 ? _selectedCategoryId : null,
       );
 
-      //print('📦 API返回结果: $result');
-
-      // 检查返回结果的格式
       if (result.containsKey('code') && result['code'] == 200) {
         final data = result['data'];
         final List<dynamic> list = data['list'] ?? [];
         final total = data['total'] ?? 0;
 
-        // print('✅ 获取到 ${list.length} 条商品，总计 $total 条');
-
-        final newGoods =
+        List<ServiceGoods> newGoods =
             list.map((item) => ServiceGoods.fromJson(item)).toList();
 
-        // 检查收藏状态
+        // 获取当前用户的收藏状态
         if (_currentUserId != null &&
             _currentUserId! > 0 &&
             newGoods.isNotEmpty) {
@@ -119,9 +148,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
             goodsIds,
             _currentUserId!,
           );
+
           for (var goods in newGoods) {
             goods.isLiked = likeStatus[goods.id] ?? false;
           }
+          print('✅ 收藏状态加载完成: ${likeStatus.length} 个商品');
         }
 
         setState(() {
@@ -130,7 +161,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           } else {
             _goodsList.addAll(newGoods);
           }
-
           _hasMore = _goodsList.length < total;
           _currentPage++;
           _isLoading = false;
@@ -141,9 +171,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           }
         });
       } else {
-        // 处理错误响应
         final errorMsg = result['message'] ?? '加载失败，请稍后重试';
-        // print('❌ API返回错误: $errorMsg');
         setState(() {
           _isLoading = false;
           _isLoadingMore = false;
@@ -151,9 +179,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         });
       }
     } catch (e) {
-      // 捕获异常并打印详细堆栈
-      // print('❌ 网络请求异常: $e');
-      // print('📚 堆栈信息: $stackTrace');
+      print('❌ 网络请求异常: $e');
       setState(() {
         _isLoading = false;
         _isLoadingMore = false;
@@ -171,7 +197,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   void _searchGoods() {
     FocusScope.of(context).unfocus();
     _loadGoods(isRefresh: true);
-    // 搜索完成后清除输入框内容，避免影响下次刷新
     _searchController.clear();
   }
 
@@ -197,7 +222,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   void _navigateToSettings() {
-    // 获取当前主题模式
     final brightness = MediaQuery.platformBrightnessOf(context);
     final themeMode =
         brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
@@ -213,6 +237,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
       MaterialPageRoute(builder: (context) => const LoginPage()),
     ).then((_) {
       _loadUser();
+      _loadGoods(isRefresh: true);
     });
   }
 
@@ -221,6 +246,57 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
       context,
       MaterialPageRoute(builder: (_) => ServiceProductDetailPage(goods: goods)),
     ).then((_) => _loadGoods(isRefresh: true));
+  }
+
+  void _toggleLike(ServiceGoods goods) async {
+    // 检查登录状态
+    if (_currentUserId == null || _currentUserId == 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请先登录')));
+      _goLogin();
+      return;
+    }
+
+    final index = _goodsList.indexWhere((g) => g.id == goods.id);
+    if (index == -1) return;
+
+    // 保存当前状态
+    final currentGoods = _goodsList[index];
+    final newIsLiked = !currentGoods.isLiked;
+    final newLikeCount =
+        newIsLiked ? currentGoods.likeCount + 1 : currentGoods.likeCount - 1;
+
+    // 乐观更新 UI
+    setState(() {
+      _goodsList[index] = currentGoods.copyWith(
+        isLiked: newIsLiked,
+        likeCount: newLikeCount,
+      );
+    });
+
+    try {
+      // 调用 API
+      final success = await ServiceApi.toggleLike(goods.id, _currentUserId!);
+
+      if (!success) {
+        // 失败时恢复原状态
+        setState(() {
+          _goodsList[index] = currentGoods;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
+      }
+    } catch (e) {
+      // 异常时恢复原状态
+      setState(() {
+        _goodsList[index] = currentGoods;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('网络错误，请检查连接')));
+    }
   }
 
   @override
@@ -233,67 +309,14 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
               ? theme.ServiceMetalColors.darkBg
               : theme.ServiceMetalColors.lightBg,
       body: NestedScrollView(
-        key: ValueKey(_categories.length), // 添加 key，当分类数量变化时强制重建
+        key: ValueKey(_categories.length),
         controller: _scrollController,
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
-            SliverAppBar(
-              backgroundColor:
-                  isDark
-                      ? theme.ServiceMetalColors.darkBg
-                      : theme.ServiceMetalColors.lightBg,
-              elevation: 0,
-              pinned: true,
-              expandedHeight: 80.h,
-              // leading: IconButton(
-              //   icon: const Icon(Icons.arrow_back),
-              //   onPressed: () => Navigator.pop(context),
-              // ),
-              actions: [],
-              flexibleSpace: FlexibleSpaceBar(
-                collapseMode: CollapseMode.pin,
-                background: Container(
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + 10.h,
-                  ),
-                  color:
-                      isDark
-                          ? theme.ServiceMetalColors.darkBg
-                          : theme.ServiceMetalColors.lightBg,
-                  child: Row(
-                    children: [
-                      // 搜索栏 - 60% 宽度
-                      Expanded(flex: 8, child: _buildSearchBar(isDark)),
-                      // 收藏按钮 - 20% 宽度
-                      Expanded(
-                        flex: 1,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.shopping_cart,
-                            color: Colors.deepPurple,
-                          ),
-                          onPressed: _navigateToCart,
-                        ),
-                      ),
-                      // 设置按钮 - 20% 宽度
-                      // Expanded(flex: 1, child: SizedBox(width: 2.w)),
-                      SizedBox(width: 5.w),
-                      Expanded(
-                        flex: 1,
-                        child: IconButton(
-                          icon: Icon(Icons.settings, color: Colors.deepPurple),
-                          onPressed: _navigateToSettings,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
             SliverPersistentHeader(
               pinned: true,
-              delegate: _SliverCategoryDelegate(
-                categoryBar: _buildCategoryBar(isDark),
+              delegate: _SliverHeaderDelegate(
+                headerContent: _buildHeaderContent(isDark),
                 backgroundColor:
                     isDark
                         ? theme.ServiceMetalColors.darkBg
@@ -307,9 +330,57 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     );
   }
 
+  Widget _buildHeaderContent(bool isDark) {
+    return Column(
+      children: [
+        // 顶部栏（搜索框、收藏、购物篮、设置）
+        Container(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 4.h, // 上移6px（原10h改为4h）
+          ),
+          child: Row(
+            children: [
+              Expanded(flex: 6, child: _buildSearchBar(isDark)),
+              Expanded(
+                flex: 1,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.favorite_border,
+                    color: Colors.deepPurple,
+                  ),
+                  onPressed: _navigateToLike,
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.shopping_cart,
+                    color: Colors.deepPurple,
+                  ),
+                  onPressed: _navigateToCart,
+                ),
+              ),
+              SizedBox(width: 5.w),
+              Expanded(
+                flex: 1,
+                child: IconButton(
+                  icon: Icon(Icons.settings, color: Colors.deepPurple),
+                  onPressed: _navigateToSettings,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 分类栏
+        _buildCategoryBar(isDark),
+      ],
+    );
+  }
+
   Widget _buildSearchBar(bool isDark) {
     return Container(
-      margin: EdgeInsets.all(16.w),
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       decoration: BoxDecoration(
         color:
             isDark
@@ -791,57 +862,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     );
   }
 
-  void _toggleLike(ServiceGoods goods) {
-    if (_currentUserId == null) {
-      // 用户未登录，提示登录
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请先登录')));
-      return;
-    }
-
-    final index = _goodsList.indexWhere((g) => g.id == goods.id);
-    if (index == -1) return;
-
-    // 先保存当前状态，计算新状态
-    final currentGoods = _goodsList[index];
-    final newIsLiked = !currentGoods.isLiked;
-
-    // 立即更新 UI（乐观更新）
-    setState(() {
-      _goodsList[index] = currentGoods.copyWith(
-        isLiked: newIsLiked,
-        likeCount:
-            newIsLiked
-                ? currentGoods.likeCount + 1
-                : currentGoods.likeCount - 1,
-      );
-    });
-
-    // 调用 API 更新收藏状态
-    ServiceApi.toggleLike(goods.id, _currentUserId!)
-        .then((success) {
-          if (!success) {
-            // API 失败，恢复状态
-            setState(() {
-              _goodsList[index] = currentGoods;
-            });
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
-          }
-        })
-        .catchError((_) {
-          // 网络错误，恢复状态
-          setState(() {
-            _goodsList[index] = currentGoods;
-          });
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('网络错误，请检查连接')));
-        });
-  }
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -851,12 +871,12 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 }
 
 // 分类栏 SliverPersistentHeader 代理
-class _SliverCategoryDelegate extends SliverPersistentHeaderDelegate {
-  final Widget categoryBar;
+class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget headerContent;
   final Color backgroundColor;
 
-  _SliverCategoryDelegate({
-    required this.categoryBar,
+  _SliverHeaderDelegate({
+    required this.headerContent,
     required this.backgroundColor,
   });
 
@@ -866,18 +886,18 @@ class _SliverCategoryDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
-    return Container(color: backgroundColor, child: categoryBar);
+    return Container(color: backgroundColor, child: headerContent);
   }
 
   @override
-  double get maxExtent => 35.h;
+  double get maxExtent => 100.h;
 
   @override
-  double get minExtent => 35.h;
+  double get minExtent => 100.h;
 
   @override
-  bool shouldRebuild(covariant _SliverCategoryDelegate oldDelegate) {
+  bool shouldRebuild(covariant _SliverHeaderDelegate oldDelegate) {
     return backgroundColor != oldDelegate.backgroundColor ||
-        categoryBar != oldDelegate.categoryBar;
+        headerContent != oldDelegate.headerContent;
   }
 }
