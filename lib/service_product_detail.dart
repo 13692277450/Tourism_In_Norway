@@ -129,7 +129,7 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
               directBuyItems: checkoutItems, // 使用 directBuyItems 参数
               directBuyGoods: _goods,
               quantity: _quantity,
-              checkoutItems: [],
+              //checkoutItems: [],
             ),
       ),
     );

@@ -60,6 +60,8 @@ dependencies:
   flutter_paypal_payment: ^1.0.0
   flutter_paypal_payment_plus: ^1.1.0
   webview_flutter: ^4.13.0
+  webview_flutter_android: ^4.7.0
+  webview_flutter_wkwebview: ^3.9.0  # iOS 支持
 
 
 

@@ -1,16 +1,15 @@
-// service_alipay.dart
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'app_shared.dart';
 
-/// 支付宝沙箱支付服务
-class ServiceAlipayService {
+class ServiceAlipayAppService {
   static const String baseUrl = AppConfig.baseWebUrl;
 
-  /// 创建支付宝订单
   static Future<Map<String, dynamic>?> createOrder(
     String orderNo,
     double amount, {
@@ -19,8 +18,7 @@ class ServiceAlipayService {
   }) async {
     try {
       final url = Uri.parse('$baseUrl/api/alipay/create-order');
-
-      log('📡 创建支付宝订单请求: $url');
+      log('📡 创建支付宝App订单请求: $url');
       log('📦 订单号: $orderNo, 金额: $amount');
 
       final response = await http.post(
@@ -56,7 +54,6 @@ class ServiceAlipayService {
     }
   }
 
-  /// 处理支付宝支付
   static Future<bool> processPayment(
     BuildContext context,
     double amount,
@@ -69,42 +66,135 @@ class ServiceAlipayService {
       return false;
     }
 
-    final payUrl = orderResponse['payUrl'];
-    log('🌐 打开支付宝支付页面: $payUrl');
+    final payUrl = orderResponse['payUrl'] as String;
+    log('📱 尝试调用支付宝App: $payUrl');
 
-    final paymentResult = await Navigator.push<bool>(
+    final bool alipayInstalled = await _isAlipayInstalled();
+
+    if (alipayInstalled) {
+      log('✅ 检测到支付宝App已安装');
+      return await _launchAlipayApp(payUrl, orderNo);
+    } else {
+      log('⚠️ 未检测到支付宝App，使用WebView方式');
+      return await _launchAlipayWebView(context, payUrl, orderNo);
+    }
+  }
+
+  static Future<bool> _isAlipayInstalled() async {
+    try {
+      final uri = Uri.parse('alipays://platformapi/startapp');
+      final canLaunch = await canLaunchUrl(uri);
+      log('🔍 支付宝App安装检测: $canLaunch');
+      return canLaunch;
+    } catch (e) {
+      log('❌ 检测支付宝App失败: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> _launchAlipayApp(String payUrl, String orderNo) async {
+    try {
+      final uri = Uri.parse(payUrl);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (launched) {
+        log('✅ 成功调用支付宝App');
+        final result = await _waitForAlipayResult(orderNo);
+        return result;
+      } else {
+        log('❌ 调用支付宝App失败');
+        return false;
+      }
+    } catch (e) {
+      log('❌ 调用支付宝App异常: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> _waitForAlipayResult(String orderNo) async {
+    log('⏳ 等待用户完成支付宝操作，3秒后查询订单状态...');
+    await Future.delayed(const Duration(seconds: 3));
+
+    for (int i = 0; i < 5; i++) {
+      log('🔍 第${i + 1}次查询订单状态...');
+      final status = await _queryOrderStatus(orderNo);
+      if (status != null) {
+        if (status == 'TRADE_SUCCESS' || status == 'TRADE_FINISHED') {
+          log('✅ 支付成功！');
+          return true;
+        } else if (status == 'TRADE_CLOSED') {
+          log('❌ 交易已关闭');
+          return false;
+        }
+      }
+
+      if (i < 4) {
+        log('⏳ 订单状态未更新，2秒后重试...');
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
+
+    log('⚠️ 查询超时，请手动确认支付结果');
+    return false;
+  }
+
+  static Future<String?> _queryOrderStatus(String orderNo) async {
+    try {
+      final url = Uri.parse('$baseUrl/api/alipay/query-order');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'orderNo': orderNo}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return data['status'];
+        }
+      }
+      return null;
+    } catch (e) {
+      log('❌ 查询订单状态异常: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> _launchAlipayWebView(
+    BuildContext context,
+    String payUrl,
+    String orderNo,
+  ) async {
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder:
-            (context) => ServiceAlipayPage(payUrl: payUrl, orderNo: orderNo),
+            (context) =>
+                _AlipayAppFallbackPage(payUrl: payUrl, orderNo: orderNo),
       ),
     );
-
-    log('📤 支付页面返回结果: $paymentResult');
-    return paymentResult == true;
+    return result == true;
   }
 }
 
-/// 支付宝支付页面组件
-class ServiceAlipayPage extends StatefulWidget {
+class _AlipayAppFallbackPage extends StatefulWidget {
   final String payUrl;
   final String orderNo;
 
-  const ServiceAlipayPage({
-    super.key,
-    required this.payUrl,
-    required this.orderNo,
-  });
+  const _AlipayAppFallbackPage({required this.payUrl, required this.orderNo});
 
   @override
-  State<ServiceAlipayPage> createState() => _ServiceAlipayPageState();
+  State<_AlipayAppFallbackPage> createState() => _AlipayAppFallbackPageState();
 }
 
-class _ServiceAlipayPageState extends State<ServiceAlipayPage> {
+class _AlipayAppFallbackPageState extends State<_AlipayAppFallbackPage> {
   late WebViewController _webViewController;
   bool _isLoading = true;
   bool _hasCompleted = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -113,7 +203,6 @@ class _ServiceAlipayPageState extends State<ServiceAlipayPage> {
   }
 
   void _initWebViewController() {
-    // 创建 WebViewController
     final controller =
         WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -121,28 +210,24 @@ class _ServiceAlipayPageState extends State<ServiceAlipayPage> {
           ..setNavigationDelegate(
             NavigationDelegate(
               onProgress: (int progress) {
-                log('📊 加载进度: $progress%');
                 setState(() {
                   _isLoading = progress < 100;
                 });
               },
               onPageStarted: (String url) {
                 log('📄 页面加载开始: $url');
-                setState(() {
-                  _errorMessage = null;
-                });
               },
               onPageFinished: (String url) {
                 log('✅ 页面加载完成: $url');
                 setState(() {
                   _isLoading = false;
                 });
+                _checkPaymentStatus(url);
               },
               onWebResourceError: (WebResourceError error) {
                 log('❌ WebView 错误: ${error.description}');
                 if (!_hasCompleted) {
                   setState(() {
-                    _errorMessage = '加载失败: ${error.description}';
                     _isLoading = false;
                   });
                 }
@@ -151,25 +236,27 @@ class _ServiceAlipayPageState extends State<ServiceAlipayPage> {
                 final url = request.url;
                 log('🔗 导航请求: $url');
 
-                // 支付宝 App 回调
-                if (url.startsWith('alipays://') ||
-                    url.startsWith('alipay://')) {
-                  log('📱 检测到支付宝 App 回调');
+                if (_hasCompleted) {
                   return NavigationDecision.prevent;
                 }
 
-                // 同步回调成功
-                if (url.contains('/alipay/success') ||
-                    url.contains('trade_status=TRADE_SUCCESS')) {
-                  log('✅ 支付成功: $url');
+                if (url.startsWith('alipays://') ||
+                    url.startsWith('alipay://')) {
+                  log('📱 检测到支付宝App回调');
+                  _tryLaunchAlipayApp(url);
+                  return NavigationDecision.prevent;
+                }
+
+                if (url.startsWith('myapp://alipay/success')) {
+                  log('✅ 支付成功 - URL scheme');
                   _hasCompleted = true;
                   _handlePaymentSuccess();
                   return NavigationDecision.prevent;
                 }
 
-                // 同步回调取消
-                if (url.contains('/alipay/cancel')) {
-                  log('❌ 支付取消: $url');
+                if (url.startsWith('myapp://alipay/cancel') ||
+                    url.startsWith('myapp://alipay/failed')) {
+                  log('❌ 支付失败/取消 - URL scheme');
                   _hasCompleted = true;
                   _handlePaymentFailure();
                   return NavigationDecision.prevent;
@@ -188,32 +275,57 @@ class _ServiceAlipayPageState extends State<ServiceAlipayPage> {
     _webViewController.loadRequest(Uri.parse(widget.payUrl));
   }
 
+  Future<void> _tryLaunchAlipayApp(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (launched) {
+        log('✅ 成功调用支付宝App');
+      } else {
+        log('❌ 调用支付宝App失败');
+      }
+    } catch (e) {
+      log('❌ 调用支付宝App异常: $e');
+    }
+  }
+
+  void _checkPaymentStatus(String url) {
+    if (_hasCompleted) return;
+
+    if (url.contains('/alipay/success') ||
+        url.contains('trade_status=TRADE_SUCCESS')) {
+      log('✅ 支付成功');
+      _hasCompleted = true;
+      _handlePaymentSuccess();
+      return;
+    }
+
+    if (url.contains('/alipay/cancel')) {
+      log('❌ 支付取消');
+      _hasCompleted = true;
+      _handlePaymentFailure();
+      return;
+    }
+  }
+
   void _handlePaymentSuccess() {
-    log('🎉 支付成功');
     if (mounted) {
       Navigator.pop(context, true);
     }
   }
 
   void _handlePaymentFailure() {
-    log('❌ 支付失败');
     if (mounted) {
       Navigator.pop(context, false);
     }
   }
 
-  void _retryLoad() {
-    setState(() {
-      _errorMessage = null;
-      _isLoading = true;
-    });
-    _webViewController.loadRequest(Uri.parse(widget.payUrl));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('支付宝支付'),
         leading: IconButton(
@@ -221,78 +333,20 @@ class _ServiceAlipayPageState extends State<ServiceAlipayPage> {
           onPressed: () {
             if (!_hasCompleted) {
               Navigator.pop(context, false);
-            } else {
-              Navigator.pop(context, false);
             }
           },
         ),
       ),
       body: Stack(
         children: [
-          // WebView
           WebViewWidget(controller: _webViewController),
-
-          // 加载指示器
           if (_isLoading)
             Container(
               color: Colors.white.withOpacity(0.9),
               child: const Center(child: CircularProgressIndicator()),
             ),
-
-          // 错误提示
-          if (_errorMessage != null)
-            Container(
-              color: Colors.white,
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _retryLoad,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('重试'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       ),
-    );
-  }
-}
-
-/// 简化的支付宝支付方法
-class AlipayPayment {
-  static Future<bool> pay(
-    BuildContext context,
-    double amount,
-    String orderNo, {
-    String subject = '挪威旅游服务订单',
-  }) async {
-    return await ServiceAlipayService.processPayment(
-      context,
-      amount,
-      orderNo,
-      subject: subject,
     );
   }
 }

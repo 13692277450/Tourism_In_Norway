@@ -139,7 +139,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
         builder:
             (_) => ServiceCheckoutPage(
               cartItems: selectedItems,
-              checkoutItems: checkoutItems,
+              // checkoutItems: checkoutItems,
             ),
       ),
     ).then((_) => _loadCart());

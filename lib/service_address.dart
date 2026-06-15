@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
+import 'app_shared.dart';
 
 class ServiceAddressPage extends StatefulWidget {
   final int? selectedAddressId;
@@ -23,19 +24,46 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
   void initState() {
     super.initState();
     _loadUser();
-    _loadAddresses();
   }
 
-  void _loadUser() {
-    // 从您的UserManager获取当前用户ID
-    // _currentUserId = userManager.currentUser?.id;
-    _currentUserId = 1;
+  void _loadUser() async {
+    try {
+      // ✅ 从 UserManager 获取真实用户ID
+      final userManager = UserManager();
+      final user = userManager.currentUser;
+      setState(() {
+        _currentUserId = user?.user_id ?? 0;
+      });
+      print('✅ 地址页面 - 当前用户ID: $_currentUserId');
+
+      // 用户加载完成后再加载地址
+      if (_currentUserId != null && _currentUserId != 0) {
+        await _loadAddresses();
+      } else {
+        setState(() => _isLoading = false);
+        // 如果未登录，提示用户登录
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('请先登录')));
+        }
+      }
+    } catch (e) {
+      print('❌ 加载用户失败: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _loadAddresses() async {
-    if (_currentUserId == null) return;
+    if (_currentUserId == null || _currentUserId == 0) {
+      print('⚠️ 用户未登录，无法加载地址');
+      return;
+    }
 
+    print('📡 开始加载用户 $_currentUserId 的地址列表...');
     final addresses = await ServiceApi.getAddresses(_currentUserId!);
+    print('✅ 加载到 ${addresses.length} 个地址');
+
     setState(() {
       _addresses = addresses;
       _isLoading = false;
@@ -89,6 +117,11 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
   }
 
   void _addOrEditAddress({ServiceAddress? address}) {
+    if (_currentUserId == null || _currentUserId == 0) {
+      _showError('请先登录');
+      return;
+    }
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -102,12 +135,19 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
   }
 
   void _selectAddress(ServiceAddress address) {
+    print('✅ 选择地址: ${address.receiverName}, ID: ${address.id}');
     Navigator.pop(context, address);
   }
 
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -233,10 +273,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap:
-              widget.selectedAddressId != null
-                  ? () => _selectAddress(address)
-                  : null,
+          onTap: () => _selectAddress(address),
           borderRadius: BorderRadius.circular(16.r),
           child: Padding(
             padding: EdgeInsets.all(16.w),
@@ -383,7 +420,7 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
   }
 }
 
-// 地址编辑页面
+// 地址编辑页面（保持不变）
 class ServiceAddressEditPage extends StatefulWidget {
   final ServiceAddress? address;
   final int userId;

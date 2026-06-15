@@ -7,6 +7,9 @@ import 'service_api.dart';
 import 'service_theme.dart' as theme;
 import 'service_address.dart';
 import 'service_paypal.dart';
+import 'service_alipay.dart';
+import 'service_alipay_app.dart';
+import 'app_shared.dart';
 
 class ServiceCheckoutPage extends StatefulWidget {
   final List<ServiceCartItem>? cartItems;
@@ -20,7 +23,6 @@ class ServiceCheckoutPage extends StatefulWidget {
     this.directBuyItems,
     this.directBuyGoods,
     this.quantity,
-    required List<Map<String, int>> checkoutItems,
   });
 
   @override
@@ -42,15 +44,30 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   @override
   void initState() {
     super.initState();
-    _loadUser();
     _initCheckoutItems();
-    _loadAddresses();
+    _loadUserAndAddresses();
   }
 
-  void _loadUser() {
-    // 从您的UserManager获取当前用户ID
-    // _currentUserId = userManager.currentUser?.id;
-    _currentUserId = 1;
+  Future<void> _loadUserAndAddresses() async {
+    try {
+      // 先加载用户信息
+      final userManager = UserManager();
+      final user = userManager.currentUser;
+      setState(() {
+        _currentUserId = user?.user_id ?? 0;
+      });
+      print('✅ 当前用户ID: $_currentUserId');
+
+      // 用户加载完成后再加载地址
+      if (_currentUserId != null && _currentUserId != 0) {
+        await _loadAddresses();
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      print('❌ 加载用户失败: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   void _initCheckoutItems() {
@@ -85,7 +102,6 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
 
     _checkoutItems = [];
     for (var item in widget.directBuyItems!) {
-      // 获取商品详情
       try {
         final goods = await ServiceApi.getGoodsDetail(item['goods_id']);
         if (goods != null) {
@@ -110,12 +126,15 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   }
 
   Future<void> _loadAddresses() async {
-    if (_currentUserId == null) return;
+    if (_currentUserId == null || _currentUserId == 0) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
     final addresses = await ServiceApi.getAddresses(_currentUserId!);
     setState(() {
       _addresses = addresses;
-      // 修复后的代码
+      // 优先选择默认地址，否则选择第一个
       try {
         _selectedAddress = addresses.firstWhere((addr) => addr.isDefault);
       } catch (e) {
@@ -133,6 +152,11 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
 
     if (_checkoutItems.isEmpty) {
       _showError('没有商品');
+      return;
+    }
+
+    if (_currentUserId == null || _currentUserId == 0) {
+      _showError('请先登录');
       return;
     }
 
@@ -156,7 +180,6 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
     if (result['code'] == 200) {
       final orderId = result['data']['order_id'];
       final orderNo = result['data']['order_no'];
-      // 跳转到支付页面
       _showPaymentDialog(orderId, orderNo);
     } else {
       _showError(result['message'] ?? '创建订单失败');
@@ -176,21 +199,36 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
             ),
             backgroundColor:
                 isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
-            title: const Text('选择支付方式'),
+            title: Text(
+              '选择支付方式',
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _buildPaymentMethod(
-                  '微信支付',
-                  '',
+                  '支付宝',
                   Icons.account_balance_wallet,
+                  () => _processAlipayPayment(orderId, orderNo),
+                  isDark,
+                ),
+                SizedBox(height: 12.h),
+                _buildPaymentMethod(
+                  '支付宝App',
+                  Icons.phone_android,
+                  () => _processAlipayAppPayment(orderId, orderNo),
+                  isDark,
+                ),
+                SizedBox(height: 12.h),
+                _buildPaymentMethod(
+                  '微信支付',
+                  Icons.wechat,
                   () => _processWeChatPayment(orderId, orderNo),
                   isDark,
                 ),
                 SizedBox(height: 12.h),
                 _buildPaymentMethod(
                   'PayPal',
-                  'https://www.paypal.com/webapps/mpp/paypal-popup',
                   Icons.payment,
                   () => _processPayPalPayment(orderId, orderNo),
                   isDark,
@@ -199,9 +237,13 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
                 child: Text(
-                  'Cancel',
+                  '取消',
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
@@ -214,7 +256,6 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
 
   Widget _buildPaymentMethod(
     String name,
-    String url,
     IconData icon,
     VoidCallback onTap,
     bool isDark,
@@ -256,41 +297,147 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   }
 
   Future<void> _processPayPalPayment(int orderId, String orderNo) async {
-    Navigator.pop(context); // 关闭支付方式对话框
+    if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
 
-    _showSuccess('正在跳转到PayPal...');
+    final amount = _totalPrice;
+    print('💰 PayPal 支付 - 订单号: $orderNo, 金额: ¥$amount');
 
-    // 使用 PayPal 支付服务处理支付
-    final success = await ServicePayPalService.processPayment(
-      context,
-      _totalPrice,
-      orderNo,
-    );
+    if (amount <= 0) {
+      _showError('订单金额无效');
+      return;
+    }
 
-    if (success) {
-      _showSuccess('PayPal 支付成功！');
-      _navigateToOrderResult(orderId, orderNo);
-    } else {
-      _showError('PayPal 支付失败或已取消');
+    _showLoading('正在跳转到PayPal...');
+
+    try {
+      final success = await ServicePayPalService.processPayment(
+        context,
+        amount,
+        orderNo,
+      );
+
+      print('📤 PayPal 支付结果: $success');
+
+      if (success && mounted) {
+        _showSuccess('PayPal 支付成功！');
+        _navigateToOrderResult(orderId, orderNo);
+      } else if (mounted) {
+        _showError('PayPal 支付失败或已取消');
+      }
+    } catch (e) {
+      print('❌ PayPal 支付异常: $e');
+      if (mounted) {
+        _showError('支付过程中发生错误');
+      }
+    }
+  }
+
+  Future<void> _processAlipayPayment(int orderId, String orderNo) async {
+    if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+
+    final amount = _totalPrice;
+    print('💰 支付宝支付 - 订单号: $orderNo, 金额: ¥$amount');
+
+    if (amount <= 0) {
+      _showError('订单金额无效');
+      return;
+    }
+
+    _showLoading('正在跳转到支付宝...');
+
+    try {
+      final success = await ServiceAlipayService.processPayment(
+        context,
+        amount,
+        orderNo,
+      );
+
+      if (success && mounted) {
+        _showSuccess('支付宝支付成功！');
+        _navigateToOrderResult(orderId, orderNo);
+      } else if (mounted) {
+        _showError('支付宝支付失败或已取消');
+      }
+    } catch (e) {
+      print('❌ 支付宝支付异常: $e');
+      if (mounted) {
+        _showError('支付过程中发生错误');
+      }
+    }
+  }
+
+  Future<void> _processAlipayAppPayment(int orderId, String orderNo) async {
+    if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
+
+    final amount = _totalPrice;
+    print('💰 支付宝App支付 - 订单号: $orderNo, 金额: ¥$amount');
+
+    if (amount <= 0) {
+      _showError('订单金额无效');
+      return;
+    }
+
+    _showLoading('正在调用支付宝App...');
+
+    try {
+      final success = await ServiceAlipayAppService.processPayment(
+        context,
+        amount,
+        orderNo,
+      );
+
+      if (success && mounted) {
+        _showSuccess('支付宝支付成功！');
+        _navigateToOrderResult(orderId, orderNo);
+      } else if (mounted) {
+        _showError('支付宝支付失败或已取消');
+      }
+    } catch (e) {
+      print('❌ 支付宝App支付异常: $e');
+      if (mounted) {
+        _showError('支付过程中发生错误');
+      }
     }
   }
 
   Future<void> _processWeChatPayment(int orderId, String orderNo) async {
-    Navigator.pop(context); // 关闭支付方式对话框
+    if (mounted && Navigator.canPop(context)) {
+      Navigator.pop(context);
+    }
 
-    _showSuccess('正在跳转到微信支付...');
+    final amount = _totalPrice;
+    print('💰 微信支付 - 订单号: $orderNo, 金额: ¥$amount');
 
-    // 使用微信支付服务处理支付
-    final success = await ServiceWeChatService.processPayment(
-      _totalPrice,
-      orderNo,
-    );
+    if (amount <= 0) {
+      _showError('订单金额无效');
+      return;
+    }
 
-    if (success) {
-      _showSuccess('微信支付成功！');
-      _navigateToOrderResult(orderId, orderNo);
-    } else {
-      _showError('微信支付失败或已取消');
+    _showLoading('正在跳转到微信支付...');
+
+    try {
+      final success = await ServiceWeChatService.processPayment(
+        amount,
+        orderNo,
+      );
+
+      if (success && mounted) {
+        _showSuccess('微信支付成功！');
+        _navigateToOrderResult(orderId, orderNo);
+      } else if (mounted) {
+        _showError('微信支付失败或已取消');
+      }
+    } catch (e) {
+      print('❌ 微信支付异常: $e');
+      if (mounted) {
+        _showError('支付过程中发生错误');
+      }
     }
   }
 
@@ -318,6 +465,16 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.green),
+    );
+  }
+
+  void _showLoading(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.blue,
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
@@ -356,22 +513,17 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 收货地址
                           _buildAddressSection(isDark),
                           SizedBox(height: 16.h),
-                          // 商品列表
                           _buildProductsSection(isDark),
                           SizedBox(height: 16.h),
-                          // 物流信息
                           _buildLogisticsSection(isDark),
                           SizedBox(height: 16.h),
-                          // 订单信息
                           _buildOrderInfoSection(isDark),
                         ],
                       ),
                     ),
                   ),
-                  // 底部结算栏
                   _buildBottomBar(isDark),
                 ],
               ),
@@ -381,6 +533,8 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   Widget _buildAddressSection(bool isDark) {
     return GestureDetector(
       onTap: () async {
+        print('🔘 点击地址选择，当前选中地址ID: ${_selectedAddress?.id}');
+
         final result = await Navigator.push(
           context,
           MaterialPageRoute(
@@ -389,8 +543,19 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
                     ServiceAddressPage(selectedAddressId: _selectedAddress?.id),
           ),
         );
-        if (result != null) {
-          await _loadAddresses();
+
+        print('📤 从地址页面返回: $result');
+
+        // ✅ 正确处理返回的地址
+        if (result != null && result is ServiceAddress) {
+          print('✅ 收到返回的地址: ${result.receiverName}, ${result.fullAddress}');
+          setState(() {
+            _selectedAddress = result;
+          });
+        } else if (result != null) {
+          print('⚠️ 返回的数据类型错误: ${result.runtimeType}');
+        } else {
+          print('⚠️ 用户取消选择地址');
         }
       },
       child: Container(

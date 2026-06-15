@@ -695,8 +695,8 @@ const List<String> countryList = [
 // 后端服务器基础URL配置
 class AppConfig {
   // 基础Web服务地址
-  static const String baseWebUrl = 'http://104.168.125.34';
-  //static const String baseWebUrl = 'http://www.pavogroup.top';
+  //static const String baseWebUrl = 'https://104.168.125.34';
+  static const String baseWebUrl = 'https://software.pavogroup.top';
 }
 
 // 用户状态管理

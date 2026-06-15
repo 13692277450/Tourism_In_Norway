@@ -45,7 +45,7 @@ class _BbsPageState extends State<BbsPage> {
   Future<void> _fetchCategories() async {
     try {
       final response = await http.get(
-        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/categories'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/categories'),
       );
 
       if (response.statusCode == 200) {
@@ -84,7 +84,7 @@ class _BbsPageState extends State<BbsPage> {
 
     try {
       final uri = Uri.parse(
-        '${shared.AppConfig.baseWebUrl}:3004/api/posts',
+        '${shared.AppConfig.baseWebUrl}/api/bbs/posts',
       ).replace(
         queryParameters: {
           'page': _currentPage.toString(),
@@ -200,7 +200,7 @@ class _BbsPageState extends State<BbsPage> {
   Future<void> _deletePost(int postId) async {
     try {
       final response = await http.delete(
-        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/posts/$postId'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/posts/$postId'),
       );
 
       if (response.statusCode == 200) {
@@ -255,7 +255,7 @@ class _BbsPageState extends State<BbsPage> {
     try {
       final userId = currentUser.user_id!;
       final uri = Uri.parse(
-        '${shared.AppConfig.baseWebUrl}:3004/api/posts',
+        '${shared.AppConfig.baseWebUrl}/api/bbs/posts',
       ).replace(queryParameters: {'user_id': userId.toString()});
 
       debugPrint('我的留言请求URL: $uri');

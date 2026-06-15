@@ -40,7 +40,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
   Future<void> _fetchCategories() async {
     try {
       final response = await http.get(
-        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/categories'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/categories'),
       );
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
@@ -83,7 +83,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/upload/image'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/upload/image'),
       );
 
       request.files.add(
@@ -141,7 +141,7 @@ class _BbsPostPageState extends State<BbsPostPage> {
       // 创建 multipart 请求（直接发送图片文件）
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/posts'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/posts'),
       );
 
       // 添加文本字段（使用数据库自增ID，整数类型）

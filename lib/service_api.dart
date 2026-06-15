@@ -6,7 +6,7 @@ import 'app_shared.dart';
 
 class ServiceApi {
   // 使用共享的服务器地址配置
-  static const String baseUrl = '${AppConfig.baseWebUrl}:3005/api/service';
+  static const String baseUrl = '${AppConfig.baseWebUrl}/api/service';
 
   // 获取分类列表
   static Future<List<ServiceCategory>> getCategories() async {
@@ -74,6 +74,7 @@ class ServiceApi {
   }
 
   // 获取商品详情
+  // 获取商品详情
   static Future<ServiceGoods?> getGoodsDetail(int id) async {
     try {
       final url = Uri.parse('$baseUrl/goods/$id');
@@ -81,12 +82,22 @@ class ServiceApi {
 
       final response = await http.get(url);
       print('📡 商品详情响应状态码: ${response.statusCode}');
+      print('📡 响应内容: ${response.body}'); // 添加日志便于调试
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);
-        return ServiceGoods.fromJson(decoded['data']);
+
+        // ✅ 添加空安全检查和数据存在性验证
+        if (decoded['code'] == 200 && decoded['data'] != null) {
+          return ServiceGoods.fromJson(decoded['data']);
+        } else {
+          print('❌ API返回错误: ${decoded['message'] ?? '未知错误'}');
+          return null;
+        }
+      } else {
+        print('❌ HTTP请求失败，状态码: ${response.statusCode}');
+        return null;
       }
-      return null;
     } catch (e) {
       print('❌ 获取商品详情失败: $e');
       return null;

@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // 调用登录API获取用户信息
       final response = await http.post(
-        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/users/login'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/users/login'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'email': _emailController.text,

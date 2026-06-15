@@ -1,4 +1,3 @@
-// service_paypal.dart
 import 'dart:convert';
 import 'dart:developer';
 import 'package:flutter/material.dart';
@@ -7,16 +6,14 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'app_shared.dart';
 
 class ServicePayPalService {
-  // PayPal 配置
-  static const String baseUrl = '${AppConfig.baseWebUrl}:3000'; // 后端服务器地址
+  static const String clientId =
+      'AdjY4PDq9K4D1BXdU0GtusDJyMjsLQwyiUOe3wd9B5SXb582bM2bqEqfczsEskSlcOnif4VTfX5T9MH-';
+  static const String baseUrl = AppConfig.baseWebUrl;
 
-  /// 1. 创建 PayPal 订单
-  static Future<Map<String, dynamic>?> createOrder(
-    String orderNo,
-    double amount,
-  ) async {
+  static Future<String?> createOrder(double amount, String orderNo) async {
     try {
       final url = Uri.parse('$baseUrl/api/paypal/create-order');
+      log('📡 创建 PayPal 订单: $url');
 
       final response = await http.post(
         url,
@@ -27,194 +24,278 @@ class ServicePayPalService {
         }),
       );
 
+      log('📡 响应: ${response.statusCode} - ${response.body}');
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          log('✅ 创建 PayPal 订单成功 - 订单号: $orderNo');
-          log('PayPal Order ID: ${data['orderId']}');
-          return data;
+          log('✅ 订单创建成功: ${data['orderId']}');
+          return data['orderId'];
         }
       }
-
-      log('❌ 创建 PayPal 订单失败: ${response.body}');
+      log('❌ 创建订单失败');
       return null;
-    } catch (error) {
-      log('❌ 创建 PayPal 订单异常: $error');
+    } catch (e) {
+      log('❌ 创建订单异常: $e');
       return null;
     }
   }
 
-  /// 2. 捕获 PayPal 订单（完成扣款）
-  static Future<bool> captureOrder(String orderId, String orderNo) async {
+  static Future<bool> captureOrder(String orderId) async {
     try {
       final url = Uri.parse('$baseUrl/api/paypal/capture-order');
+      log('📡 捕获 PayPal 订单: $orderId');
 
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'orderId': orderId, 'orderNo': orderNo}),
+        body: json.encode({'orderId': orderId}),
       );
+
+      log('📡 捕获响应: ${response.statusCode} - ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success'] == true) {
-          log('✅ 捕获 PayPal 订单成功 - 订单号: $orderNo');
+          log('✅ 捕获成功');
           return true;
         }
       }
-
-      log('❌ 捕获 PayPal 订单失败: ${response.body}');
+      log('❌ 捕获失败');
       return false;
-    } catch (error) {
-      log('❌ 捕获 PayPal 订单异常: $error');
+    } catch (e) {
+      log('❌ 捕获异常: $e');
       return false;
     }
   }
 
-  /// 处理 PayPal 支付（完整流程）
   static Future<bool> processPayment(
     BuildContext context,
     double amount,
-    String orderNo, {
-    String itemName = '挪威旅游服务订单',
-  }) async {
-    // Step 1: 创建 PayPal 订单
-    final orderResponse = await createOrder(orderNo, amount);
-    if (orderResponse == null || orderResponse['approveUrl'] == null) {
-      log('❌ 创建订单失败');
+    String orderNo,
+  ) async {
+    final orderId = await createOrder(amount, orderNo);
+    if (orderId == null) {
+      log('❌ 无法创建订单');
       return false;
     }
 
-    final approveUrl = orderResponse['approveUrl'];
-    final paypalOrderId = orderResponse['orderId'];
-
-    // Step 2: 在 WebView 中打开支付页面
-    final paymentResult = await Navigator.push(
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder:
-            (context) => ServicePayPalPage(
-              approveUrl: approveUrl,
+            (context) => _PayPalCheckoutPage(
+              orderId: orderId,
+              amount: amount,
               orderNo: orderNo,
-              paypalOrderId: paypalOrderId,
             ),
       ),
     );
 
-    // Step 3: 如果用户完成审批，执行捕获订单
-    if (paymentResult == true) {
-      return await captureOrder(paypalOrderId, orderNo);
-    }
-
-    return false;
+    return result ?? false;
   }
 }
 
-/// PayPal 沙盒支付页面组件
-class ServicePayPalPage extends StatefulWidget {
-  final String approveUrl;
+class _PayPalCheckoutPage extends StatefulWidget {
+  final String orderId;
+  final double amount;
   final String orderNo;
-  final String paypalOrderId;
 
-  const ServicePayPalPage({
-    super.key,
-    required this.approveUrl,
+  const _PayPalCheckoutPage({
+    required this.orderId,
+    required this.amount,
     required this.orderNo,
-    required this.paypalOrderId,
   });
 
   @override
-  State<ServicePayPalPage> createState() => _ServicePayPalPageState();
+  State<_PayPalCheckoutPage> createState() => _PayPalCheckoutPageState();
 }
 
-class _ServicePayPalPageState extends State<ServicePayPalPage> {
-  late WebViewController _webViewController;
+class _PayPalCheckoutPageState extends State<_PayPalCheckoutPage> {
+  late WebViewController _controller;
   bool _isLoading = true;
   bool _hasCompleted = false;
 
   @override
   void initState() {
     super.initState();
-    _initWebViewController();
+    _initWebView();
   }
 
-  void _initWebViewController() {
-    _webViewController =
+  void _initWebView() {
+    final controller =
         WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..setBackgroundColor(const Color(0x00000000))
+          ..setBackgroundColor(Colors.white)
           ..setNavigationDelegate(
             NavigationDelegate(
-              onProgress: (int progress) {
+              onProgress: (progress) {
                 setState(() {
                   _isLoading = progress < 100;
                 });
               },
-              onPageStarted: (String url) {
-                log('页面加载开始: $url');
+              onPageStarted: (url) {
+                log('📄 页面加载: $url');
               },
-              onPageFinished: (String url) {
+              onPageFinished: (url) {
+                log('✅ 页面完成: $url');
                 setState(() {
                   _isLoading = false;
                 });
-                _checkPaymentStatus(url);
               },
-              onWebResourceError: (WebResourceError error) {
-                log('WebView 错误: $error');
+              onWebResourceError: (error) {
+                log('❌ WebView 错误: ${error.description}');
                 if (!_hasCompleted) {
-                  _handlePaymentFailure();
+                  setState(() {
+                    _isLoading = false;
+                  });
                 }
               },
-              onNavigationRequest: (NavigationRequest request) {
-                log('导航请求: ${request.url}');
-                _checkPaymentStatus(request.url);
-                return NavigationDecision.navigate;
+              onSslAuthError: (error) {
+                log('⚠️ SSL 错误，继续加载');
+                error.proceed();
               },
             ),
-          )
-          ..loadRequest(Uri.parse(widget.approveUrl));
+          );
+
+    _controller = controller;
+    _loadPayPalSDK();
   }
 
-  void _checkPaymentStatus(String url) {
+  void _loadPayPalSDK() {
+    final html = '''
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPal Payment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
+    }
+    .container {
+      text-align: center;
+      padding: 20px;
+    }
+    .loading {
+      color: #666;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    #paypal-button-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="paypal-button-container">
+      <p class="loading">Loading PayPal...</p>
+    </div>
+  </div>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=${ServicePayPalService.clientId}&currency=USD&intent=capture"></script>
+
+  <script>
+    paypal.Buttons({
+      createOrder: function() {
+        return "${widget.orderId}";
+      },
+
+      onApprove: function(data) {
+        fetch("${ServicePayPalService.baseUrl}/api/paypal/capture-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId: data.orderID })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(result) {
+          if (result.success) {
+            document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1 style="color:green;">✅ Payment Successful!</h1><p>Order: ${widget.orderNo}</p></div>';
+            setTimeout(function() {
+              FlutterChannel.postMessage(JSON.stringify({status: "success", orderId: data.orderID}));
+            }, 1500);
+          } else {
+            document.body.innerHTML = '<div style="text-align:center;padding:40px;"><h1 style="color:red;">❌ Payment Failed</h1><p>' + (result.message || 'Unknown error') + '</p></div>';
+            setTimeout(function() {
+              FlutterChannel.postMessage(JSON.stringify({status: "error", message: result.message}));
+            }, 1500);
+          }
+        })
+        .catch(function(err) {
+          FlutterChannel.postMessage(JSON.stringify({status: "error", message: err.toString()}));
+        });
+      },
+
+      onCancel: function() {
+        FlutterChannel.postMessage(JSON.stringify({status: "cancel"}));
+      },
+
+      onError: function(err) {
+        FlutterChannel.postMessage(JSON.stringify({status: "error", message: err.toString()}));
+      }
+    }).render("#paypal-button-container");
+  </script>
+</body>
+</html>
+''';
+
+    _controller.loadHtmlString(html);
+
+    _controller.addJavaScriptChannel(
+      'FlutterChannel',
+      onMessageReceived: (message) {
+        log('📩 收到 JS 消息: ${message.message}');
+        _handleJsMessage(message.message);
+      },
+    );
+  }
+
+  void _handleJsMessage(String msg) {
     if (_hasCompleted) return;
 
-    // 检查是否跳转到成功页面（根据后端配置）
-    if (url.contains('/payment/success')) {
-      log('✅ 用户完成支付审批 - 订单号: ${widget.orderNo}');
-      log('PayPal Order ID: ${widget.paypalOrderId}');
-      _hasCompleted = true;
-      _handlePaymentSuccess();
-      return;
+    try {
+      final data = json.decode(msg);
+      final status = data['status'] as String;
+
+      switch (status) {
+        case 'success':
+          log('✅ 支付成功');
+          _hasCompleted = true;
+          if (mounted) Navigator.pop(context, true);
+          break;
+        case 'cancel':
+          log('❌ 用户取消支付');
+          _hasCompleted = true;
+          if (mounted) Navigator.pop(context, false);
+          break;
+        case 'error':
+          log('❌ 支付错误: ${data['message']}');
+          _hasCompleted = true;
+          if (mounted) Navigator.pop(context, false);
+          break;
+      }
+    } catch (e) {
+      log('❌ 解析 JS 消息失败: $e');
     }
-
-    // 检查是否跳转到取消页面
-    if (url.contains('/payment/cancel')) {
-      log('❌ 用户取消支付 - 订单号: ${widget.orderNo}');
-      _hasCompleted = true;
-      _handlePaymentFailure();
-      return;
-    }
-  }
-
-  void _handlePaymentSuccess() {
-    Navigator.pop(context, true);
-  }
-
-  void _handlePaymentFailure() {
-    Navigator.pop(context, false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PayPal 支付'),
+        title: const Text('PayPal Payment'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.close),
           onPressed: () {
             if (!_hasCompleted) {
-              log('用户关闭支付页面');
-              _hasCompleted = true;
               Navigator.pop(context, false);
             }
           },
@@ -222,21 +303,14 @@ class _ServicePayPalPageState extends State<ServicePayPalPage> {
       ),
       body: Stack(
         children: [
-          WebViewWidget(controller: _webViewController),
-          if (_isLoading) const Center(child: CircularProgressIndicator()),
+          WebViewWidget(controller: _controller),
+          if (_isLoading)
+            Container(
+              color: Colors.white.withOpacity(0.9),
+              child: const Center(child: CircularProgressIndicator()),
+            ),
         ],
       ),
     );
-  }
-}
-
-/// 简化的 PayPal 支付方法
-class PayPalPayment {
-  static Future<bool> pay(
-    BuildContext context,
-    double amount,
-    String orderNo,
-  ) async {
-    return await ServicePayPalService.processPayment(context, amount, orderNo);
   }
 }

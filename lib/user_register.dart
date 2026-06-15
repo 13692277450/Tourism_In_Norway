@@ -77,7 +77,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('${shared.AppConfig.baseWebUrl}:3004/api/users/register'),
+        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/users/register'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'name': _nameController.text,
