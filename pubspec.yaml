@@ -92,6 +92,9 @@ flutter:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   assets:
+    - assets/images/
+    - assets/fonts/
+    - assets/icons/
     - assets/upgradebar_waiting.png
 
   # An image asset can refer to one or more resolution-specific "variants", see

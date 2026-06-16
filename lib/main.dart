@@ -139,7 +139,7 @@ class _MyAppState extends State<MyApp> {
       ),
       iconTheme: const IconThemeData(color: Color(0xFF6A78A4)),
       textTheme: const TextTheme(
-        bodyLarge: TextStyle(color: Color(0xFF1A1A2E)),
+        bodyLarge: TextStyle(color: Color.fromARGB(255, 67, 67, 122)),
         bodyMedium: TextStyle(color: Color(0xFF4B4B6B)),
       ),
       dividerColor: const Color(0xFFE0E0E0),
@@ -166,15 +166,15 @@ class _MyAppState extends State<MyApp> {
         surface: const Color(0xFF1E1E2E),
         background: const Color(0xFF121212),
       ),
-      scaffoldBackgroundColor: const Color(0xFF121212),
-      cardColor: const Color(0xFF1E1E2E),
+      scaffoldBackgroundColor: const Color.fromARGB(255, 53, 52, 52),
+      cardColor: const Color.fromARGB(255, 60, 60, 92),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF1A1A2E),
+        backgroundColor: Color.fromARGB(255, 48, 48, 87),
         foregroundColor: Color(0xFFE0E0E0),
         elevation: 0,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color(0xFF1E1E2E),
+        backgroundColor: Color.fromARGB(255, 57, 57, 95),
       ),
       iconTheme: const IconThemeData(color: Color(0xFF9E9E9E)),
       textTheme: const TextTheme(
@@ -184,7 +184,7 @@ class _MyAppState extends State<MyApp> {
       dividerColor: const Color(0xFF333333),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFF2A2A3E),
+        fillColor: const Color.fromARGB(255, 71, 71, 103),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16.w),
           borderSide: const BorderSide(color: Color(0xFF444444)),
@@ -331,7 +331,10 @@ class MainScreen extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors:
                     isDark
-                        ? [const Color(0xFF1A1A2E), const Color(0xFF121212)]
+                        ? [
+                          const Color.fromARGB(255, 53, 53, 91),
+                          const Color(0xFF121212),
+                        ]
                         : [const Color(0xFFF1F6FF), const Color(0xFFFFFFFF)],
               ),
             ),
@@ -369,13 +372,14 @@ class MainScreen extends StatelessWidget {
       bottomNavigationBar: Padding(
         padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 12.h),
         child: PhysicalModel(
-          color: Colors.transparent,
+          color: const Color.fromARGB(0, 46, 45, 45),
           elevation: 3,
           borderRadius: BorderRadius.circular(32.w),
           clipBehavior: Clip.antiAlias,
           child: Container(
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+              color:
+                  isDark ? const Color.fromARGB(255, 59, 59, 86) : Colors.white,
               borderRadius: BorderRadius.circular(32.w),
               boxShadow: [
                 BoxShadow(
