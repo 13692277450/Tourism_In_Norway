@@ -383,28 +383,8 @@ class _ServiceAddressPageState extends State<ServiceAddressPage> {
         width: 140.w,
         height: 44.h,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              theme.ServiceMetalColors.primary,
-              theme.ServiceMetalColors.accent,
-            ],
-          ),
+          color: theme.ServiceMetalColors.primary,
           borderRadius: BorderRadius.circular(22.r),
-          boxShadow:
-              isDark
-                  ? [
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.primary,
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    ),
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.accent,
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                  : null,
         ),
         alignment: Alignment.center,
         child: Text(
@@ -656,28 +636,8 @@ class _ServiceAddressEditPageState extends State<ServiceAddressEditPage> {
       child: Container(
         height: 50.h,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              theme.ServiceMetalColors.primary,
-              theme.ServiceMetalColors.accent,
-            ],
-          ),
+          color: theme.ServiceMetalColors.primary,
           borderRadius: BorderRadius.circular(25.r),
-          boxShadow:
-              isDark
-                  ? [
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.primary,
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    ),
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.accent,
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

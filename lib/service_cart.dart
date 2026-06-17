@@ -245,17 +245,12 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       decoration: BoxDecoration(
         color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16.r),
-        border:
-            isDark
-                ? Border.all(
-                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
-                )
-                : null,
+        border: isDark ? Border.all(color: Colors.grey[700]!) : null,
         boxShadow:
             isDark
                 ? [
                   BoxShadow(
-                    color: theme.ServiceMetalColors.primary.withOpacity(0.1),
+                    color: Colors.black.withOpacity(0.2),
                     blurRadius: 8,
                   ),
                 ]
@@ -349,19 +344,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.bold,
-                        color:
-                            isDark
-                                ? theme.ServiceMetalColors.primary
-                                : theme.ServiceMetalColors.primary,
-                        shadows:
-                            isDark
-                                ? [
-                                  Shadow(
-                                    color: theme.ServiceMetalColors.primary,
-                                    blurRadius: 5,
-                                  ),
-                                ]
-                                : null,
+                        color: theme.ServiceMetalColors.primary,
                       ),
                     ),
                     // 数量选择器
@@ -452,7 +435,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
           BoxShadow(
             color:
                 isDark
-                    ? theme.ServiceMetalColors.primary.withOpacity(0.2)
+                    ? Colors.black.withOpacity(0.3)
                     : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
@@ -511,19 +494,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color:
-                        isDark
-                            ? theme.ServiceMetalColors.primary
-                            : theme.ServiceMetalColors.primary,
-                    shadows:
-                        isDark
-                            ? [
-                              Shadow(
-                                color: theme.ServiceMetalColors.primary,
-                                blurRadius: 8,
-                              ),
-                            ]
-                            : null,
+                    color: theme.ServiceMetalColors.primary,
                   ),
                 ),
                 Text(
@@ -555,28 +526,8 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
         width: width,
         height: 44.h,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              theme.ServiceMetalColors.primary,
-              theme.ServiceMetalColors.accent,
-            ],
-          ),
+          color: theme.ServiceMetalColors.primary,
           borderRadius: BorderRadius.circular(22.r),
-          boxShadow:
-              isDark
-                  ? [
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.primary,
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    ),
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.accent,
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

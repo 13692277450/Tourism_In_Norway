@@ -738,25 +738,8 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
 
   Widget _buildMetalDivider(bool isDark) {
     return Container(
-      height: 2,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            isDark
-                ? theme.ServiceMetalColors.primary.withOpacity(0)
-                : Colors.transparent,
-            isDark
-                ? theme.ServiceMetalColors.primary
-                : theme.ServiceMetalColors.primary,
-            isDark
-                ? theme.ServiceMetalColors.accent
-                : theme.ServiceMetalColors.accent,
-            isDark
-                ? theme.ServiceMetalColors.accent.withOpacity(0)
-                : Colors.transparent,
-          ],
-        ),
-      ),
+      height: 1,
+      color: isDark ? Colors.grey[700] : Colors.grey[300],
     );
   }
 
@@ -769,19 +752,13 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
                 ? theme.ServiceMetalColors.darkSurface
                 : theme.ServiceMetalColors.lightSurface,
         borderRadius: BorderRadius.circular(16.r),
-        border:
-            isDark
-                ? Border.all(
-                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
-                )
-                : null,
+        border: isDark ? Border.all(color: Colors.grey[700]!) : null,
         boxShadow:
             isDark
                 ? [
                   BoxShadow(
-                    color: theme.ServiceMetalColors.primary.withOpacity(0.2),
-                    blurRadius: 12,
-                    spreadRadius: -4,
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
                   ),
                 ]
                 : [
@@ -837,37 +814,8 @@ class _ServiceProductDetailPageState extends State<ServiceProductDetailPage> {
       child: Container(
         height: 48.h,
         decoration: BoxDecoration(
-          gradient:
-              gradient ??
-              (isDark
-                  ? const LinearGradient(
-                    colors: [
-                      theme.ServiceMetalColors.primary,
-                      theme.ServiceMetalColors.accent,
-                    ],
-                  )
-                  : const LinearGradient(
-                    colors: [
-                      theme.ServiceMetalColors.primary,
-                      theme.ServiceMetalColors.primary,
-                    ],
-                  )),
+          color: theme.ServiceMetalColors.primary,
           borderRadius: BorderRadius.circular(24.r),
-          boxShadow:
-              isDark
-                  ? [
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.primary,
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    ),
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.accent,
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

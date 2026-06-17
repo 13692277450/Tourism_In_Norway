@@ -206,17 +206,12 @@ class _ServiceLikePageState extends State<ServiceLikePage> {
         decoration: BoxDecoration(
           color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(12.r),
-          border:
-              isDark
-                  ? Border.all(
-                    color: theme.ServiceMetalColors.primary.withOpacity(0.3),
-                  )
-                  : null,
+          border: isDark ? Border.all(color: Colors.grey[700]!) : null,
           boxShadow:
               isDark
                   ? [
                     BoxShadow(
-                      color: theme.ServiceMetalColors.primary.withOpacity(0.1),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 8,
                     ),
                   ]

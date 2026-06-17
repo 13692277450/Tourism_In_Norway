@@ -838,19 +838,8 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
             color:
                 isTotal
-                    ? (isDark
-                        ? theme.ServiceMetalColors.primary
-                        : theme.ServiceMetalColors.primary)
+                    ? theme.ServiceMetalColors.primary
                     : (isDark ? Colors.white : Colors.black87),
-            shadows:
-                isTotal && isDark
-                    ? [
-                      Shadow(
-                        color: theme.ServiceMetalColors.primary,
-                        blurRadius: 8,
-                      ),
-                    ]
-                    : null,
           ),
         ),
       ],
@@ -860,20 +849,7 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
   Widget _buildMetalDivider(bool isDark) {
     return Container(
       height: 1,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            isDark
-                ? theme.ServiceMetalColors.primary.withOpacity(0)
-                : Colors.transparent,
-            isDark ? theme.ServiceMetalColors.primary : Colors.grey[300]!,
-            isDark ? theme.ServiceMetalColors.accent : Colors.grey[300]!,
-            isDark
-                ? theme.ServiceMetalColors.accent.withOpacity(0)
-                : Colors.transparent,
-          ],
-        ),
-      ),
+      color: isDark ? Colors.grey[700] : Colors.grey[300],
     );
   }
 
@@ -886,7 +862,7 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
           BoxShadow(
             color:
                 isDark
-                    ? theme.ServiceMetalColors.primary.withOpacity(0.2)
+                    ? Colors.black.withOpacity(0.3)
                     : Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
@@ -911,19 +887,7 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color:
-                        isDark
-                            ? theme.ServiceMetalColors.primary
-                            : theme.ServiceMetalColors.primary,
-                    shadows:
-                        isDark
-                            ? [
-                              Shadow(
-                                color: theme.ServiceMetalColors.primary,
-                                blurRadius: 8,
-                              ),
-                            ]
-                            : null,
+                    color: theme.ServiceMetalColors.primary,
                   ),
                 ),
               ],
@@ -955,28 +919,8 @@ class _ServiceCheckoutPageState extends State<ServiceCheckoutPage> {
         width: width,
         height: 48.h,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [
-              theme.ServiceMetalColors.primary,
-              theme.ServiceMetalColors.accent,
-            ],
-          ),
+          color: theme.ServiceMetalColors.primary,
           borderRadius: BorderRadius.circular(24.r),
-          boxShadow:
-              isDark
-                  ? [
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.primary,
-                      blurRadius: 12,
-                      spreadRadius: 1,
-                    ),
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.accent,
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                  : null,
         ),
         alignment: Alignment.center,
         child: Text(

@@ -391,12 +391,8 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
             isDark
                 ? [
                   BoxShadow(
-                    color: theme.ServiceMetalColors.primary.withOpacity(0.3),
-                    blurRadius: 10,
-                  ),
-                  BoxShadow(
-                    color: theme.ServiceMetalColors.accent.withOpacity(0.2),
-                    blurRadius: 5,
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 8,
                   ),
                 ]
                 : [
@@ -405,12 +401,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                     blurRadius: 8,
                   ),
                 ],
-        border:
-            isDark
-                ? Border.all(
-                  color: theme.ServiceMetalColors.primary.withOpacity(0.5),
-                )
-                : null,
+        border: isDark ? Border.all(color: Colors.grey[700]!) : null,
       ),
       child: Row(
         children: [
@@ -497,15 +488,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24.r),
-          gradient:
-              isSelected && isDark
-                  ? LinearGradient(
-                    colors: [
-                      theme.ServiceMetalColors.primary,
-                      theme.ServiceMetalColors.accent,
-                    ],
-                  )
-                  : null,
           color:
               isSelected && !isDark
                   ? theme.ServiceMetalColors.primary
@@ -515,29 +497,10 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           border: Border.all(
             color:
                 isSelected
-                    ? (isDark
-                        ? theme.ServiceMetalColors.silver
-                        : theme.ServiceMetalColors.primary)
-                    : (isDark
-                        ? theme.ServiceMetalColors.primary.withOpacity(0.5)
-                        : Colors.grey[300]!),
+                    ? theme.ServiceMetalColors.primary
+                    : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
             width: 1.5,
           ),
-          boxShadow:
-              isSelected && isDark
-                  ? [
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.primary,
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    ),
-                    BoxShadow(
-                      color: theme.ServiceMetalColors.accent,
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                  : null,
         ),
         child: Text(
           title,
@@ -759,19 +722,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                         style: TextStyle(
                           fontSize: 16.sp,
                           fontWeight: FontWeight.normal,
-                          color:
-                              isDark
-                                  ? theme.ServiceMetalColors.primary
-                                  : theme.ServiceMetalColors.primary,
-                          shadows:
-                              isDark
-                                  ? [
-                                    Shadow(
-                                      color: theme.ServiceMetalColors.primary,
-                                      blurRadius: 8,
-                                    ),
-                                  ]
-                                  : null,
+                          color: theme.ServiceMetalColors.primary,
                         ),
                       ),
                       if (goods.originalPrice != null)

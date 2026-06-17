@@ -57,12 +57,7 @@ class ServiceSettings extends StatelessWidget {
                   height: 60.w,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        theme.ServiceMetalColors.primary,
-                        theme.ServiceMetalColors.accent,
-                      ],
-                    ),
+                    color: theme.ServiceMetalColors.primary,
                   ),
                   child: const Center(
                     child: Icon(Icons.person, size: 30, color: Colors.black),
