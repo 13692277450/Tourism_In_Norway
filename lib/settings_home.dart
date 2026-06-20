@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:in_app_update/in_app_update.dart';
 
 import 'app_shared.dart' as shared;
 import 'settings_upgrade.dart';
@@ -139,8 +140,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 fillColor: isDark ? const Color(0xFF2A2A3E) : Colors.white,
               ),
-              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
-              dropdownColor: isDark ? const Color(0xFF1E1E2E) : null,
+              style: TextStyle(
+                color: isDark ? const Color(0xFFE0E0E0) : Colors.black87,
+              ),
+              dropdownColor: isDark ? const Color(0xFF1E1E2E) : Colors.white,
               items:
                   locales
                       .map(
@@ -591,5 +594,19 @@ class _InfoCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+Future<bool> checkGooglePlayUpdate() async {
+  try {
+    final info = await InAppUpdate.checkForUpdate();
+    if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+      await InAppUpdate.startFlexibleUpdate();
+      await InAppUpdate.completeFlexibleUpdate();
+    }
+    return true;
+  } catch (e) {
+    debugPrint('Update check failed: $e');
+    return false;
   }
 }

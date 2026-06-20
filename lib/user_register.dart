@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 
 import 'app_shared.dart' as shared;
 
+const baseUrl = '${shared.AppConfig.baseWebUrl}:${shared.AppConfig.port3004}';
+
 // 可用的Flutter内置图标列表
 const List<IconData> availableIcons = [
   Icons.person,
@@ -77,7 +79,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/users/register'),
+        Uri.parse('$baseUrl/api/bbs/users/register'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'name': _nameController.text,
@@ -151,92 +153,120 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(title: const Text('用户注册')),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '用户信息',
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 16.h),
-
-            _buildTextField(
-              controller: _nameController,
-              label: '登录用户名 *',
-              hint: '请输入登录用户名',
-              icon: Icons.person,
-            ),
-            SizedBox(height: 12.h),
-
-            _buildTextField(
-              controller: _mailController,
-              label: '邮箱 *',
-              hint: '请输入邮箱',
-              keyboardType: TextInputType.emailAddress,
-              icon: Icons.email,
-            ),
-            SizedBox(height: 12.h),
-
-            _buildTextField(
-              controller: _telephoneController,
-              label: '电话 *',
-              hint: '请输入电话',
-              keyboardType: TextInputType.phone,
-              icon: Icons.phone,
-            ),
-            SizedBox(height: 12.h),
-
-            _buildTextField(
-              controller: _passwordController,
-              label: '密码 *',
-              hint: '请输入密码',
-              obscureText: true,
-              icon: Icons.lock,
-            ),
-            SizedBox(height: 12.h),
-
-            _buildTextField(
-              controller: _confirmPasswordController,
-              label: '确认密码 *',
-              hint: '请再次输入密码',
-              obscureText: true,
-              icon: Icons.lock_outline,
-            ),
-            SizedBox(height: 12.h),
-
-            _buildCountryDropdown(),
-            SizedBox(height: 12.h),
-
-            _buildIconPicker(),
-            SizedBox(height: 12.h),
-
-            _buildTextField(
-              controller: _remarkController,
-              label: '备注',
-              hint: '请输入备注信息',
-              maxLines: 3,
-              icon: Icons.note,
-            ),
-            SizedBox(height: 32.h),
-
-            Center(
-              child: ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitRegister,
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(200.w, 48.h),
-                  backgroundColor: const Color(0xFF3D5AFE),
+        child: Center(
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(24.w),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1F2937) : Colors.white,
+              borderRadius: BorderRadius.circular(16.w),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
-                child:
-                    _isSubmitting
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('注册'),
-              ),
+              ],
+              border: isDark ? Border.all(color: Colors.grey[700]!) : null,
             ),
-          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '用户信息',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+
+                _buildTextField(
+                  controller: _nameController,
+                  label: '登录用户名 *',
+                  hint: '请输入登录用户名',
+                  icon: Icons.person,
+                ),
+                SizedBox(height: 12.h),
+
+                _buildTextField(
+                  controller: _mailController,
+                  label: '邮箱 *',
+                  hint: '请输入邮箱',
+                  keyboardType: TextInputType.emailAddress,
+                  icon: Icons.email,
+                ),
+                SizedBox(height: 12.h),
+
+                _buildTextField(
+                  controller: _telephoneController,
+                  label: '电话 *',
+                  hint: '请输入电话',
+                  keyboardType: TextInputType.phone,
+                  icon: Icons.phone,
+                ),
+                SizedBox(height: 12.h),
+
+                _buildTextField(
+                  controller: _passwordController,
+                  label: '密码 *',
+                  hint: '请输入密码',
+                  obscureText: true,
+                  icon: Icons.lock,
+                ),
+                SizedBox(height: 12.h),
+
+                _buildTextField(
+                  controller: _confirmPasswordController,
+                  label: '确认密码 *',
+                  hint: '请再次输入密码',
+                  obscureText: true,
+                  icon: Icons.lock_outline,
+                ),
+                SizedBox(height: 12.h),
+
+                _buildCountryDropdown(),
+                SizedBox(height: 12.h),
+
+                _buildIconPicker(),
+                SizedBox(height: 12.h),
+
+                _buildTextField(
+                  controller: _remarkController,
+                  label: '备注',
+                  hint: '请输入备注信息',
+                  maxLines: 3,
+                  icon: Icons.note,
+                ),
+                SizedBox(height: 32.h),
+
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submitRegister,
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: Size(200.w, 48.h),
+                      backgroundColor: const Color(0xFF3D5AFE),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.w),
+                      ),
+                    ),
+                    child:
+                        _isSubmitting
+                            ? const CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                            : const Text('注册'),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -251,10 +281,17 @@ class _RegisterPageState extends State<RegisterPage> {
     int maxLines = 1,
     IconData? icon,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(fontSize: 14.sp)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: isDark ? Colors.grey[300] : Colors.black,
+          ),
+        ),
         SizedBox(height: 4.h),
         TextField(
           controller: controller,
@@ -264,36 +301,62 @@ class _RegisterPageState extends State<RegisterPage> {
               borderRadius: BorderRadius.circular(8.w),
             ),
             prefixIcon: icon != null ? Icon(icon) : null,
+            filled: isDark,
+            fillColor: isDark ? const Color(0xFF374151) : null,
+            hintStyle: TextStyle(
+              color: isDark ? Colors.grey[500] : Colors.grey[400],
+            ),
           ),
           keyboardType: keyboardType,
           obscureText: obscureText,
           maxLines: maxLines,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
         ),
       ],
     );
   }
 
   Widget _buildCountryDropdown() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('国家 *', style: TextStyle(fontSize: 14)),
+        Text(
+          '国家 *',
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: isDark ? Colors.grey[300] : Colors.black,
+          ),
+        ),
         SizedBox(height: 4.h),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey),
+            border: Border.all(color: isDark ? Colors.grey[600]! : Colors.grey),
             borderRadius: BorderRadius.circular(8.w),
+            color: isDark ? const Color(0xFF374151) : null,
           ),
           child: DropdownButtonFormField<String>(
             value: _selectedCountry,
-            hint: const Text('请选择国家'),
+            hint: Text(
+              '请选择国家',
+              style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey),
+            ),
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(horizontal: 12),
             ),
+            dropdownColor: isDark ? const Color(0xFF374151) : Colors.white,
             items:
                 shared.countryList.map((country) {
-                  return DropdownMenuItem(value: country, child: Text(country));
+                  return DropdownMenuItem(
+                    value: country,
+                    child: Text(
+                      country,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                  );
                 }).toList(),
             onChanged: (value) {
               setState(() {

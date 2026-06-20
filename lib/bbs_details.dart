@@ -35,7 +35,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          '${shared.AppConfig.baseWebUrl}/api/bbs/posts/${_post.id}/comments',
+          '${shared.AppConfig.baseWebUrl3004}/api/bbs/posts/${_post.id}/comments',
         ),
       );
 
@@ -68,7 +68,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     try {
       final response = await http.get(
         Uri.parse(
-          '${shared.AppConfig.baseWebUrl}/api/bbs/posts/${_post.id}/like/status?user_id=${currentUser.user_id}',
+          '${shared.AppConfig.baseWebUrl3004}/api/bbs/posts/${_post.id}/like/status?user_id=${currentUser.user_id}',
         ),
       );
 
@@ -94,7 +94,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     try {
       final response = await http.post(
         Uri.parse(
-          '${shared.AppConfig.baseWebUrl}/api/bbs/posts/${_post.id}/like',
+          '${shared.AppConfig.baseWebUrl3004}/api/bbs/posts/${_post.id}/like',
         ),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'user_id': currentUser.user_id}),
@@ -140,7 +140,7 @@ class _BbsDetailsPageState extends State<BbsDetailsPage> {
     try {
       final response = await http.post(
         Uri.parse(
-          '${shared.AppConfig.baseWebUrl}/api/bbs/posts/${_post.id}/comments',
+          '${shared.AppConfig.baseWebUrl3004}/api/bbs/posts/${_post.id}/comments',
         ),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({'user_id': currentUser.user_id, 'content': content}),

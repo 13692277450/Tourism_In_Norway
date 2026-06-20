@@ -8,7 +8,7 @@ import 'app_shared.dart';
 class ServicePayPalService {
   static const String clientId =
       'AdjY4PDq9K4D1BXdU0GtusDJyMjsLQwyiUOe3wd9B5SXb582bM2bqEqfczsEskSlcOnif4VTfX5T9MH-';
-  static const String baseUrl = AppConfig.baseWebUrl;
+  static const String baseUrl = '${AppConfig.baseWebUrl}:${AppConfig.port3006}';
 
   static Future<String?> createOrder(double amount, String orderNo) async {
     try {

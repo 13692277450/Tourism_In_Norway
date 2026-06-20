@@ -38,16 +38,19 @@ class _UpdateCheckWrapperState extends State<UpdateCheckWrapper> {
 
   Future<void> _checkForUpdates() async {
     try {
-      final versionInfo = await VersionChecker.checkForUpdate();
-      if (versionInfo != null && mounted) {
-        await showDialog(
-          context: context,
-          barrierDismissible: !versionInfo.isMandatory,
-          builder: (context) => UpdateDialog(versionInfo: versionInfo),
-        );
+      final playUpdateSuccess = await checkGooglePlayUpdate();
+      if (!playUpdateSuccess) {
+        final versionInfo = await VersionChecker.checkForUpdate();
+        if (versionInfo != null && mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: !versionInfo.isMandatory,
+            builder: (context) => UpdateDialog(versionInfo: versionInfo),
+          );
+        }
       }
     } catch (e) {
-      throw Exception('版本检查失败: $e');
+      debugPrint('版本检查失败: $e');
     } finally {
       if (mounted) {
         setState(() {

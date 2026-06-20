@@ -1,6 +1,7 @@
 // service_wechat.dart
 import 'package:fluwx/fluwx.dart' as fluwx;
 import 'package:tourism_in_norway/app_shared.dart' as shared;
+import 'package:tourism_in_norway/user_auth.dart';
 
 class ServiceWeChatService {
   // 初始化微信支付
@@ -9,8 +10,7 @@ class ServiceWeChatService {
 
     await fluwxInstance.registerApi(
       appId: "wx1234567890abcdef", // 替换为您的微信支付AppID
-      universalLink:
-          "${shared.AppConfig.baseWebUrl}/wechatpay", // 替换为您的微信支付Universal Link
+      universalLink: "$baseUrl/wechatpay", // 替换为您的微信支付Universal Link
     );
   }
 

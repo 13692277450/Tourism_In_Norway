@@ -17,6 +17,7 @@ class BbsPage extends StatefulWidget {
 
 class _BbsPageState extends State<BbsPage> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   List<Category> _categories = [];
   int _selectedCategoryId = 0;
@@ -42,10 +43,17 @@ class _BbsPageState extends State<BbsPage> {
     _fetchPosts();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchCategories() async {
     try {
       final response = await http.get(
-        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/categories'),
+        Uri.parse('${shared.AppConfig.baseWebUrl3004}/api/bbs/categories'),
       );
 
       if (response.statusCode == 200) {
@@ -84,7 +92,7 @@ class _BbsPageState extends State<BbsPage> {
 
     try {
       final uri = Uri.parse(
-        '${shared.AppConfig.baseWebUrl}/api/bbs/posts',
+        '${shared.AppConfig.baseWebUrl3004}/api/bbs/posts',
       ).replace(
         queryParameters: {
           'page': _currentPage.toString(),
@@ -151,6 +159,7 @@ class _BbsPageState extends State<BbsPage> {
   }
 
   void _searchPosts() {
+    _searchFocusNode.unfocus();
     _fetchPosts(isRefresh: true);
   }
 
@@ -200,7 +209,7 @@ class _BbsPageState extends State<BbsPage> {
   Future<void> _deletePost(int postId) async {
     try {
       final response = await http.delete(
-        Uri.parse('${shared.AppConfig.baseWebUrl}/api/bbs/posts/$postId'),
+        Uri.parse('${shared.AppConfig.baseWebUrl3004}/api/bbs/posts/$postId'),
       );
 
       if (response.statusCode == 200) {
@@ -228,7 +237,7 @@ class _BbsPageState extends State<BbsPage> {
     setState(() {
       _showMyPosts = !_showMyPosts;
       if (_showMyPosts) {
-        _selectedCategoryId = 0; // 清除分类选择
+        _selectedCategoryId = 0;
         _fetchMyPosts();
       } else {
         _fetchPosts(isRefresh: true);
@@ -255,7 +264,7 @@ class _BbsPageState extends State<BbsPage> {
     try {
       final userId = currentUser.user_id!;
       final uri = Uri.parse(
-        '${shared.AppConfig.baseWebUrl}/api/bbs/posts',
+        '${shared.AppConfig.baseWebUrl3004}/api/bbs/posts',
       ).replace(queryParameters: {'user_id': userId.toString()});
 
       debugPrint('我的留言请求URL: $uri');
@@ -301,37 +310,6 @@ class _BbsPageState extends State<BbsPage> {
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-      floatingActionButton:
-          isDark
-              ? Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF4F46E5),
-                      blurRadius: 12,
-                      spreadRadius: 4,
-                    ),
-                    BoxShadow(
-                      color: const Color(0xFF0EA5E9).withOpacity(0.5),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: FloatingActionButton(
-                  onPressed: _navigateToPostPage,
-                  backgroundColor: const Color(0xFF1E293B),
-                  foregroundColor: const Color(0xFF4F46E5),
-                  elevation: 0,
-                  child: const Icon(Icons.add),
-                ),
-              )
-              : FloatingActionButton(
-                onPressed: _navigateToPostPage,
-                backgroundColor: const Color(0xFF4F46E5),
-                foregroundColor: Colors.white,
-                child: const Icon(Icons.add),
-              ),
       body: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification is ScrollEndNotification &&
@@ -344,6 +322,7 @@ class _BbsPageState extends State<BbsPage> {
         },
         child: CustomScrollView(
           slivers: [
+            // SliverAppBar - 背景色不变
             SliverAppBar(
               title: Text(
                 '论坛',
@@ -355,367 +334,282 @@ class _BbsPageState extends State<BbsPage> {
                 ),
               ),
               pinned: true,
-              backgroundColor:
-                  isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
               foregroundColor: isDark ? Colors.white : Colors.black,
-              elevation: isDark ? 0 : 4,
+              // elevation: isDark ? 0 : 4,
               shadowColor:
                   isDark ? const Color(0xFF4F46E5).withOpacity(0.3) : null,
             ),
 
+            // 搜索栏 + 发帖按钮行
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: BorderRadius.circular(12.w),
-                    boxShadow:
-                        isDark
-                            ? [
-                              BoxShadow(
-                                color: const Color(0xFF4F46E5).withOpacity(0.3),
-                                blurRadius: 12,
-                                spreadRadius: 2,
-                              ),
-                              BoxShadow(
-                                color: const Color(0xFF0EA5E9).withOpacity(0.2),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ]
-                            : [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 8,
-                              ),
-                            ],
-                    border:
-                        isDark
-                            ? Border.all(
-                              color: const Color(0xFF4F46E5).withOpacity(0.5),
-                              width: 1.5,
-                            )
-                            : Border.all(color: Colors.grey[200]!, width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(width: 12.w),
-                      Icon(
-                        Icons.search,
-                        color:
-                            isDark ? const Color(0xFF4F46E5) : Colors.grey[500],
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: '搜索帖子或用户名',
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              color:
-                                  isDark
-                                      ? const Color(0xFF94A3B8)
-                                      : Colors.grey[500],
-                            ),
-                          ),
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black,
-                          ),
-                          onSubmitted: (_) => _searchPosts(),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: _searchPosts,
-                        child: Text(
-                          '搜索',
-                          style: TextStyle(
+                padding: EdgeInsets.fromLTRB(16.w, 10.w, 16.w, 16.w),
+                child: Row(
+                  children: [
+                    // 搜索栏 - 宽度缩小
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color:
+                              isDark ? const Color(0xFF1E293B) : Colors.white,
+                          borderRadius: BorderRadius.circular(12.w),
+                          border: Border.all(
                             color:
                                 isDark
-                                    ? const Color(0xFF4F46E5)
-                                    : const Color(0xFF4F46E5),
+                                    ? const Color(0xFF334155)
+                                    : Colors.grey[300]!,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: TextField(
+                                controller: _searchController,
+                                focusNode: _searchFocusNode,
+                                decoration: InputDecoration(
+                                  hintText: 'Search post or name',
+                                  border: InputBorder.none,
+                                  filled: isDark,
+                                  fillColor:
+                                      isDark ? const Color(0xFF283347) : null,
+                                  hintStyle: TextStyle(
+                                    color:
+                                        isDark
+                                            ? const Color(0xFF94A3B8)
+                                            : Colors.grey[500],
+                                  ),
+                                ),
+                                style: TextStyle(
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
+                                onSubmitted: (_) => _searchPosts(),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _searchPosts,
+                              icon: Icon(
+                                Icons.search,
+                                color:
+                                    isDark
+                                        ? const Color(0xFF4F46E5)
+                                        : const Color(0xFF4F46E5),
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            SizedBox(width: 8.w),
+                          ],
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 12.w),
+                    // 发帖按钮 - 淡蓝色背景（调淡五成）
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: const [
+                            Color(0xFF818CF8), // 淡蓝色
+                            Color(0xFF60A5FA), // 淡蓝色
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12.w),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4F46E5).withOpacity(0.15),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _navigateToPostPage,
+                          borderRadius: BorderRadius.circular(12.w),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16.w,
+                              vertical: 12.h,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.edit_note,
+                                  color: Colors.white,
+                                  size: 20.sp,
+                                ),
+                                SizedBox(width: 6.w),
+                                Text(
+                                  '发帖',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
 
-            // 分类按钮栏（包含我的留言按钮）
+            // 分类按钮栏 - 统一风格
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 42.h,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  itemCount: _categories.length + 1, // +1 为"我的留言"按钮
+                  itemCount: _categories.length + 1,
                   itemBuilder: (context, index) {
-                    // 第一个按钮是"全部"分类
+                    // "全部"按钮
                     if (index == 0) {
                       final category = _categories[0];
                       final isSelected =
                           !_showMyPosts && _selectedCategoryId == category.id;
                       return Padding(
                         padding: EdgeInsets.only(right: 12.w),
-                        child:
-                            isDark
-                                ? Container(
-                                  decoration:
-                                      isSelected
-                                          ? BoxDecoration(
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0xFF4F46E5),
-                                                blurRadius: 12,
-                                                spreadRadius: 2,
-                                              ),
-                                              BoxShadow(
-                                                color: const Color(
-                                                  0xFF0EA5E9,
-                                                ).withOpacity(0.5),
-                                                blurRadius: 8,
-                                                spreadRadius: 2,
-                                              ),
-                                            ],
-                                          )
-                                          : null,
-                                  child: ElevatedButton(
-                                    onPressed:
-                                        () => _onCategorySelected(category.id),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1E293B),
-                                      foregroundColor: const Color(0xFF4F46E5),
-                                      side: BorderSide(
-                                        color: const Color(0xFF4F46E5),
-                                        width: isSelected ? 2 : 1.5,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          20.w,
-                                        ),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 20.w,
-                                        vertical: 12.h,
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    child: Text(category.name),
-                                  ),
-                                )
-                                : ElevatedButton(
-                                  onPressed:
-                                      () => _onCategorySelected(category.id),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        isSelected
-                                            ? const Color(0xFF4F46E5)
-                                            : Colors.white,
-                                    foregroundColor:
-                                        isSelected
-                                            ? Colors.white
-                                            : const Color(0xFF4F46E5),
-                                    side: BorderSide(
-                                      color: const Color(0xFF4F46E5),
-                                      width: 1.5,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20.w),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 20.w,
-                                      vertical: 12.h,
-                                    ),
-                                    elevation: isSelected ? 4 : 0,
-                                  ),
-                                  child: Text(category.name),
-                                ),
+                        child: ElevatedButton(
+                          onPressed: () => _onCategorySelected(category.id),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isDark
+                                    ? (isSelected
+                                        ? const Color(0xFF4F46E5)
+                                        : const Color(0xFF1E293B))
+                                    : (isSelected
+                                        ? const Color(0xFF4F46E5)
+                                        : Colors.white),
+                            foregroundColor:
+                                isDark
+                                    ? (isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF94A3B8))
+                                    : (isSelected
+                                        ? Colors.white
+                                        : const Color(0xFF4F46E5)),
+                            side: BorderSide(
+                              color: const Color(0xFF4F46E5),
+                              width: isSelected ? 2 : 1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(13.w),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
+                            elevation: isSelected ? 4 : 0,
+                          ),
+                          child: Text(category.name),
+                        ),
                       );
                     }
 
-                    // 第二个按钮是"我的留言"（金色边框）
+                    // "我的留言"按钮
                     if (index == 1) {
                       final isSelected = _showMyPosts;
                       return Padding(
                         padding: EdgeInsets.only(right: 12.w),
-                        child:
-                            isDark
-                                ? Container(
-                                  decoration:
-                                      isSelected
-                                          ? BoxDecoration(
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: const Color(0xFFD4AF37),
-                                                blurRadius: 12,
-                                                spreadRadius: 2,
-                                              ),
-                                              BoxShadow(
-                                                color: const Color(
-                                                  0xFF4F46E5,
-                                                ).withOpacity(0.5),
-                                                blurRadius: 8,
-                                                spreadRadius: 2,
-                                              ),
-                                            ],
-                                          )
-                                          : null,
-                                  child: ElevatedButton(
-                                    onPressed: () {
-                                      if (userManager.isLoggedIn) {
-                                        _toggleMyPosts();
-                                      } else {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (context) => const LoginPage(),
-                                          ),
-                                        ).then((_) => setState(() {}));
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1E293B),
-                                      foregroundColor: const Color(0xFFD4AF37),
-                                      side: BorderSide(
-                                        color: const Color(0xFFD4AF37),
-                                        width: isSelected ? 2 : 1.5,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          20.w,
-                                        ),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 20.w,
-                                        vertical: 12.h,
-                                      ),
-                                      elevation: 0,
-                                    ),
-                                    child: const Text('我的留言'),
-                                  ),
-                                )
-                                : ElevatedButton(
-                                  onPressed: () {
-                                    if (userManager.isLoggedIn) {
-                                      _toggleMyPosts();
-                                    } else {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => const LoginPage(),
-                                        ),
-                                      ).then((_) => setState(() {}));
-                                    }
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor:
-                                        isSelected
-                                            ? const Color(0xFFD4AF37)
-                                            : Colors.white,
-                                    foregroundColor:
-                                        isSelected
-                                            ? Colors.black
-                                            : const Color(0xFFD4AF37),
-                                    side: BorderSide(
-                                      color: const Color(0xFFD4AF37),
-                                      width: 1.5,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20.w),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 20.w,
-                                      vertical: 12.h,
-                                    ),
-                                    elevation: isSelected ? 4 : 0,
-                                  ),
-                                  child: const Text('我的留言'),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (userManager.isLoggedIn) {
+                              _toggleMyPosts();
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginPage(),
                                 ),
+                              ).then((_) => setState(() {}));
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                isDark
+                                    ? (isSelected
+                                        ? const Color(0xFFD4AF37)
+                                        : const Color(0xFF1E293B))
+                                    : (isSelected
+                                        ? const Color(0xFFD4AF37)
+                                        : Colors.white),
+                            foregroundColor:
+                                isDark
+                                    ? (isSelected
+                                        ? Colors.black
+                                        : const Color(0xFFD4AF37))
+                                    : (isSelected
+                                        ? Colors.black
+                                        : const Color(0xFFD4AF37)),
+                            side: BorderSide(
+                              color: const Color(0xFFD4AF37),
+                              width: isSelected ? 2 : 1,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(13.w),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 20.w,
+                              vertical: 12.h,
+                            ),
+                            elevation: isSelected ? 4 : 0,
+                          ),
+                          child: const Text('我的留言'),
+                        ),
                       );
                     }
 
-                    // 其他分类按钮（索引从2开始）
+                    // 其他分类按钮 - 统一使用20.w圆角
                     final category = _categories[index - 1];
                     final isSelected =
                         !_showMyPosts && _selectedCategoryId == category.id;
                     return Padding(
                       padding: EdgeInsets.only(right: 12.w),
-                      child:
-                          isDark
-                              ? Container(
-                                decoration:
-                                    isSelected
-                                        ? BoxDecoration(
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: const Color(0xFF4F46E5),
-                                              blurRadius: 12,
-                                              spreadRadius: 2,
-                                            ),
-                                            BoxShadow(
-                                              color: const Color(
-                                                0xFF0EA5E9,
-                                              ).withOpacity(0.5),
-                                              blurRadius: 8,
-                                              spreadRadius: 2,
-                                            ),
-                                          ],
-                                        )
-                                        : null,
-                                child: ElevatedButton(
-                                  onPressed:
-                                      () => _onCategorySelected(category.id),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1E293B),
-                                    foregroundColor: const Color(0xFF4F46E5),
-                                    side: BorderSide(
-                                      color: const Color(0xFF4F46E5),
-                                      width: isSelected ? 2 : 1.5,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20.w),
-                                    ),
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 20.w,
-                                      vertical: 12.h,
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                  child: Text(category.name),
-                                ),
-                              )
-                              : ElevatedButton(
-                                onPressed:
-                                    () => _onCategorySelected(category.id),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      isSelected
-                                          ? const Color(0xFF4F46E5)
-                                          : Colors.white,
-                                  foregroundColor:
-                                      isSelected
-                                          ? Colors.white
-                                          : const Color(0xFF4F46E5),
-                                  side: BorderSide(
-                                    color: const Color(0xFF4F46E5),
-                                    width: 1.5,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20.w),
-                                  ),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 20.w,
-                                    vertical: 12.h,
-                                  ),
-                                  elevation: isSelected ? 4 : 0,
-                                ),
-                                child: Text(category.name),
-                              ),
+                      child: ElevatedButton(
+                        onPressed: () => _onCategorySelected(category.id),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isDark
+                                  ? (isSelected
+                                      ? const Color(0xFF4F46E5)
+                                      : const Color(0xFF1E293B))
+                                  : (isSelected
+                                      ? const Color(0xFF4F46E5)
+                                      : Colors.white),
+                          foregroundColor:
+                              isDark
+                                  ? (isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF94A3B8))
+                                  : (isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF4F46E5)),
+                          side: BorderSide(
+                            color: const Color(0xFF4F46E5),
+                            width: isSelected ? 2 : 1,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(13.w),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 20.w,
+                            vertical: 12.h,
+                          ),
+                          elevation: isSelected ? 4 : 0,
+                        ),
+                        child: Text(category.name),
+                      ),
                     );
                   },
                 ),
@@ -734,17 +628,8 @@ class _BbsPageState extends State<BbsPage> {
                         size: 48,
                         color:
                             isDark
-                                ? const Color(0xFF00D4FF)
+                                ? const Color(0xFF4F46E5)
                                 : const Color(0xFF3D5AFE),
-                        shadows:
-                            isDark
-                                ? [
-                                  Shadow(
-                                    color: const Color(0xFF00D4FF),
-                                    blurRadius: 20,
-                                  ),
-                                ]
-                                : null,
                       ),
                       SizedBox(height: 16.h),
                       Text(
@@ -755,54 +640,24 @@ class _BbsPageState extends State<BbsPage> {
                         ),
                       ),
                       SizedBox(height: 16.h),
-                      isDark
-                          ? Container(
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(
-                                    0xFFFF00FF,
-                                  ).withOpacity(0.5),
-                                  blurRadius: 15,
-                                  spreadRadius: 3,
-                                ),
-                              ],
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
                             ),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const LoginPage(),
-                                  ),
-                                ).then((_) => setState(() {}));
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0F172A),
-                                foregroundColor: const Color(0xFFFF00FF),
-                                side: const BorderSide(
-                                  color: Color(0xFFFF00FF),
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Text('去登录'),
-                            ),
-                          )
-                          : ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginPage(),
-                                ),
-                              ).then((_) => setState(() {}));
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3D5AFE),
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('去登录'),
-                          ),
+                          ).then((_) => setState(() {}));
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              isDark
+                                  ? const Color(0xFF4F46E5)
+                                  : const Color(0xFF3D5AFE),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('去登录'),
+                      ),
                     ],
                   ),
                 ),
@@ -862,7 +717,6 @@ class _BbsPageState extends State<BbsPage> {
                 ),
             ],
 
-            // 我的留言列表
             if (_showMyPosts && _myPosts.isNotEmpty)
               SliverList(
                 delegate: SliverChildBuilderDelegate((context, index) {
@@ -876,7 +730,6 @@ class _BbsPageState extends State<BbsPage> {
                 }, childCount: _myPosts.length),
               ),
 
-            // 暂无留言提示
             if (_showMyPosts && _myPosts.isEmpty && !_isLoading)
               SliverToBoxAdapter(
                 child: Padding(
@@ -889,17 +742,8 @@ class _BbsPageState extends State<BbsPage> {
                           size: 48,
                           color:
                               isDark
-                                  ? const Color(0xFF00D4FF)
+                                  ? const Color(0xFF4F46E5)
                                   : const Color(0xFF3D5AFE),
-                          shadows:
-                              isDark
-                                  ? [
-                                    Shadow(
-                                      color: const Color(0xFF00D4FF),
-                                      blurRadius: 20,
-                                    ),
-                                  ]
-                                  : null,
                         ),
                         SizedBox(height: 16.h),
                         Text(
@@ -921,7 +765,6 @@ class _BbsPageState extends State<BbsPage> {
   }
 }
 
-// Category 和 Post 类保持不变
 class Category {
   final int id;
   final String name;
@@ -997,7 +840,6 @@ class Post {
     );
   }
 
-  // 添加 copyWith 方法
   Post copyWith({
     int? id,
     int? user_id,
@@ -1050,40 +892,22 @@ class _PostCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12.w),
-        boxShadow:
-            isDark
-                ? [
-                  BoxShadow(
-                    color: const Color(0xFF4F46E5).withOpacity(0.4),
-                    blurRadius: 18,
-                    spreadRadius: 3,
-                  ),
-                  BoxShadow(
-                    color: const Color(0xFF0EA5E9).withOpacity(0.25),
-                    blurRadius: 12,
-                    spreadRadius: 2,
-                  ),
-                ]
-                : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-        border:
-            isDark
-                ? Border.all(
-                  color: const Color(0xFF4F46E5).withOpacity(0.6),
-                  width: 1.5,
-                )
-                : Border.all(color: Colors.grey[200]!, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : Colors.grey[200]!,
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: Stack(
           children: [
-            // 主要内容 - 可点击区域
             InkWell(
               onTap: onTap,
               borderRadius: BorderRadius.circular(12.w),
@@ -1092,7 +916,6 @@ class _PostCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 标题行（为删除按钮留出空间）
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1104,25 +927,13 @@ class _PostCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               color:
                                   isDark
-                                      ? const Color(0xFF4F46E5)
+                                      ? const Color(0xFFF1F5F9)
                                       : const Color(0xFF1E3A8A),
-                              shadows:
-                                  isDark
-                                      ? [
-                                        Shadow(
-                                          color: const Color(
-                                            0xFF4F46E5,
-                                          ).withOpacity(0.4),
-                                          blurRadius: 8,
-                                        ),
-                                      ]
-                                      : null,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        // 为删除按钮预留空间（如果显示的话）
                         if (isOwnPost) SizedBox(width: 32.w),
                       ],
                     ),
@@ -1171,58 +982,30 @@ class _PostCard extends StatelessWidget {
 
                     Row(
                       children: [
-                        isDark
-                            ? Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 2.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF1E293B),
-                                borderRadius: BorderRadius.circular(4.w),
-                                border: Border.all(
-                                  color: const Color(0xFF4F46E5),
-                                  width: 1.5,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(
-                                      0xFF4F46E5,
-                                    ).withOpacity(0.5),
-                                    blurRadius: 6,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
-                              ),
-                              child: Text(
-                                post.categoryName,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFF4F46E5),
-                                ),
-                              ),
-                            )
-                            : Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8.w,
-                                vertical: 2.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEEF2FF),
-                                borderRadius: BorderRadius.circular(4.w),
-                                border: Border.all(
-                                  color: const Color(0xFF4F46E5),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                post.categoryName,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: const Color(0xFF4F46E5),
-                                ),
-                              ),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                isDark
+                                    ? const Color(0xFF4F46E5).withOpacity(0.15)
+                                    : const Color(0xFFEEF2FF),
+                            borderRadius: BorderRadius.circular(4.w),
+                            border: Border.all(
+                              color: const Color(0xFF4F46E5),
+                              width: 1,
                             ),
+                          ),
+                          child: Text(
+                            post.categoryName,
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: const Color(0xFF4F46E5),
+                            ),
+                          ),
+                        ),
                         SizedBox(width: 12.w),
                         Text(
                           post.authorName,
@@ -1293,7 +1076,6 @@ class _PostCard extends StatelessWidget {
                 ),
               ),
             ),
-            // 删除按钮 - 右上角
             if (isOwnPost)
               Positioned(
                 top: 8.h,
@@ -1315,7 +1097,7 @@ class _PostCard extends StatelessWidget {
                           BoxShadow(
                             color: Colors.black.withOpacity(0.1),
                             blurRadius: 4,
-                            offset: Offset(0, 1),
+                            offset: const Offset(0, 1),
                           ),
                         ],
                       ),

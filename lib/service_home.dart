@@ -344,20 +344,14 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
               Expanded(
                 flex: 1,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.favorite_border,
-                    color: Colors.deepPurple,
-                  ),
+                  icon: const Icon(Icons.favorite_border, color: Colors.orange),
                   onPressed: _navigateToLike,
                 ),
               ),
               Expanded(
                 flex: 1,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.shopping_cart,
-                    color: Colors.deepPurple,
-                  ),
+                  icon: const Icon(Icons.shopping_cart, color: Colors.orange),
                   onPressed: _navigateToCart,
                 ),
               ),
@@ -365,7 +359,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
               Expanded(
                 flex: 1,
                 child: IconButton(
-                  icon: Icon(Icons.settings, color: Colors.deepPurple),
+                  icon: const Icon(Icons.settings, color: Colors.orange),
                   onPressed: _navigateToSettings,
                 ),
               ),
@@ -386,7 +380,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
             isDark
                 ? theme.ServiceMetalColors.darkSurface
                 : theme.ServiceMetalColors.lightSurface,
-        borderRadius: BorderRadius.circular(30.r),
+        borderRadius: BorderRadius.circular(22.r),
         boxShadow:
             isDark
                 ? [
@@ -406,17 +400,14 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
       child: Row(
         children: [
           SizedBox(width: 16.w),
-          Icon(
-            Icons.search,
-            color: isDark ? theme.ServiceMetalColors.primary : Colors.grey,
-          ),
-          SizedBox(width: 12.w),
           Expanded(
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search Service...',
+                hintText: 'Search...',
                 border: InputBorder.none,
+                filled: isDark,
+                fillColor: isDark ? const Color(0xFF283347) : null,
                 hintStyle: TextStyle(
                   color:
                       isDark
@@ -433,15 +424,13 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
               onSubmitted: (_) => _searchGoods(),
             ),
           ),
-          TextButton(
-            onPressed: _searchGoods,
-            child: Text(
-              'Search',
-              style: TextStyle(
-                color:
-                    isDark
-                        ? theme.ServiceMetalColors.primary
-                        : theme.ServiceMetalColors.primary,
+          GestureDetector(
+            onTap: _searchGoods,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              child: Icon(
+                Icons.search,
+                color: isDark ? theme.ServiceMetalColors.primary : Colors.grey,
               ),
             ),
           ),
@@ -487,7 +476,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24.r),
+          borderRadius: BorderRadius.circular(13.r),
           color:
               isSelected && !isDark
                   ? theme.ServiceMetalColors.primary

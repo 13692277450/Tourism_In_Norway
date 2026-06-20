@@ -6,7 +6,8 @@ import 'app_shared.dart';
 
 class ServiceApi {
   // 使用共享的服务器地址配置
-  static const String baseUrl = '${AppConfig.baseWebUrl}/api/service';
+  static const String baseUrl =
+      '${AppConfig.baseWebUrl}:${AppConfig.port3005}/api/service';
 
   // 获取分类列表
   static Future<List<ServiceCategory>> getCategories() async {

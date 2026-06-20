@@ -8,7 +8,7 @@ import 'app_shared.dart';
 
 /// 支付宝沙箱支付服务
 class ServiceAlipayService {
-  static const String baseUrl = AppConfig.baseWebUrl;
+  static const String baseUrl = '${AppConfig.baseWebUrl}:${AppConfig.port3007}';
 
   /// 创建支付宝订单
   static Future<Map<String, dynamic>?> createOrder(
