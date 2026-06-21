@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:tourism_in_norway/service_home.dart';
 
 import 'home.dart';
@@ -15,7 +16,158 @@ import 'app_shared.dart' as shared;
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 配置全局图片缓存
+  _configureImageCache();
+
   runApp(const MyApp());
+}
+
+/// 配置全局图片缓存
+void _configureImageCache() {
+  // 设置内存缓存大小：100MB
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 100 * 1024 * 1024;
+  PaintingBinding.instance.imageCache.maximumSize = 200; // 最多缓存200张图片
+}
+
+/// 扩展CachedNetworkImage，提供全局默认配置
+class AppCachedImage extends StatelessWidget {
+  final String imageUrl;
+  final double? width;
+  final double? height;
+  final BoxFit? fit;
+  final Widget? placeholder;
+  final Widget? errorWidget;
+  final String? placeholderImage; // 本地占位图资源路径
+  final Duration fadeInDuration;
+  final Duration fadeOutDuration;
+  final bool useOldImageOnUrlChange;
+
+  const AppCachedImage({
+    super.key,
+    required this.imageUrl,
+    this.width,
+    this.height,
+    this.fit,
+    this.placeholder,
+    this.errorWidget,
+    this.placeholderImage,
+    this.fadeInDuration = const Duration(milliseconds: 300),
+    this.fadeOutDuration = const Duration(milliseconds: 150),
+    this.useOldImageOnUrlChange = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: width,
+      height: height,
+      fit: fit ?? BoxFit.cover,
+      fadeInDuration: fadeInDuration,
+      fadeOutDuration: fadeOutDuration,
+      useOldImageOnUrlChange: useOldImageOnUrlChange,
+      placeholder: (context, url) {
+        if (placeholder != null) {
+          return placeholder!;
+        }
+        if (placeholderImage != null) {
+          return Image.asset(
+            placeholderImage!,
+            width: width,
+            height: height,
+            fit: fit ?? BoxFit.cover,
+          );
+        }
+        // 默认加载动画
+        return Container(
+          width: width,
+          height: height,
+          color: isDark ? Colors.grey[800] : Colors.grey[200],
+          child: const Center(
+            child: SizedBox(
+              width: 30,
+              height: 30,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
+            ),
+          ),
+        );
+      },
+      errorWidget: (context, url, error) {
+        if (errorWidget != null) {
+          return errorWidget!;
+        }
+        // 默认错误显示
+        return Container(
+          width: width,
+          height: height,
+          color: isDark ? Colors.grey[800] : Colors.grey[200],
+          child: Icon(
+            Icons.broken_image,
+            size: 30,
+            color: isDark ? Colors.grey[600] : Colors.grey[400],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 预缓存图片工具
+class ImagePrecacheHelper {
+  static final List<String> _cachedUrls = [];
+
+  /// 预缓存单张图片
+  static Future<void> precacheImage(
+    String url,
+    BuildContext context, {
+    required Null Function(dynamic exception, dynamic stackTrace) onError,
+  }) async {
+    if (_cachedUrls.contains(url)) return;
+
+    try {
+      await precacheImage(
+        NetworkImage(url) as String,
+        context,
+        onError: (exception, stackTrace) {
+          debugPrint('预缓存图片失败: $url, $exception');
+        },
+      );
+      _cachedUrls.add(url);
+    } catch (e) {
+      debugPrint('预缓存图片失败: $url, $e');
+    }
+  }
+
+  /// 预缓存多张图片
+  static Future<void> precacheImages(
+    List<String> urls,
+    BuildContext context,
+  ) async {
+    final futures =
+        urls
+            .map(
+              (url) => precacheImage(
+                url,
+                context,
+                onError: (exception, stackTrace) {},
+              ),
+            )
+            .toList();
+    await Future.wait(futures, eagerError: false);
+  }
+
+  /// 清理缓存
+  static void clearCache() {
+    _cachedUrls.clear();
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+  }
 }
 
 class UpdateCheckWrapper extends StatefulWidget {
@@ -64,10 +216,6 @@ class _UpdateCheckWrapperState extends State<UpdateCheckWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    // if (!_initialized) {
-    //   return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    // }
-
     return widget.child;
   }
 }
@@ -82,7 +230,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   Locale _locale = const Locale('en');
   int _selectedIndex = 0;
-  ThemeMode _themeMode = ThemeMode.system; // 默认跟随系统
+  ThemeMode _themeMode = ThemeMode.system;
 
   @override
   void initState() {
@@ -124,7 +272,6 @@ class _MyAppState extends State<MyApp> {
     _saveThemeMode(mode);
   }
 
-  // 亮色主题
   ThemeData _buildLightTheme() {
     return ThemeData(
       useMaterial3: true,
@@ -159,7 +306,6 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  // 暗色主题
   ThemeData _buildDarkTheme() {
     return ThemeData(
       useMaterial3: true,
@@ -328,7 +474,6 @@ class MainScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // 背景渐变 - 暗色模式下使用深色渐变
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -352,20 +497,7 @@ class MainScreen extends StatelessWidget {
                   padding: EdgeInsets.symmetric(horizontal: 24.w),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // 主题切换按钮（顶部）
-                      // IconButton(
-                      //   icon: Icon(
-                      //     isDark ? Icons.light_mode : Icons.dark_mode,
-                      //     color: isDark ? Colors.amber : const Color(0xFF6A78A4),
-                      //   ),
-                      //   onPressed: () {
-                      //     onThemeModeChanged(
-                      //       isDark ? ThemeMode.light : ThemeMode.dark,
-                      //     );
-                      //   },
-                      // ),
-                    ],
+                    children: [],
                   ),
                 ),
                 Expanded(child: _buildPage(context)),

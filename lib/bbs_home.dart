@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:http/http.dart' as http;
+import 'package:cached_network_image_ce/cached_network_image.dart';
 
 import 'app_shared.dart' as shared;
 import 'bbs_details.dart';
@@ -322,7 +323,6 @@ class _BbsPageState extends State<BbsPage> {
         },
         child: CustomScrollView(
           slivers: [
-            // SliverAppBar - 背景色不变
             SliverAppBar(
               title: Text(
                 '论坛',
@@ -336,18 +336,15 @@ class _BbsPageState extends State<BbsPage> {
               pinned: true,
               backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
               foregroundColor: isDark ? Colors.white : Colors.black,
-              // elevation: isDark ? 0 : 4,
               shadowColor:
                   isDark ? const Color(0xFF4F46E5).withOpacity(0.3) : null,
             ),
 
-            // 搜索栏 + 发帖按钮行
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(16.w, 10.w, 16.w, 16.w),
                 child: Row(
                   children: [
-                    // 搜索栏 - 宽度缩小
                     Expanded(
                       flex: 3,
                       child: Container(
@@ -409,14 +406,10 @@ class _BbsPageState extends State<BbsPage> {
                       ),
                     ),
                     SizedBox(width: 12.w),
-                    // 发帖按钮 - 淡蓝色背景（调淡五成）
                     Container(
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: const [
-                            Color(0xFF818CF8), // 淡蓝色
-                            Color(0xFF60A5FA), // 淡蓝色
-                          ],
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF818CF8), Color(0xFF60A5FA)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -466,7 +459,6 @@ class _BbsPageState extends State<BbsPage> {
               ),
             ),
 
-            // 分类按钮栏 - 统一风格
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 42.h,
@@ -478,7 +470,6 @@ class _BbsPageState extends State<BbsPage> {
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           itemCount: _categories.length + 1,
                           itemBuilder: (context, index) {
-                            // "全部"按钮
                             if (index == 0) {
                               final category = _categories[0];
                               final isSelected =
@@ -524,7 +515,6 @@ class _BbsPageState extends State<BbsPage> {
                               );
                             }
 
-                            // "我的留言"按钮
                             if (index == 1) {
                               final isSelected = _showMyPosts;
                               return Padding(
@@ -578,7 +568,6 @@ class _BbsPageState extends State<BbsPage> {
                               );
                             }
 
-                            // 其他分类按钮 - 统一使用20.w圆角
                             final category = _categories[index - 1];
                             final isSelected =
                                 !_showMyPosts &&
@@ -879,6 +868,62 @@ class Post {
   }
 }
 
+/// 带缓存功能的网络图片组件
+class CachedPostImage extends StatelessWidget {
+  final String imageUrl;
+  final double width;
+  final double height;
+  final BoxFit fit;
+
+  const CachedPostImage({
+    super.key,
+    required this.imageUrl,
+    required this.width,
+    required this.height,
+    this.fit = BoxFit.cover,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: width,
+      height: height,
+      fit: fit,
+      fadeInDuration: const Duration(milliseconds: 300),
+      placeholder:
+          (context, url) => Container(
+            width: width,
+            height: height,
+            color: isDark ? Colors.grey[800] : Colors.grey[200],
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
+              ),
+            ),
+          ),
+      errorWidget:
+          (context, url, error) => Container(
+            width: width,
+            height: height,
+            color: isDark ? Colors.grey[800] : Colors.grey[200],
+            child: Icon(
+              Icons.broken_image,
+              size: 30,
+              color: isDark ? Colors.grey[600] : Colors.grey[400],
+            ),
+          ),
+    );
+  }
+}
+
 class _PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback onTap;
@@ -963,6 +1008,7 @@ class _PostCard extends StatelessWidget {
                     ),
                     SizedBox(height: 8.h),
 
+                    // 使用带缓存的图片组件
                     if (post.images.isNotEmpty)
                       SizedBox(
                         height: 80.h,
@@ -972,19 +1018,10 @@ class _PostCard extends StatelessWidget {
                           itemBuilder: (context, index) {
                             return Padding(
                               padding: EdgeInsets.only(right: 8.w),
-                              child: Image.network(
-                                post.images[index],
+                              child: CachedPostImage(
+                                imageUrl: post.images[index],
                                 width: 80.w,
                                 height: 80.h,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    width: 80.w,
-                                    height: 80.h,
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.broken_image),
-                                  );
-                                },
                               ),
                             );
                           },
@@ -1178,21 +1215,21 @@ class _PostCard extends StatelessWidget {
 Color _getCategoryColor(int categoryId) {
   switch (categoryId) {
     case 1:
-      return const Color(0xFF4F46E5); // 靛蓝
+      return const Color(0xFF4F46E5);
     case 2:
-      return const Color(0xFF059669); // 翠绿
+      return const Color(0xFF059669);
     case 3:
-      return const Color(0xFFD97706); // 琥珀
+      return const Color(0xFFD97706);
     case 4:
-      return const Color(0xFFDC2626); // 红色
+      return const Color(0xFFDC2626);
     case 5:
-      return const Color(0xFF7C3AED); // 紫色
+      return const Color(0xFF7C3AED);
     case 6:
-      return const Color(0xFF0891B2); // 青色
+      return const Color(0xFF0891B2);
     case 7:
-      return const Color(0xFFDB2777); // 粉色
+      return const Color(0xFFDB2777);
     case 8:
-      return const Color(0xFF65A30D); // 黄绿
+      return const Color(0xFF65A30D);
     default:
       return const Color(0xFF4F46E5);
   }

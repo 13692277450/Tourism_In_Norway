@@ -10,7 +10,7 @@ import 'service_cart.dart';
 import 'service_like.dart';
 import 'user_auth.dart';
 import 'app_shared.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image_ce/cached_network_image.dart';
 
 class ServiceHomePage extends StatefulWidget {
   const ServiceHomePage({super.key});
@@ -35,6 +35,8 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   String? _errorMessage;
   int? _currentUserId;
 
+  final Set<int> _loadedImageIds = {};
+
   @override
   void initState() {
     super.initState();
@@ -42,17 +44,22 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     _loadCategories();
     _loadGoods(isRefresh: true);
 
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.hasClients) {
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+
+      if (currentScroll >= maxScroll - 200) {
         _loadMoreGoods();
       }
-    });
+    }
   }
 
   void _loadUser() async {
     try {
-      // 等待一小段时间确保 UserManager 已初始化
       await Future.delayed(Duration.zero);
       final user = UserManager().currentUser;
       setState(() {
@@ -60,7 +67,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
       });
       print('✅ 当前用户ID: $_currentUserId');
 
-      // 用户加载完成后，刷新商品列表以显示正确的收藏状态
       if (_currentUserId != null &&
           _currentUserId! > 0 &&
           _goodsList.isNotEmpty) {
@@ -72,7 +78,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     }
   }
 
-  // 刷新当前商品列表的收藏状态
   Future<void> _refreshLikeStatusForCurrentGoods() async {
     if (_currentUserId == null || _currentUserId! <= 0) return;
     if (_goodsList.isEmpty) return;
@@ -117,6 +122,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         _hasMore = true;
         _goodsList = [];
         _errorMessage = null;
+        _loadedImageIds.clear();
       } else {
         _isLoadingMore = true;
       }
@@ -139,7 +145,8 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         List<ServiceGoods> newGoods =
             list.map((item) => ServiceGoods.fromJson(item)).toList();
 
-        // 获取当前用户的收藏状态
+        newGoods.sort((a, b) => b.id.compareTo(a.id));
+
         if (_currentUserId != null &&
             _currentUserId! > 0 &&
             newGoods.isNotEmpty) {
@@ -159,15 +166,19 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           if (isRefresh) {
             _goodsList = newGoods;
           } else {
-            _goodsList.addAll(newGoods);
+            final existingIds = _goodsList.map((g) => g.id).toSet();
+            final uniqueNewGoods =
+                newGoods.where((g) => !existingIds.contains(g.id)).toList();
+            _goodsList.addAll(uniqueNewGoods);
+            _goodsList.sort((a, b) => b.id.compareTo(a.id));
           }
 
-          if (newGoods.isEmpty ||
-              newGoods.length < _pageSize ||
-              _goodsList.length >= total) {
+          final totalLoaded = _goodsList.length;
+          if (newGoods.isEmpty || totalLoaded >= total) {
             _hasMore = false;
           } else {
             _currentPage++;
+            _hasMore = true;
           }
 
           _isLoading = false;
@@ -198,6 +209,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
   void _loadMoreGoods() {
     if (!_isLoadingMore && _hasMore && !_isLoading) {
+      print('🔄 加载更多数据，当前页: $_currentPage');
       _loadGoods();
     }
   }
@@ -257,7 +269,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   void _toggleLike(ServiceGoods goods) async {
-    // 检查登录状态
     if (_currentUserId == null || _currentUserId == 0) {
       ScaffoldMessenger.of(
         context,
@@ -269,13 +280,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     final index = _goodsList.indexWhere((g) => g.id == goods.id);
     if (index == -1) return;
 
-    // 保存当前状态
     final currentGoods = _goodsList[index];
     final newIsLiked = !currentGoods.isLiked;
     final newLikeCount =
         newIsLiked ? currentGoods.likeCount + 1 : currentGoods.likeCount - 1;
 
-    // 乐观更新 UI
     setState(() {
       _goodsList[index] = currentGoods.copyWith(
         isLiked: newIsLiked,
@@ -284,11 +293,9 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     });
 
     try {
-      // 调用 API
       final success = await ServiceApi.toggleLike(goods.id, _currentUserId!);
 
       if (!success) {
-        // 失败时恢复原状态
         setState(() {
           _goodsList[index] = currentGoods;
         });
@@ -297,7 +304,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
       }
     } catch (e) {
-      // 异常时恢复原状态
       setState(() {
         _goodsList[index] = currentGoods;
       });
@@ -316,24 +322,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           isDark
               ? theme.ServiceMetalColors.darkBg
               : theme.ServiceMetalColors.lightBg,
-      body: NestedScrollView(
-        key: ValueKey(_categories.length),
-        controller: _scrollController,
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverHeaderDelegate(
-                headerContent: _buildHeaderContent(isDark),
-                backgroundColor:
-                    isDark
-                        ? theme.ServiceMetalColors.darkBg
-                        : theme.ServiceMetalColors.lightBg,
-              ),
-            ),
-          ];
-        },
-        body: _buildGoodsList(isDark),
+      body: Column(
+        children: [
+          _buildHeaderContent(isDark),
+          Expanded(child: _buildGoodsList(isDark)),
+        ],
       ),
     );
   }
@@ -341,10 +334,9 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   Widget _buildHeaderContent(bool isDark) {
     return Column(
       children: [
-        // 顶部栏（搜索框、收藏、购物篮、设置）
         Container(
           padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + 4.h, // 上移6px（原10h改为4h）
+            top: MediaQuery.of(context).padding.top + 4.h,
           ),
           child: Row(
             children: [
@@ -374,7 +366,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
             ],
           ),
         ),
-        // 分类栏
         _buildCategoryBar(isDark),
       ],
     );
@@ -554,34 +545,43 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     }
 
     return GridView.builder(
-      padding: EdgeInsets.fromLTRB(12.w, 12.w, 12.w, 100.h),
+      controller: _scrollController,
+      padding: EdgeInsets.fromLTRB(9.w, 8.h, 9.w, 90.h), // 左右缩小3px，上缩小4px
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.7,
-        crossAxisSpacing: 27.w,
-        mainAxisSpacing: 70.h,
+        crossAxisSpacing: 12.w, // 左右间距缩小6px（从27改为21）
+        mainAxisSpacing: 12.h, // 上下间距缩小12px（从70改为58）
+        childAspectRatio: 0.68,
       ),
-      shrinkWrap: false,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _goodsList.length + (_hasMore ? 1 : 0),
+      itemCount: _goodsList.length + 1,
       itemBuilder: (context, index) {
         if (index == _goodsList.length) {
-          return Center(
-            child: Padding(
-              padding: EdgeInsets.all(16.w),
-              child:
-                  _isLoadingMore
-                      ? const CircularProgressIndicator()
-                      : Text(
-                        '—— 加载更多 ——',
-                        style: TextStyle(
-                          color: isDark ? Colors.grey : Colors.grey[400],
-                        ),
-                      ),
-            ),
-          );
+          if (_isLoadingMore) {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              child: const Center(child: CircularProgressIndicator()),
+            );
+          } else if (!_hasMore && _goodsList.isNotEmpty) {
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: 20.h),
+              child: Center(
+                child: Text(
+                  'No more data',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          } else {
+            return const SizedBox.shrink();
+          }
         }
-        return _buildGoodsCard(_goodsList[index], isDark);
+
+        final goods = _goodsList[index];
+        return _buildGoodsCard(goods, isDark);
       },
     );
   }
@@ -589,8 +589,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   Widget _buildGoodsCard(ServiceGoods goods, bool isDark) {
     return GestureDetector(
       onTap: () => _navigateToDetail(goods),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+      child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
           color:
@@ -622,27 +621,52 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // 商品图片
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
               child: Stack(
                 children: [
-                  Image.network(
-                    goods.mainImage ?? 'https://picsum.photos/id/0/400/400',
-                    height: 180.h,
+                  CachedNetworkImage(
+                    imageUrl:
+                        goods.mainImage ?? 'https://picsum.photos/id/0/400/400',
+                    height: 150.h,
                     width: double.infinity,
                     fit: BoxFit.cover,
-                    errorBuilder:
-                        (_, __, ___) => Container(
-                          height: 180.h,
-                          color: Colors.grey[200],
+                    fadeInDuration: const Duration(milliseconds: 300),
+                    fadeOutDuration: const Duration(milliseconds: 150),
+                    placeholder:
+                        (context, url) => Container(
+                          height: 150.h,
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                          child: Center(
+                            child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  theme.ServiceMetalColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                    errorWidget:
+                        (context, url, error) => Container(
+                          height: 150.h,
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
                           child: Icon(
                             Icons.image_not_supported,
                             size: 40,
-                            color: Colors.grey,
+                            color: isDark ? Colors.grey[600] : Colors.grey[400],
                           ),
                         ),
+                    cacheKey:
+                        goods.mainImage != null
+                            ? 'goods_${goods.id}_${goods.mainImage!.hashCode}'
+                            : null,
                   ),
                   // 评分标签
                   if (goods.score > 0)
@@ -651,8 +675,8 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                       right: 8.w,
                       child: Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 8.w,
-                          vertical: 10.h,
+                          horizontal: 6.w,
+                          vertical: 3.h,
                         ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
@@ -661,13 +685,13 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                               theme.ServiceMetalColors.bronze,
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(20.r),
+                          borderRadius: BorderRadius.circular(16.r),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.star, size: 12.sp, color: Colors.white),
-                            SizedBox(width: 4.w),
+                            Icon(Icons.star, size: 10.sp, color: Colors.white),
+                            SizedBox(width: 2.w),
                             Text(
                               '${goods.score}',
                               style: TextStyle(
@@ -683,93 +707,115 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                 ],
               ),
             ),
-            // 商品信息
-            Padding(
-              padding: EdgeInsets.all(10.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    goods.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color:
-                          isDark
-                              ? theme.ServiceMetalColors.darkText
-                              : theme.ServiceMetalColors.lightText,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    goods.shortDescription ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      color:
-                          isDark
-                              ? theme.ServiceMetalColors.darkTextSecondary
-                              : theme.ServiceMetalColors.lightTextSecondary,
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Row(
-                    children: [
-                      Text(
-                        '¥${goods.price.toStringAsFixed(2)}',
+            // 商品信息 - 使用Expanded确保内容不溢出
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 8.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 商品名称
+                    Flexible(
+                      child: Text(
+                        goods.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.normal,
-                          color: theme.ServiceMetalColors.primary,
-                        ),
-                      ),
-                      if (goods.originalPrice != null)
-                        Padding(
-                          padding: EdgeInsets.only(left: 8.w),
-                          child: Text(
-                            '¥${goods.originalPrice!.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              decoration: TextDecoration.lineThrough,
-                              color:
-                                  isDark
-                                      ? theme
-                                          .ServiceMetalColors
-                                          .darkTextTertiary
-                                      : theme
-                                          .ServiceMetalColors
-                                          .lightTextTertiary,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  SizedBox(height: 10.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '销量 ${goods.salesCount}',
-                        style: TextStyle(
-                          fontSize: 10.sp,
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.w600,
+                          height: 1.2,
                           color:
                               isDark
-                                  ? theme.ServiceMetalColors.darkTextTertiary
-                                  : theme.ServiceMetalColors.lightTextTertiary,
+                                  ? theme.ServiceMetalColors.darkText
+                                  : theme.ServiceMetalColors.lightText,
                         ),
                       ),
-                      _buildLikeButton(
-                        goods.likeCount,
-                        goods.isLiked,
-                        isDark,
-                        () => _toggleLike(goods),
+                    ),
+                    SizedBox(height: 2.h),
+                    // 简短描述
+                    if (goods.shortDescription != null &&
+                        goods.shortDescription!.isNotEmpty)
+                      Flexible(
+                        child: Text(
+                          goods.shortDescription!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11.sp,
+                            color:
+                                isDark
+                                    ? theme.ServiceMetalColors.darkTextSecondary
+                                    : theme
+                                        .ServiceMetalColors
+                                        .lightTextSecondary,
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                ],
+                    SizedBox(height: 6.h),
+                    // 价格行
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '¥${goods.price.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.bold,
+                              color: theme.ServiceMetalColors.primary,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (goods.originalPrice != null)
+                          Padding(
+                            padding: EdgeInsets.only(left: 4.w),
+                            child: Text(
+                              '¥${goods.originalPrice!.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 10.sp,
+                                decoration: TextDecoration.lineThrough,
+                                color:
+                                    isDark
+                                        ? theme
+                                            .ServiceMetalColors
+                                            .darkTextTertiary
+                                        : theme
+                                            .ServiceMetalColors
+                                            .lightTextTertiary,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    // 销量和点赞行 - 使用Row确保都在一行
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '销量 ${goods.salesCount}',
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color:
+                                isDark
+                                    ? theme.ServiceMetalColors.darkTextTertiary
+                                    : theme
+                                        .ServiceMetalColors
+                                        .lightTextTertiary,
+                          ),
+                        ),
+                        _buildLikeButton(
+                          goods.likeCount,
+                          goods.isLiked,
+                          isDark,
+                          () => _toggleLike(goods),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -787,6 +833,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     return GestureDetector(
       onTap: onTap,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             isLiked ? Icons.favorite : Icons.favorite_border,
@@ -798,7 +845,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                         ? theme.ServiceMetalColors.darkTextSecondary
                         : Colors.grey),
           ),
-          SizedBox(width: 4.w),
+          SizedBox(width: 3.w),
           Text(
             count.toString(),
             style: TextStyle(
@@ -817,39 +864,8 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
-  }
-}
-
-// 分类栏 SliverPersistentHeader 代理
-class _SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
-  final Widget headerContent;
-  final Color backgroundColor;
-
-  _SliverHeaderDelegate({
-    required this.headerContent,
-    required this.backgroundColor,
-  });
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    return Container(color: backgroundColor, child: headerContent);
-  }
-
-  @override
-  double get maxExtent => 100.h;
-
-  @override
-  double get minExtent => 100.h;
-
-  @override
-  bool shouldRebuild(covariant _SliverHeaderDelegate oldDelegate) {
-    return backgroundColor != oldDelegate.backgroundColor ||
-        headerContent != oldDelegate.headerContent;
   }
 }
