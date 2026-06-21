@@ -37,6 +37,49 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
   final Set<int> _loadedImageIds = {};
 
+  // 分类对应的彩色Emoji映射
+  final Map<String, String> _categoryEmojis = {
+    '全部': '📦',
+    '电子产品': '📱',
+    '服装服饰': '👔',
+    '服装配饰': '👔',
+    '其他': '📌',
+    '服务': '🚀',
+    '食品饮料': '🍜',
+    '家居生活': '🏠',
+    '美妆护肤': '💄',
+    '母婴玩具': '👶',
+    '运动户外': '⚽',
+    '图书文具': '📚',
+    '汽车用品': '🚗',
+    '宠物用品': '🐾',
+    '珠宝首饰': '💎',
+    '数码配件': '🔌',
+    '家用电器': '📺',
+    '办公耗材': '🖊️',
+    '鞋靴箱包': '👟',
+    '床上用品': '🛏️',
+    '厨房用具': '🍳',
+    '个护清洁': '🧴',
+    '乐器音像': '🎵',
+    '手机通讯': '📱',
+    '电脑办公': '💻',
+    '摄影摄像': '📷',
+    '餐厅美食': '🍽',
+    '酒店住宿': 
+  };
+
+  // 获取分类对应的Emoji
+  String _getCategoryEmoji(String categoryName) {
+    for (final entry in _categoryEmojis.entries) {
+      if (categoryName.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    // 默认返回
+    return '📌';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -452,11 +495,13 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         itemBuilder: (context, index) {
           final category = _categories[index];
           final isSelected = _selectedCategoryId == category.id;
+          final emoji = _getCategoryEmoji(category.name);
 
           return Padding(
             padding: EdgeInsets.only(right: 12.w),
             child: _buildCategoryButton(
               category.name,
+              emoji,
               isSelected,
               isDark,
               () => _onCategorySelected(category.id),
@@ -469,6 +514,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
   Widget _buildCategoryButton(
     String title,
+    String emoji,
     bool isSelected,
     bool isDark,
     VoidCallback onTap,
@@ -477,34 +523,73 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(13.r),
-          color:
-              isSelected && !isDark
-                  ? theme.ServiceMetalColors.primary
-                  : (isDark
-                      ? theme.ServiceMetalColors.darkSurface
-                      : theme.ServiceMetalColors.lightSurface),
+          gradient:
+              isSelected
+                  ? const LinearGradient(
+                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                  : isDark
+                  ? const LinearGradient(
+                    colors: [Color(0xFF374151), Color(0xFF1F2937)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                  : const LinearGradient(
+                    colors: [Color(0xFFF0F4FF), Color(0xFFE8EDF5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
           border: Border.all(
             color:
                 isSelected
-                    ? theme.ServiceMetalColors.primary
-                    : (isDark ? Colors.grey[600]! : Colors.grey[300]!),
-            width: 1.5,
+                    ? Colors.transparent
+                    : isDark
+                    ? Colors.grey[600]!
+                    : const Color(0xFFD1D9E6),
+            width: 1,
           ),
+          boxShadow:
+              isSelected
+                  ? [
+                    BoxShadow(
+                      color: const Color(0xFF667EEA).withOpacity(0.35),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                  : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.06),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
         ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color:
-                isSelected
-                    ? (isDark ? Colors.black : Colors.white)
-                    : (isDark
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: TextStyle(fontSize: 14.sp)),
+            SizedBox(width: 6.w),
+            Text(
+              title,
+              style: TextStyle(
+                color:
+                    isSelected
+                        ? Colors.white
+                        : isDark
                         ? theme.ServiceMetalColors.darkText
-                        : theme.ServiceMetalColors.lightText),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
+                        : const Color(0xFF2D3748),
+                fontSize: 13.sp,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -546,11 +631,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
     return GridView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.fromLTRB(9.w, 8.h, 9.w, 90.h), // 左右缩小3px，上缩小4px
+      padding: EdgeInsets.fromLTRB(9.w, 8.h, 9.w, 90.h),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 12.w, // 左右间距缩小6px（从27改为21）
-        mainAxisSpacing: 12.h, // 上下间距缩小12px（从70改为58）
+        crossAxisSpacing: 12.w,
+        mainAxisSpacing: 12.h,
         childAspectRatio: 0.68,
       ),
       itemCount: _goodsList.length + 1,
@@ -790,7 +875,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                       ],
                     ),
                     SizedBox(height: 6.h),
-                    // 销量和点赞行 - 使用Row确保都在一行
+                    // 销量和点赞行
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

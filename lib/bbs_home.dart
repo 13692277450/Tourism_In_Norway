@@ -9,6 +9,559 @@ import 'bbs_details.dart';
 import 'bbs_post.dart';
 import 'user_auth.dart';
 
+// ==================== Category 类 ====================
+class Category {
+  final int id;
+  final String name;
+  final String description;
+
+  Category({required this.id, required this.name, required this.description});
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      description: json['description'] ?? '',
+    );
+  }
+}
+
+// ==================== Post 类 ====================
+class Post {
+  final int id;
+  final int user_id;
+  final String title;
+  final String content;
+  final String authorName;
+  final String categoryName;
+  final int likesCount;
+  final int commentsCount;
+  final DateTime createdAt;
+  final List<String> images;
+  final int categoryId;
+
+  Post({
+    required this.id,
+    required this.user_id,
+    required this.title,
+    required this.content,
+    required this.authorName,
+    required this.categoryName,
+    required this.likesCount,
+    required this.commentsCount,
+    required this.createdAt,
+    this.images = const [],
+    this.categoryId = 0,
+  });
+
+  factory Post.fromJson(Map<String, dynamic> json) {
+    final imagesJson = json['images'];
+    List<String> images = [];
+
+    if (imagesJson != null) {
+      if (imagesJson is List) {
+        images = imagesJson.map((e) => e.toString()).toList();
+      } else if (imagesJson is String) {
+        try {
+          final parsed = jsonDecode(imagesJson);
+          if (parsed is List) {
+            images = parsed.map((e) => e.toString()).toList();
+          }
+        } catch (_) {}
+      }
+    }
+
+    return Post(
+      id: json['id'] ?? 0,
+      user_id: json['user_id'] ?? 0,
+      title: json['title'] ?? '',
+      content: json['content'] ?? '',
+      authorName: json['user_name'] ?? json['author'] ?? 'Anonymous',
+      categoryName: json['category_name'] ?? 'No Category',
+      likesCount: json['likes_count'] ?? 0,
+      commentsCount: json['comments_count'] ?? 0,
+      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      images: images,
+      categoryId: json['category_id'] ?? 0,
+    );
+  }
+
+  Post copyWith({
+    int? id,
+    int? user_id,
+    String? title,
+    String? content,
+    String? authorName,
+    String? categoryName,
+    int? likesCount,
+    int? commentsCount,
+    DateTime? createdAt,
+    List<String>? images,
+    int? categoryId,
+  }) {
+    return Post(
+      id: id ?? this.id,
+      user_id: user_id ?? this.user_id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      authorName: authorName ?? this.authorName,
+      categoryName: categoryName ?? this.categoryName,
+      likesCount: likesCount ?? this.likesCount,
+      commentsCount: commentsCount ?? this.commentsCount,
+      createdAt: createdAt ?? this.createdAt,
+      images: images ?? this.images,
+      categoryId: categoryId ?? this.categoryId,
+    );
+  }
+}
+
+// ==================== 颜色工具函数 ====================
+Color _getCategoryColor(int categoryId) {
+  switch (categoryId) {
+    case 1:
+      return const Color(0xFF4F46E5);
+    case 2:
+      return const Color(0xFF059669);
+    case 3:
+      return const Color(0xFFD97706);
+    case 4:
+      return const Color(0xFFDC2626);
+    case 5:
+      return const Color(0xFF7C3AED);
+    case 6:
+      return const Color(0xFF0891B2);
+    case 7:
+      return const Color(0xFFDB2777);
+    case 8:
+      return const Color(0xFF65A30D);
+    default:
+      return const Color(0xFF4F46E5);
+  }
+}
+
+// ==================== CachedPostImage 组件 ====================
+class CachedPostImage extends StatelessWidget {
+  final String imageUrl;
+  final double width;
+  final double height;
+  final BoxFit fit;
+
+  const CachedPostImage({
+    super.key,
+    required this.imageUrl,
+    required this.width,
+    required this.height,
+    this.fit = BoxFit.cover,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: width,
+      height: height,
+      fit: fit,
+      fadeInDuration: const Duration(milliseconds: 300),
+      placeholder:
+          (context, url) => Container(
+            width: width,
+            height: height,
+            color: isDark ? Colors.grey[800] : Colors.grey[200],
+            child: const Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                ),
+              ),
+            ),
+          ),
+      errorWidget:
+          (context, url, error) => Container(
+            width: width,
+            height: height,
+            color: isDark ? Colors.grey[800] : Colors.grey[200],
+            child: Icon(
+              Icons.broken_image,
+              size: 30,
+              color: isDark ? Colors.grey[600] : Colors.grey[400],
+            ),
+          ),
+    );
+  }
+}
+
+// ==================== _PostCard 组件 ====================
+class _PostCard extends StatelessWidget {
+  final Post post;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+  final int? currentUserId;
+  final Map<int, String> categoryEmojis;
+  final Map<String, String> categoryNameEmojis;
+  final String Function(int) getHotEmoji;
+
+  const _PostCard({
+    required this.post,
+    required this.onTap,
+    required this.onDelete,
+    this.currentUserId,
+    required this.categoryEmojis,
+    required this.categoryNameEmojis,
+    required this.getHotEmoji,
+  });
+
+  String _getEmojiForCategory(int categoryId, String categoryName) {
+    if (categoryEmojis.containsKey(categoryId)) {
+      return categoryEmojis[categoryId]!;
+    }
+    for (final entry in categoryNameEmojis.entries) {
+      if (categoryName.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    return '📝';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isOwnPost = currentUserId != null && post.user_id == currentUserId;
+    final hotEmoji = getHotEmoji(post.likesCount);
+    final categoryEmoji = _getEmojiForCategory(
+      post.categoryId,
+      post.categoryName,
+    );
+
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12.w),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Stack(
+          children: [
+            InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(12.w),
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 标题行 - 添加分类Emoji
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(categoryEmoji, style: TextStyle(fontSize: 18.sp)),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            post.title,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  isDark
+                                      ? _getCategoryColor(
+                                        post.categoryId,
+                                      ).withOpacity(0.9)
+                                      : _getCategoryColor(post.categoryId),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isOwnPost) SizedBox(width: 32.w),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+
+                    Text(
+                      post.content,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color:
+                            isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: 8.h),
+
+                    // 使用带缓存的图片组件
+                    if (post.images.isNotEmpty)
+                      SizedBox(
+                        height: 80.h,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: post.images.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: EdgeInsets.only(right: 8.w),
+                              child: CachedPostImage(
+                                imageUrl: post.images[index],
+                                width: 80.w,
+                                height: 80.h,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    SizedBox(height: 12.h),
+
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                isDark
+                                    ? const Color(0xFF4F46E5).withOpacity(0.15)
+                                    : const Color(0xFFEEF2FF),
+                            borderRadius: BorderRadius.circular(4.w),
+                            border: Border.all(
+                              color: const Color(0xFF4F46E5),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            '$categoryEmoji ${post.categoryName}',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              color: _getCategoryColor(post.categoryId),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Text(
+                          post.authorName,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color:
+                                isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : Colors.grey[500],
+                          ),
+                        ),
+                        const Spacer(),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.thumb_up,
+                              size: 14.sp,
+                              color:
+                                  isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : Colors.grey[500],
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              post.likesCount.toString(),
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color:
+                                    isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : Colors.grey[500],
+                              ),
+                            ),
+                            SizedBox(width: 16.w),
+                            Icon(
+                              Icons.comment,
+                              size: 14.sp,
+                              color:
+                                  isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : Colors.grey[500],
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              post.commentsCount.toString(),
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color:
+                                    isDark
+                                        ? const Color(0xFF94A3B8)
+                                        : Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 4.h),
+                    Row(
+                      children: [
+                        Text(
+                          _formatDate(post.createdAt),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color:
+                                isDark
+                                    ? const Color(0xFF64748B)
+                                    : Colors.grey[500],
+                          ),
+                        ),
+                        // 如果点赞超过100，在底部中间显示热门Emoji
+                        if (hotEmoji.isNotEmpty) ...[
+                          const Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 10.w,
+                              vertical: 4.h,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFF6B35), Color(0xFFFF4500)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(20.r),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFFFF6B35,
+                                  ).withOpacity(0.3),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  hotEmoji,
+                                  style: TextStyle(fontSize: 16.sp),
+                                ),
+                                SizedBox(width: 4.w),
+                                Text(
+                                  '${post.likesCount}',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (isOwnPost)
+              Positioned(
+                top: 8.h,
+                right: 8.w,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _showDeleteConfirmation(context),
+                    borderRadius: BorderRadius.circular(20.r),
+                    child: Container(
+                      padding: EdgeInsets.all(6.w),
+                      decoration: BoxDecoration(
+                        color:
+                            isDark
+                                ? const Color(0xFF334155).withOpacity(0.9)
+                                : Colors.white.withOpacity(0.95),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.delete_outline,
+                        size: 18.sp,
+                        color:
+                            isDark ? const Color(0xFFFF4757) : Colors.redAccent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('确认删除'),
+          content: const Text('确定要删除这条帖子吗？此操作无法撤销。'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.w),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
+              child: const Text('取消'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                onDelete();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFFFF4757),
+              ),
+              child: const Text('删除'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 1) return '刚刚';
+    if (diff.inHours < 1) return '${diff.inMinutes}分钟前';
+    if (diff.inDays < 1) return '${diff.inHours}小时前';
+    if (diff.inDays < 7) return '${diff.inDays}天前';
+    return '${date.month}/${date.day}';
+  }
+}
+
+// ==================== BbsPage 主页面 ====================
 class BbsPage extends StatefulWidget {
   const BbsPage({super.key});
 
@@ -36,6 +589,51 @@ class _BbsPageState extends State<BbsPage> {
   String? _errorMessage;
 
   final shared.UserManager userManager = shared.UserManager();
+
+  // 分类对应的彩色Emoji
+  final Map<int, String> _categoryEmojis = {
+    1: '💬',
+    2: '🍽️',
+    3: '✈️',
+    4: '🎭',
+    5: '📌',
+    6: '🏨',
+    7: '🎪',
+    8: '🌿',
+  };
+
+  final Map<String, String> _categoryNameEmojis = {
+    '酒店住宿': '🏨',
+    '美食餐厅': '🍽️',
+    '旅游攻略': '✈️',
+    '文化体验': '🎭',
+    '实用信息': '📌',
+    '景点推荐': '🏞️',
+    '活动体验': '🎪',
+    '自然风光': '🌿',
+  };
+
+  // 热门Emoji列表（点赞超过100时显示）
+  final List<String> _hotEmojis = [
+    '🔥',
+    '⭐',
+    '🌟',
+    '💯',
+    '🎉',
+    '🏆',
+    '👑',
+    '💪',
+    '✨',
+    '🌈',
+  ];
+
+  String _getHotEmoji(int likesCount) {
+    if (likesCount < 100) return '';
+    if (likesCount >= 500) return '👑';
+    if (likesCount >= 300) return '🏆';
+    if (likesCount >= 200) return '🌟';
+    return '🔥';
+  }
 
   @override
   void initState() {
@@ -323,15 +921,33 @@ class _BbsPageState extends State<BbsPage> {
         },
         child: CustomScrollView(
           slivers: [
+            // 标题栏 - 添加彩色icon，文字改为深橙色
             SliverAppBar(
-              title: Text(
-                '论坛',
-                style: TextStyle(
-                  color:
-                      isDark
-                          ? const Color(0xFFFFFFFF)
-                          : const Color(0xFF1E293B),
-                ),
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(4.w),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Icon(Icons.forum, size: 20.sp, color: Colors.white),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '论坛',
+                    style: TextStyle(
+                      color: const Color(0xFFE67E22), // 深橙色
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20.sp,
+                    ),
+                  ),
+                ],
               ),
               pinned: true,
               backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
@@ -688,6 +1304,9 @@ class _BbsPageState extends State<BbsPage> {
                     onTap: () => _navigateToPostDetail(post),
                     onDelete: () => _deletePost(post.id),
                     currentUserId: userManager.currentUser?.user_id,
+                    categoryEmojis: _categoryEmojis,
+                    categoryNameEmojis: _categoryNameEmojis,
+                    getHotEmoji: _getHotEmoji,
                   );
                 }, childCount: _posts.length),
               ),
@@ -725,6 +1344,9 @@ class _BbsPageState extends State<BbsPage> {
                     onTap: () => _navigateToPostDetail(post),
                     onDelete: () => _deletePost(post.id),
                     currentUserId: userManager.currentUser?.user_id,
+                    categoryEmojis: _categoryEmojis,
+                    categoryNameEmojis: _categoryNameEmojis,
+                    getHotEmoji: _getHotEmoji,
                   );
                 }, childCount: _myPosts.length),
               ),
@@ -761,476 +1383,5 @@ class _BbsPageState extends State<BbsPage> {
         ),
       ),
     );
-  }
-}
-
-class Category {
-  final int id;
-  final String name;
-  final String description;
-
-  Category({required this.id, required this.name, required this.description});
-
-  factory Category.fromJson(Map<String, dynamic> json) {
-    return Category(
-      id: json['id'] ?? 0,
-      name: json['name'] ?? '',
-      description: json['description'] ?? '',
-    );
-  }
-}
-
-class Post {
-  final int id;
-  final int user_id;
-  final String title;
-  final String content;
-  final String authorName;
-  final String categoryName;
-  final int likesCount;
-  final int commentsCount;
-  final DateTime createdAt;
-  final List<String> images;
-  final int categoryId;
-
-  Post({
-    required this.id,
-    required this.user_id,
-    required this.title,
-    required this.content,
-    required this.authorName,
-    required this.categoryName,
-    required this.likesCount,
-    required this.commentsCount,
-    required this.createdAt,
-    this.images = const [],
-    this.categoryId = 0,
-  });
-
-  factory Post.fromJson(Map<String, dynamic> json) {
-    final imagesJson = json['images'];
-    List<String> images = [];
-
-    if (imagesJson != null) {
-      if (imagesJson is List) {
-        images = imagesJson.map((e) => e.toString()).toList();
-      } else if (imagesJson is String) {
-        try {
-          final parsed = jsonDecode(imagesJson);
-          if (parsed is List) {
-            images = parsed.map((e) => e.toString()).toList();
-          }
-        } catch (_) {}
-      }
-    }
-
-    return Post(
-      id: json['id'] ?? 0,
-      user_id: json['user_id'] ?? 0,
-      title: json['title'] ?? '',
-      content: json['content'] ?? '',
-      authorName: json['user_name'] ?? json['author'] ?? 'Anonymous',
-      categoryName: json['category_name'] ?? 'No Category',
-      likesCount: json['likes_count'] ?? 0,
-      commentsCount: json['comments_count'] ?? 0,
-      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
-      images: images,
-      categoryId: json['category_id'] ?? 0,
-    );
-  }
-
-  Post copyWith({
-    int? id,
-    int? user_id,
-    String? title,
-    String? content,
-    String? authorName,
-    String? categoryName,
-    int? likesCount,
-    int? commentsCount,
-    DateTime? createdAt,
-    List<String>? images,
-    int? categoryId,
-  }) {
-    return Post(
-      id: id ?? this.id,
-      user_id: user_id ?? this.user_id,
-      title: title ?? this.title,
-      content: content ?? this.content,
-      authorName: authorName ?? this.authorName,
-      categoryName: categoryName ?? this.categoryName,
-      likesCount: likesCount ?? this.likesCount,
-      commentsCount: commentsCount ?? this.commentsCount,
-      createdAt: createdAt ?? this.createdAt,
-      images: images ?? this.images,
-      categoryId: categoryId ?? this.categoryId,
-    );
-  }
-}
-
-/// 带缓存功能的网络图片组件
-class CachedPostImage extends StatelessWidget {
-  final String imageUrl;
-  final double width;
-  final double height;
-  final BoxFit fit;
-
-  const CachedPostImage({
-    super.key,
-    required this.imageUrl,
-    required this.width,
-    required this.height,
-    this.fit = BoxFit.cover,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      width: width,
-      height: height,
-      fit: fit,
-      fadeInDuration: const Duration(milliseconds: 300),
-      placeholder:
-          (context, url) => Container(
-            width: width,
-            height: height,
-            color: isDark ? Colors.grey[800] : Colors.grey[200],
-            child: const Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                ),
-              ),
-            ),
-          ),
-      errorWidget:
-          (context, url, error) => Container(
-            width: width,
-            height: height,
-            color: isDark ? Colors.grey[800] : Colors.grey[200],
-            child: Icon(
-              Icons.broken_image,
-              size: 30,
-              color: isDark ? Colors.grey[600] : Colors.grey[400],
-            ),
-          ),
-    );
-  }
-}
-
-class _PostCard extends StatelessWidget {
-  final Post post;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
-  final int? currentUserId;
-
-  const _PostCard({
-    required this.post,
-    required this.onTap,
-    required this.onDelete,
-    this.currentUserId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isOwnPost = currentUserId != null && post.user_id == currentUserId;
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12.w),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : Colors.grey[200]!,
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: Stack(
-          children: [
-            InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(12.w),
-              child: Padding(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            post.title,
-                            style: TextStyle(
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  isDark
-                                      ? _getCategoryColor(
-                                        post.categoryId,
-                                      ).withOpacity(0.9)
-                                      : _getCategoryColor(post.categoryId),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isOwnPost) SizedBox(width: 32.w),
-                      ],
-                    ),
-                    SizedBox(height: 8.h),
-
-                    Text(
-                      post.content,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color:
-                            isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
-                      ),
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: 8.h),
-
-                    // 使用带缓存的图片组件
-                    if (post.images.isNotEmpty)
-                      SizedBox(
-                        height: 80.h,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: post.images.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: EdgeInsets.only(right: 8.w),
-                              child: CachedPostImage(
-                                imageUrl: post.images[index],
-                                width: 80.w,
-                                height: 80.h,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    SizedBox(height: 12.h),
-
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8.w,
-                            vertical: 2.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                isDark
-                                    ? const Color(0xFF4F46E5).withOpacity(0.15)
-                                    : const Color(0xFFEEF2FF),
-                            borderRadius: BorderRadius.circular(4.w),
-                            border: Border.all(
-                              color: const Color(0xFF4F46E5),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            post.categoryName,
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: _getCategoryColor(post.categoryId),
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 12.w),
-                        Text(
-                          post.authorName,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color:
-                                isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : Colors.grey[500],
-                          ),
-                        ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.thumb_up,
-                              size: 14.sp,
-                              color:
-                                  isDark
-                                      ? const Color(0xFF94A3B8)
-                                      : Colors.grey[500],
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              post.likesCount.toString(),
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color:
-                                    isDark
-                                        ? const Color(0xFF94A3B8)
-                                        : Colors.grey[500],
-                              ),
-                            ),
-                            SizedBox(width: 16.w),
-                            Icon(
-                              Icons.comment,
-                              size: 14.sp,
-                              color:
-                                  isDark
-                                      ? const Color(0xFF94A3B8)
-                                      : Colors.grey[500],
-                            ),
-                            SizedBox(width: 4.w),
-                            Text(
-                              post.commentsCount.toString(),
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                color:
-                                    isDark
-                                        ? const Color(0xFF94A3B8)
-                                        : Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      _formatDate(post.createdAt),
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color:
-                            isDark ? const Color(0xFF64748B) : Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (isOwnPost)
-              Positioned(
-                top: 8.h,
-                right: 8.w,
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _showDeleteConfirmation(context),
-                    borderRadius: BorderRadius.circular(20.r),
-                    child: Container(
-                      padding: EdgeInsets.all(6.w),
-                      decoration: BoxDecoration(
-                        color:
-                            isDark
-                                ? const Color(0xFF334155).withOpacity(0.9)
-                                : Colors.white.withOpacity(0.95),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.delete_outline,
-                        size: 18.sp,
-                        color:
-                            isDark ? const Color(0xFFFF4757) : Colors.redAccent,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('确认删除'),
-          content: const Text('确定要删除这条帖子吗？此操作无法撤销。'),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.w),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.grey[600]),
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onDelete();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFFF4757),
-              ),
-              child: const Text('删除'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final diff = now.difference(date);
-
-    if (diff.inMinutes < 1) return '刚刚';
-    if (diff.inHours < 1) return '${diff.inMinutes}分钟前';
-    if (diff.inDays < 1) return '${diff.inHours}小时前';
-    if (diff.inDays < 7) return '${diff.inDays}天前';
-    return '${date.month}/${date.day}';
-  }
-}
-
-Color _getCategoryColor(int categoryId) {
-  switch (categoryId) {
-    case 1:
-      return const Color(0xFF4F46E5);
-    case 2:
-      return const Color(0xFF059669);
-    case 3:
-      return const Color(0xFFD97706);
-    case 4:
-      return const Color(0xFFDC2626);
-    case 5:
-      return const Color(0xFF7C3AED);
-    case 6:
-      return const Color(0xFF0891B2);
-    case 7:
-      return const Color(0xFFDB2777);
-    case 8:
-      return const Color(0xFF65A30D);
-    default:
-      return const Color(0xFF4F46E5);
   }
 }

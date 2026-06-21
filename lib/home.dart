@@ -1,4 +1,5 @@
 import 'dart:convert';
+//import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -30,6 +31,51 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = true;
   String? errorMessage;
   String? _selectedScenicTag;
+
+  // 是否已记录访问
+  bool _hasRecordedVisit = false;
+
+  // 景点名称对应的彩色图标/emoji映射
+  final Map<String, String> _placeIcons = {
+    '卑尔根': '🏔️',
+    '奥斯陆': '🏛️',
+    '特罗姆瑟': '🌌',
+    '罗弗敦': '🏝️',
+    '盖朗厄尔': '🏞️',
+    '斯塔万格': '⚓',
+    '特隆赫姆': '⛪',
+    '奥勒松': '🏘️',
+    '弗洛姆': '🚂',
+    '松恩峡湾': '🌊',
+    '哈当厄尔': '🍒',
+    '吕瑟峡湾': '⛰️',
+  };
+
+  // 随机彩色图标列表（当没有匹配时使用）
+  final List<String> _randomIcons = [
+    '🌟',
+    '🔥',
+    '💎',
+    '🌈',
+    '🎯',
+    '⭐',
+    '🌸',
+    '🌺',
+    '🍀',
+    '🎨',
+    '💫',
+    '🌿',
+  ];
+
+  String _getIconForPlace(String name) {
+    for (final entry in _placeIcons.entries) {
+      if (name.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+    final index = name.hashCode.abs() % _randomIcons.length;
+    return _randomIcons[index];
+  }
 
   List<String> get _scenicTagNames {
     final names =
@@ -84,6 +130,32 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  // ==================== 访问计数功能 ====================
+  Future<void> _recordVisit() async {
+    if (_hasRecordedVisit) return;
+
+    try {
+      final now = DateTime.now();
+      final formattedTime =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+
+      final response = await http.post(
+        Uri.parse('${shared.AppConfig.baseWebUrl3004}/api/visit/counter'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'connectTime': formattedTime}),
+      );
+
+      if (response.statusCode == 200) {
+        _hasRecordedVisit = true;
+        debugPrint('✅ 访问记录成功: $formattedTime');
+      } else {
+        debugPrint('❌ 访问记录失败: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('❌ 访问记录异常: $e');
+    }
   }
 
   Future<void> fetchScenicData({bool isRefresh = false}) async {
@@ -184,6 +256,11 @@ class _HomePageState extends State<HomePage> {
             errorMessage = '未找到景点数据，请稍后重试。';
           }
         });
+
+        // 数据加载完成后记录访问（只记录一次）
+        if (!_hasRecordedVisit && places.isNotEmpty) {
+          _recordVisit();
+        }
       } else {
         setState(() {
           isLoading = false;
@@ -212,61 +289,171 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSearchBar(bool isDark) {
     return Container(
       margin: EdgeInsets.fromLTRB(13.w, 16.h, 13.w, 4.h),
-      decoration: BoxDecoration(
-        color: isDark ? theme.ServiceMetalColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        border:
-            isDark
-                ? Border.all(
-                  color: theme.ServiceMetalColors.primary.withOpacity(0.3),
-                )
-                : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
       child: Row(
         children: [
-          SizedBox(width: 16.w),
           Expanded(
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Search...',
-                border: InputBorder.none,
-                filled: isDark,
-                fillColor:
+            child: Container(
+              decoration: BoxDecoration(
+                color:
                     isDark
                         ? theme.ServiceMetalColors.darkSurface
                         : Colors.white,
-                hintStyle: TextStyle(
-                  color:
-                      isDark
-                          ? theme.ServiceMetalColors.darkTextSecondary
-                          : Colors.grey[400],
-                  fontSize: 14.sp,
-                ),
+                borderRadius: BorderRadius.circular(12.r),
+                border:
+                    isDark
+                        ? Border.all(
+                          color: theme.ServiceMetalColors.primary.withOpacity(
+                            0.3,
+                          ),
+                        )
+                        : null,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              style: TextStyle(
-                color:
-                    isDark ? theme.ServiceMetalColors.darkText : Colors.black87,
-                fontSize: 14.sp,
+              child: Row(
+                children: [
+                  SizedBox(width: 16.w),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search...',
+                        border: InputBorder.none,
+                        filled: isDark,
+                        fillColor:
+                            isDark
+                                ? theme.ServiceMetalColors.darkSurface
+                                : Colors.white,
+                        hintStyle: TextStyle(
+                          color:
+                              isDark
+                                  ? theme.ServiceMetalColors.darkTextSecondary
+                                  : Colors.grey[400],
+                          fontSize: 14.sp,
+                        ),
+                      ),
+                      style: TextStyle(
+                        color:
+                            isDark
+                                ? theme.ServiceMetalColors.darkText
+                                : Colors.black87,
+                        fontSize: 14.sp,
+                      ),
+                      onSubmitted: (_) => _searchPlaces(),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _searchPlaces,
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: Icon(
+                        Icons.search,
+                        color: theme.ServiceMetalColors.primary,
+                        size: 22.sp,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              onSubmitted: (_) => _searchPlaces(),
             ),
           ),
-          GestureDetector(
-            onTap: _searchPlaces,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              child: Icon(
-                Icons.search,
-                color: theme.ServiceMetalColors.primary,
-                size: 22.sp,
+          SizedBox(width: 10.w),
+          // 挪威国旗 - 修复显示问题
+          Container(
+            width: 36.w,
+            height: 36.w,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(
+                color: isDark ? Colors.grey[600]! : Colors.grey[300]!,
+                width: 0.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(7.r),
+              child: Image.asset(
+                'assets/images/norwayflag.png',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // 使用 SVG 格式或绘制手动国旗
+                  return _buildNorwayFlagPlaceholder(isDark);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 手动绘制挪威国旗作为备用
+  Widget _buildNorwayFlagPlaceholder(bool isDark) {
+    return Container(
+      color: const Color(0xFFEF2B2D), // 红色底色
+      child: Stack(
+        children: [
+          // 白色十字（水平）
+          Align(
+            alignment: Alignment.center,
+            child: Container(height: 10.h, color: Colors.white),
+          ),
+          // 白色十字（垂直）
+          Align(
+            alignment: Alignment.center,
+            child: Container(width: 10.w, color: Colors.white),
+          ),
+          // 蓝色十字（水平，在白色十字内部）
+          Align(
+            alignment: Alignment.center,
+            child: Container(height: 6.h, color: const Color(0xFF002868)),
+          ),
+          // 蓝色十字（垂直，在白色十字内部）
+          Align(
+            alignment: Alignment.center,
+            child: Container(width: 6.w, color: const Color(0xFF002868)),
+          ),
+          // 左上角蓝色方块
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Container(
+              width: 14.w,
+              height: 10.h,
+              color: const Color(0xFF002868),
+            ),
+          ),
+          // 左上角白色十字
+          Positioned(
+            left: 0,
+            top: 0,
+            child: Container(
+              width: 14.w,
+              height: 10.h,
+              child: Stack(
+                children: [
+                  // 白色十字（水平）
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(height: 2.h, color: Colors.white),
+                  ),
+                  // 白色十字（垂直）
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(width: 2.w, color: Colors.white),
+                  ),
+                ],
               ),
             ),
           ),
@@ -312,16 +499,37 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '热门景点',
-                style: TextStyle(
-                  color:
-                      isDark
-                          ? theme.ServiceMetalColors.darkText
-                          : theme.ServiceMetalColors.lightText,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(6.w),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Icon(
+                      Icons.auto_awesome,
+                      size: 16.sp,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Text(
+                    '热门景点',
+                    style: TextStyle(
+                      color:
+                          isDark
+                              ? theme.ServiceMetalColors.darkText
+                              : theme.ServiceMetalColors.lightText,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
               if (_selectedScenicTag != null || _searchQuery.isNotEmpty)
                 GestureDetector(
@@ -363,6 +571,7 @@ class _HomePageState extends State<HomePage> {
       children:
           tags.map((tag) {
             final selected = tag == _selectedScenicTag;
+            final icon = _getIconForPlace(tag);
             return Padding(
               padding: EdgeInsets.only(right: 10.w),
               child: GestureDetector(
@@ -382,14 +591,20 @@ class _HomePageState extends State<HomePage> {
                     gradient:
                         selected
                             ? const LinearGradient(
-                              colors: [Color(0xFF5B86E5), Color(0xFF36D1DC)],
+                              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             )
                             : isDark
                             ? const LinearGradient(
                               colors: [Color(0xFF374151), Color(0xFF1F2937)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             )
                             : const LinearGradient(
-                              colors: [Color(0xFFEEF2FF), Color(0xFFDBEAFE)],
+                              colors: [Color(0xFFF0F4FF), Color(0xFFE8EDF5)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
                     borderRadius: BorderRadius.circular(13.w),
                     border: Border.all(
@@ -400,34 +615,54 @@ class _HomePageState extends State<HomePage> {
                               ? theme.ServiceMetalColors.primary.withOpacity(
                                 0.3,
                               )
-                              : Colors.white.withOpacity(0.3),
+                              : const Color(0xFFD1D9E6),
+                      width: 1,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            selected
-                                ? const Color(0xFF36D1DC).withOpacity(0.25)
-                                : Colors.black.withOpacity(isDark ? 0.2 : 0.08),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+                    boxShadow:
+                        selected
+                            ? [
+                              BoxShadow(
+                                color: const Color(0xFF667EEA).withOpacity(0.3),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                            : [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(
+                                  isDark ? 0.2 : 0.06,
+                                ),
+                                blurRadius: 6,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                   ),
                   child: Center(
-                    child: Text(
-                      tag,
-                      style: TextStyle(
-                        color:
-                            selected
-                                ? Colors.white
-                                : isDark
-                                ? theme.ServiceMetalColors.darkText
-                                : const Color(0xFF37474F),
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(icon, style: TextStyle(fontSize: 14.sp)),
+                        SizedBox(width: 4.w),
+                        Flexible(
+                          child: Text(
+                            tag,
+                            style: TextStyle(
+                              color:
+                                  selected
+                                      ? Colors.white
+                                      : isDark
+                                      ? theme.ServiceMetalColors.darkText
+                                      : const Color(0xFF2D3748),
+                              fontSize: 12.sp,
+                              fontWeight:
+                                  selected ? FontWeight.bold : FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

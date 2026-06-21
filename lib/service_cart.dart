@@ -28,7 +28,6 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
   }
 
   void _loadUser() {
-    // 从UserManager获取当前用户ID
     final userManager = shared.UserManager();
     _currentUserId = userManager.currentUser?.user_id;
   }
@@ -62,7 +61,6 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       }
     });
 
-    // 更新服务器
     for (var item in _cartItems) {
       await ServiceApi.updateCart(cartId: item.id, selected: item.selected);
     }
@@ -90,7 +88,13 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('确认删除'),
+            title: Row(
+              children: [
+                Text('🗑️', style: TextStyle(fontSize: 20.sp)),
+                SizedBox(width: 8.w),
+                const Text('确认删除'),
+              ],
+            ),
             content: const Text('确定要删除该商品吗？'),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12.r),
@@ -100,10 +104,20 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                 onPressed: () => Navigator.pop(context, false),
                 child: const Text('取消'),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('删除'),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  child: const Text('删除'),
+                ),
               ),
             ],
           ),
@@ -136,24 +150,38 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder:
-            (_) => ServiceCheckoutPage(
-              cartItems: selectedItems,
-              // checkoutItems: checkoutItems,
-            ),
+        builder: (_) => ServiceCheckoutPage(cartItems: selectedItems),
       ),
     ).then((_) => _loadCart());
   }
 
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
+      SnackBar(
+        content: Row(
+          children: [
+            Text('✅', style: TextStyle(fontSize: 16.sp)),
+            SizedBox(width: 8.w),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(
+        content: Row(
+          children: [
+            Text('❌', style: TextStyle(fontSize: 16.sp)),
+            SizedBox(width: 8.w),
+            Text(message),
+          ],
+        ),
+        backgroundColor: Colors.red,
+      ),
     );
   }
 
@@ -177,15 +205,32 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
               ? theme.ServiceMetalColors.darkBg
               : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
-        title: Text(
-          '购物车',
-          style: TextStyle(
-            color:
-                isDark
-                    ? theme.ServiceMetalColors.primary
-                    : theme.ServiceMetalColors.lightText,
-          ),
+        title: Row(
+          children: [
+            Text('🛒', style: TextStyle(fontSize: 20.sp)),
+            SizedBox(width: 8.w),
+            Text(
+              '购物车',
+              style: TextStyle(
+                color: const Color(0xFFF57C00), // 中橙色
+                fontWeight: FontWeight.bold,
+                fontSize: 18.sp,
+              ),
+            ),
+          ],
         ),
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : const Color(0xFFF57C00),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor:
+            isDark
+                ? theme.ServiceMetalColors.darkBg
+                : theme.ServiceMetalColors.lightBg,
+        elevation: isDark ? 0 : 4,
       ),
       body:
           _isLoading
@@ -215,24 +260,80 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 80.sp,
-            color:
-                isDark
-                    ? theme.ServiceMetalColors.primary.withOpacity(0.5)
-                    : Colors.grey[400],
-          ),
-          SizedBox(height: 16.h),
-          Text(
-            '购物车空空如也',
-            style: TextStyle(
-              fontSize: 16.sp,
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
+          Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF6B35).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.shopping_cart_outlined,
+              size: 60.sp,
+              color: const Color(0xFFF57C00),
             ),
           ),
           SizedBox(height: 16.h),
-          _buildMetalButton('去逛逛', () => Navigator.pop(context), isDark),
+          Text(
+            '🛒 购物车空空如也',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFF57C00),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '快去添加一些商品吧',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12.w),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF6B35).withOpacity(0.3),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(180.w, 44.h),
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.w),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🛍️', style: TextStyle(fontSize: 18.sp)),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '去逛逛',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -264,7 +365,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 选择框
+          // 选择框 - 中橙色
           GestureDetector(
             onTap: () => _toggleSelectItem(item),
             child: Container(
@@ -276,7 +377,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                 border: Border.all(
                   color:
                       item.selected
-                          ? theme.ServiceMetalColors.primary
+                          ? const Color(0xFFF57C00)
                           : (isDark ? Colors.grey[600]! : Colors.grey[400]!),
                   width: 2,
                 ),
@@ -286,7 +387,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                       ? Icon(
                         Icons.check,
                         size: 16.sp,
-                        color: theme.ServiceMetalColors.primary,
+                        color: const Color(0xFFF57C00),
                       )
                       : null,
             ),
@@ -344,18 +445,17 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                       style: TextStyle(
                         fontSize: 18.sp,
                         fontWeight: FontWeight.bold,
-                        color: theme.ServiceMetalColors.primary,
+                        color: const Color(0xFFF57C00),
                       ),
                     ),
-                    // 数量选择器
+                    // 数量选择器 - 中橙色边框
                     Container(
                       decoration: BoxDecoration(
                         border: Border.all(
                           color:
                               isDark
-                                  ? theme.ServiceMetalColors.primary
-                                      .withOpacity(0.5)
-                                  : Colors.grey[300]!,
+                                  ? const Color(0xFFF57C00).withOpacity(0.5)
+                                  : const Color(0xFFF57C00).withOpacity(0.3),
                         ),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
@@ -390,15 +490,19 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
               ],
             ),
           ),
-          // 删除按钮
+          // 删除按钮 - 中橙色
           GestureDetector(
             onTap: () => _removeItem(item),
             child: Container(
               padding: EdgeInsets.all(6.w),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF6B35).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20.r),
+              ),
               child: Icon(
                 Icons.delete_outline,
-                size: 20.sp,
-                color: isDark ? Colors.redAccent : Colors.red[400],
+                size: 18.sp,
+                color: const Color(0xFFF57C00),
               ),
             ),
           ),
@@ -414,14 +518,12 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
         decoration: BoxDecoration(
           color:
-              isDark ? theme.ServiceMetalColors.darkSurface : Colors.grey[100],
+              isDark
+                  ? theme.ServiceMetalColors.darkSurface
+                  : const Color(0xFFFF6B35).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8.r),
         ),
-        child: Icon(
-          icon,
-          size: 16.sp,
-          color: isDark ? theme.ServiceMetalColors.primary : Colors.black87,
-        ),
+        child: Icon(icon, size: 16.sp, color: const Color(0xFFF57C00)),
       ),
     );
   }
@@ -445,7 +547,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
       child: SafeArea(
         child: Row(
           children: [
-            // 全选按钮
+            // 全选按钮 - 中橙色
             GestureDetector(
               onTap: _toggleSelectAll,
               child: Row(
@@ -458,7 +560,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                       border: Border.all(
                         color:
                             _isAllSelected
-                                ? theme.ServiceMetalColors.primary
+                                ? const Color(0xFFF57C00)
                                 : (isDark
                                     ? Colors.grey[600]!
                                     : Colors.grey[400]!),
@@ -470,7 +572,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                             ? Icon(
                               Icons.check,
                               size: 14.sp,
-                              color: theme.ServiceMetalColors.primary,
+                              color: const Color(0xFFF57C00),
                             )
                             : null,
                   ),
@@ -479,7 +581,8 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                     '全选',
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: isDark ? Colors.white : Colors.black87,
+                      color: const Color(0xFFF57C00),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -494,7 +597,7 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.bold,
-                    color: theme.ServiceMetalColors.primary,
+                    color: const Color(0xFFF57C00),
                   ),
                 ),
                 Text(
@@ -507,36 +610,52 @@ class _ServiceCartPageState extends State<ServiceCartPage> {
               ],
             ),
             SizedBox(width: 12.w),
-            _buildMetalButton('结算', _checkout, isDark, width: 100.w),
+            // 结算按钮 - 中橙色渐变
+            Container(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(22.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF6B35).withOpacity(0.4),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ElevatedButton(
+                onPressed: _checkout,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(100.w, 44.h),
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: Colors.white,
+                  shadowColor: Colors.transparent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(22.r),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('💳', style: TextStyle(fontSize: 16.sp)),
+                    SizedBox(width: 6.w),
+                    Text(
+                      '结算',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMetalButton(
-    String text,
-    VoidCallback onTap,
-    bool isDark, {
-    double? width,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: width,
-        height: 44.h,
-        decoration: BoxDecoration(
-          color: theme.ServiceMetalColors.primary,
-          borderRadius: BorderRadius.circular(22.r),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
         ),
       ),
     );

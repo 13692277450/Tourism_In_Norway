@@ -103,19 +103,32 @@ class _ServiceLikePageState extends State<ServiceLikePage> {
               ? theme.ServiceMetalColors.darkBg
               : theme.ServiceMetalColors.lightBg,
       appBar: AppBar(
-        title: Text(
-          '我的收藏',
-          style: TextStyle(
-            color:
-                isDark
-                    ? theme.ServiceMetalColors.darkText
-                    : theme.ServiceMetalColors.lightText,
-          ),
+        title: Row(
+          children: [
+            Text('❤️', style: TextStyle(fontSize: 20.sp)),
+            SizedBox(width: 8.w),
+            Text(
+              '我的收藏',
+              style: TextStyle(
+                color: const Color(0xFFF57C00), // 中橙色
+                fontWeight: FontWeight.bold,
+                fontSize: 18.sp,
+              ),
+            ),
+          ],
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : const Color(0xFFF57C00),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
+        backgroundColor:
+            isDark
+                ? theme.ServiceMetalColors.darkBg
+                : theme.ServiceMetalColors.lightBg,
+        elevation: isDark ? 0 : 4,
       ),
       body:
           _isLoading
@@ -139,27 +152,89 @@ class _ServiceLikePageState extends State<ServiceLikePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.login,
-            size: 60.sp,
-            color: isDark ? theme.ServiceMetalColors.primary : Colors.grey,
+          // 爱心动画图标
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF6B35).withOpacity(0.3),
+                  blurRadius: 20,
+                  spreadRadius: 8,
+                ),
+              ],
+            ),
+            child: Icon(Icons.favorite, size: 40.sp, color: Colors.white),
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
           Text(
-            '请先登录',
+            '❤️ 请先登录',
             style: TextStyle(
-              fontSize: 18.sp,
-              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFF57C00), // 中橙色
             ),
           ),
-          SizedBox(height: 16.h),
-          ElevatedButton(
-            onPressed: _goLogin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.ServiceMetalColors.primary,
-              foregroundColor: Colors.black,
+          SizedBox(height: 8.h),
+          Text(
+            '登录后查看您的收藏商品',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
             ),
-            child: const Text('立即登录'),
+          ),
+          SizedBox(height: 32.h),
+          // 美化登录按钮
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12.w),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF6B35).withOpacity(0.4),
+                  blurRadius: 16,
+                  spreadRadius: 4,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: _goLogin,
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(200.w, 50.h),
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.w),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🚀', style: TextStyle(fontSize: 20.sp)),
+                  SizedBox(width: 10.w),
+                  Text(
+                    '立即登录',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -171,25 +246,78 @@ class _ServiceLikePageState extends State<ServiceLikePage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.favorite_border,
-            size: 60.sp,
-            color: isDark ? theme.ServiceMetalColors.accent : Colors.grey,
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF6B35).withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.favorite_border,
+              size: 60.sp,
+              color: const Color(0xFFF57C00), // 中橙色
+            ),
           ),
           SizedBox(height: 16.h),
           Text(
-            '暂无收藏',
+            '💔 暂无收藏',
             style: TextStyle(
-              fontSize: 18.sp,
-              color: isDark ? Colors.white : Colors.black87,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFFF57C00), // 中橙色
             ),
           ),
           SizedBox(height: 8.h),
           Text(
-            '去商品列表看看吧',
+            '去商品列表逛逛吧',
             style: TextStyle(
               fontSize: 14.sp,
               color: isDark ? Colors.grey[400] : Colors.grey[500],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6B35), Color(0xFFF7931E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12.w),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF6B35).withOpacity(0.3),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(180.w, 44.h),
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.w),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('🛍️', style: TextStyle(fontSize: 18.sp)),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '去逛逛',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -279,12 +407,22 @@ class _ServiceLikePageState extends State<ServiceLikePage> {
                         ),
                       ),
                       const Spacer(),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Colors.red,
+                      // 删除按钮 - 中橙色
+                      Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF6B35).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20.r),
                         ),
-                        onPressed: () => _removeLike(goods.id),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.delete_outline,
+                            size: 18.sp,
+                            color: const Color(0xFFF57C00),
+                          ),
+                          onPressed: () => _removeLike(goods.id),
+                          padding: EdgeInsets.all(6.w),
+                          constraints: const BoxConstraints(),
+                        ),
                       ),
                     ],
                   ),

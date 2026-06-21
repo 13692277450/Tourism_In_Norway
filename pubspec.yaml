@@ -64,6 +64,7 @@ dependencies:
   webview_flutter_wkwebview: ^3.9.0  # iOS 支持
   # in_app_update: ^4.2.5
   cached_network_image_ce: ^4.8.0
+  flutter_svg: ^2.0.18
 
 
 
@@ -98,6 +99,7 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/upgradebar_waiting.png
+    - assets/images/norwayflag.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
