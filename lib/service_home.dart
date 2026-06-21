@@ -66,7 +66,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     '电脑办公': '💻',
     '摄影摄像': '📷',
     '餐厅美食': '🍽',
-    '酒店住宿': 
   };
 
   // 获取分类对应的Emoji
