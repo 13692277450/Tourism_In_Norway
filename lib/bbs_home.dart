@@ -375,7 +375,9 @@ class _BbsPageState extends State<BbsPage> {
                                   border: InputBorder.none,
                                   filled: isDark,
                                   fillColor:
-                                      isDark ? const Color(0xFF283347) : null,
+                                      isDark
+                                          ? const Color(0xFF1E293B)
+                                          : Colors.white,
                                   hintStyle: TextStyle(
                                     color:
                                         isDark
@@ -468,151 +470,159 @@ class _BbsPageState extends State<BbsPage> {
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 42.h,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  itemCount: _categories.length + 1,
-                  itemBuilder: (context, index) {
-                    // "全部"按钮
-                    if (index == 0) {
-                      final category = _categories[0];
-                      final isSelected =
-                          !_showMyPosts && _selectedCategoryId == category.id;
-                      return Padding(
-                        padding: EdgeInsets.only(right: 12.w),
-                        child: ElevatedButton(
-                          onPressed: () => _onCategorySelected(category.id),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                isDark
-                                    ? (isSelected
-                                        ? const Color(0xFF4F46E5)
-                                        : const Color(0xFF1E293B))
-                                    : (isSelected
-                                        ? const Color(0xFF4F46E5)
-                                        : Colors.white),
-                            foregroundColor:
-                                isDark
-                                    ? (isSelected
-                                        ? Colors.white
-                                        : const Color(0xFF94A3B8))
-                                    : (isSelected
-                                        ? Colors.white
-                                        : const Color(0xFF4F46E5)),
-                            side: BorderSide(
-                              color: const Color(0xFF4F46E5),
-                              width: isSelected ? 2 : 1,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(13.w),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20.w,
-                              vertical: 12.h,
-                            ),
-                            elevation: isSelected ? 4 : 0,
-                          ),
-                          child: Text(category.name),
-                        ),
-                      );
-                    }
-
-                    // "我的留言"按钮
-                    if (index == 1) {
-                      final isSelected = _showMyPosts;
-                      return Padding(
-                        padding: EdgeInsets.only(right: 12.w),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (userManager.isLoggedIn) {
-                              _toggleMyPosts();
-                            } else {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginPage(),
+                child:
+                    _categories.isEmpty
+                        ? const SizedBox.shrink()
+                        : ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          itemCount: _categories.length + 1,
+                          itemBuilder: (context, index) {
+                            // "全部"按钮
+                            if (index == 0) {
+                              final category = _categories[0];
+                              final isSelected =
+                                  !_showMyPosts &&
+                                  _selectedCategoryId == category.id;
+                              return Padding(
+                                padding: EdgeInsets.only(right: 12.w),
+                                child: ElevatedButton(
+                                  onPressed:
+                                      () => _onCategorySelected(category.id),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        isDark
+                                            ? (isSelected
+                                                ? const Color(0xFF4F46E5)
+                                                : const Color(0xFF1E293B))
+                                            : (isSelected
+                                                ? const Color(0xFF4F46E5)
+                                                : Colors.white),
+                                    foregroundColor:
+                                        isDark
+                                            ? (isSelected
+                                                ? Colors.white
+                                                : const Color(0xFF94A3B8))
+                                            : (isSelected
+                                                ? Colors.white
+                                                : const Color(0xFF4F46E5)),
+                                    side: BorderSide(
+                                      color: const Color(0xFF4F46E5),
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(13.w),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 20.w,
+                                      vertical: 12.h,
+                                    ),
+                                    elevation: isSelected ? 4 : 0,
+                                  ),
+                                  child: Text(category.name),
                                 ),
-                              ).then((_) => setState(() {}));
+                              );
                             }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                isDark
-                                    ? (isSelected
-                                        ? const Color(0xFFD4AF37)
-                                        : const Color(0xFF1E293B))
-                                    : (isSelected
-                                        ? const Color(0xFFD4AF37)
-                                        : Colors.white),
-                            foregroundColor:
-                                isDark
-                                    ? (isSelected
-                                        ? Colors.black
-                                        : const Color(0xFFD4AF37))
-                                    : (isSelected
-                                        ? Colors.black
-                                        : const Color(0xFFD4AF37)),
-                            side: BorderSide(
-                              color: const Color(0xFFD4AF37),
-                              width: isSelected ? 2 : 1,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(13.w),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20.w,
-                              vertical: 12.h,
-                            ),
-                            elevation: isSelected ? 4 : 0,
-                          ),
-                          child: const Text('我的留言'),
-                        ),
-                      );
-                    }
 
-                    // 其他分类按钮 - 统一使用20.w圆角
-                    final category = _categories[index - 1];
-                    final isSelected =
-                        !_showMyPosts && _selectedCategoryId == category.id;
-                    return Padding(
-                      padding: EdgeInsets.only(right: 12.w),
-                      child: ElevatedButton(
-                        onPressed: () => _onCategorySelected(category.id),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              isDark
-                                  ? (isSelected
-                                      ? const Color(0xFF4F46E5)
-                                      : const Color(0xFF1E293B))
-                                  : (isSelected
-                                      ? const Color(0xFF4F46E5)
-                                      : Colors.white),
-                          foregroundColor:
-                              isDark
-                                  ? (isSelected
-                                      ? Colors.white
-                                      : const Color(0xFF94A3B8))
-                                  : (isSelected
-                                      ? Colors.white
-                                      : const Color(0xFF4F46E5)),
-                          side: BorderSide(
-                            color: const Color(0xFF4F46E5),
-                            width: isSelected ? 2 : 1,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(13.w),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 20.w,
-                            vertical: 12.h,
-                          ),
-                          elevation: isSelected ? 4 : 0,
+                            // "我的留言"按钮
+                            if (index == 1) {
+                              final isSelected = _showMyPosts;
+                              return Padding(
+                                padding: EdgeInsets.only(right: 12.w),
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    if (userManager.isLoggedIn) {
+                                      _toggleMyPosts();
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => const LoginPage(),
+                                        ),
+                                      ).then((_) => setState(() {}));
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        isDark
+                                            ? (isSelected
+                                                ? const Color(0xFFD4AF37)
+                                                : const Color(0xFF1E293B))
+                                            : (isSelected
+                                                ? const Color(0xFFD4AF37)
+                                                : Colors.white),
+                                    foregroundColor:
+                                        isDark
+                                            ? (isSelected
+                                                ? Colors.black
+                                                : const Color(0xFFD4AF37))
+                                            : (isSelected
+                                                ? Colors.black
+                                                : const Color(0xFFD4AF37)),
+                                    side: BorderSide(
+                                      color: const Color(0xFFD4AF37),
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(13.w),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 20.w,
+                                      vertical: 12.h,
+                                    ),
+                                    elevation: isSelected ? 4 : 0,
+                                  ),
+                                  child: const Text('我的留言'),
+                                ),
+                              );
+                            }
+
+                            // 其他分类按钮 - 统一使用20.w圆角
+                            final category = _categories[index - 1];
+                            final isSelected =
+                                !_showMyPosts &&
+                                _selectedCategoryId == category.id;
+                            return Padding(
+                              padding: EdgeInsets.only(right: 12.w),
+                              child: ElevatedButton(
+                                onPressed:
+                                    () => _onCategorySelected(category.id),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      isDark
+                                          ? (isSelected
+                                              ? const Color(0xFF4F46E5)
+                                              : const Color(0xFF1E293B))
+                                          : (isSelected
+                                              ? const Color(0xFF4F46E5)
+                                              : Colors.white),
+                                  foregroundColor:
+                                      isDark
+                                          ? (isSelected
+                                              ? Colors.white
+                                              : const Color(0xFF94A3B8))
+                                          : (isSelected
+                                              ? Colors.white
+                                              : const Color(0xFF4F46E5)),
+                                  side: BorderSide(
+                                    color: const Color(0xFF4F46E5),
+                                    width: isSelected ? 2 : 1,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(13.w),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 20.w,
+                                    vertical: 12.h,
+                                  ),
+                                  elevation: isSelected ? 4 : 0,
+                                ),
+                                child: Text(category.name),
+                              ),
+                            );
+                          },
                         ),
-                        child: Text(category.name),
-                      ),
-                    );
-                  },
-                ),
               ),
             ),
 
@@ -927,8 +937,10 @@ class _PostCard extends StatelessWidget {
                               fontWeight: FontWeight.bold,
                               color:
                                   isDark
-                                      ? const Color(0xFFF1F5F9)
-                                      : const Color(0xFF1E3A8A),
+                                      ? _getCategoryColor(
+                                        post.categoryId,
+                                      ).withOpacity(0.9)
+                                      : _getCategoryColor(post.categoryId),
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -1002,7 +1014,7 @@ class _PostCard extends StatelessWidget {
                             post.categoryName,
                             style: TextStyle(
                               fontSize: 12.sp,
-                              color: const Color(0xFF4F46E5),
+                              color: _getCategoryColor(post.categoryId),
                             ),
                           ),
                         ),
@@ -1160,5 +1172,28 @@ class _PostCard extends StatelessWidget {
     if (diff.inDays < 1) return '${diff.inHours}小时前';
     if (diff.inDays < 7) return '${diff.inDays}天前';
     return '${date.month}/${date.day}';
+  }
+}
+
+Color _getCategoryColor(int categoryId) {
+  switch (categoryId) {
+    case 1:
+      return const Color(0xFF4F46E5); // 靛蓝
+    case 2:
+      return const Color(0xFF059669); // 翠绿
+    case 3:
+      return const Color(0xFFD97706); // 琥珀
+    case 4:
+      return const Color(0xFFDC2626); // 红色
+    case 5:
+      return const Color(0xFF7C3AED); // 紫色
+    case 6:
+      return const Color(0xFF0891B2); // 青色
+    case 7:
+      return const Color(0xFFDB2777); // 粉色
+    case 8:
+      return const Color(0xFF65A30D); // 黄绿
+    default:
+      return const Color(0xFF4F46E5);
   }
 }

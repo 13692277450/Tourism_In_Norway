@@ -239,7 +239,10 @@ class _HomePageState extends State<HomePage> {
                 hintText: 'Search...',
                 border: InputBorder.none,
                 filled: isDark,
-                fillColor: isDark ? const Color(0xFF283347) : null,
+                fillColor:
+                    isDark
+                        ? theme.ServiceMetalColors.darkSurface
+                        : Colors.white,
                 hintStyle: TextStyle(
                   color:
                       isDark

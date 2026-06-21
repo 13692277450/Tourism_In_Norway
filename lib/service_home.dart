@@ -10,6 +10,7 @@ import 'service_cart.dart';
 import 'service_like.dart';
 import 'user_auth.dart';
 import 'app_shared.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ServiceHomePage extends StatefulWidget {
   const ServiceHomePage({super.key});
@@ -29,10 +30,9 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   int _currentPage = 1;
   final int _pageSize = 10;
   bool _hasMore = true;
-  bool _isLoading = false;
+  bool _isLoading = true;
   bool _isLoadingMore = false;
   String? _errorMessage;
-
   int? _currentUserId;
 
   @override
@@ -40,7 +40,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     super.initState();
     _loadUser();
     _loadCategories();
-    _loadGoods();
+    _loadGoods(isRefresh: true);
 
     _scrollController.addListener(() {
       if (_scrollController.position.pixels >=
@@ -161,8 +161,15 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           } else {
             _goodsList.addAll(newGoods);
           }
-          _hasMore = _goodsList.length < total;
-          _currentPage++;
+
+          if (newGoods.isEmpty ||
+              newGoods.length < _pageSize ||
+              _goodsList.length >= total) {
+            _hasMore = false;
+          } else {
+            _currentPage++;
+          }
+
           _isLoading = false;
           _isLoadingMore = false;
 
@@ -179,11 +186,12 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         });
       }
     } catch (e) {
-      print('❌ 网络请求异常: $e');
       setState(() {
         _isLoading = false;
         _isLoadingMore = false;
-        _errorMessage = '网络错误: $e';
+        if (isRefresh || _goodsList.isEmpty) {
+          _errorMessage = '网络错误，请检查连接';
+        }
       });
     }
   }
@@ -407,7 +415,10 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                 hintText: 'Search...',
                 border: InputBorder.none,
                 filled: isDark,
-                fillColor: isDark ? const Color(0xFF283347) : null,
+                fillColor:
+                    isDark
+                        ? theme.ServiceMetalColors.darkSurface
+                        : theme.ServiceMetalColors.lightSurface,
                 hintStyle: TextStyle(
                   color:
                       isDark
@@ -440,6 +451,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   Widget _buildCategoryBar(bool isDark) {
+    if (_categories.isEmpty) return const SizedBox.shrink();
     return SizedBox(
       height: 35.h,
       child: ListView.builder(

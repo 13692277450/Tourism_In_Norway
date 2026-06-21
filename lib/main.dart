@@ -33,7 +33,9 @@ class _UpdateCheckWrapperState extends State<UpdateCheckWrapper> {
   @override
   void initState() {
     super.initState();
-    _checkForUpdates();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdates();
+    });
   }
 
   Future<void> _checkForUpdates() async {
@@ -62,9 +64,9 @@ class _UpdateCheckWrapperState extends State<UpdateCheckWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_initialized) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    // if (!_initialized) {
+    //   return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    // }
 
     return widget.child;
   }

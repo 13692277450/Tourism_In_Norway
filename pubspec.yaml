@@ -62,7 +62,7 @@ dependencies:
   webview_flutter: ^4.13.0
   webview_flutter_android: ^4.7.0
   webview_flutter_wkwebview: ^3.9.0  # iOS 支持
-  in_app_update: ^4.2.5
+  # in_app_update: ^4.2.5
 
 
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:in_app_update/in_app_update.dart';
+// import 'package:in_app_update/in_app_update.dart';
 
 import 'app_shared.dart' as shared;
 import 'settings_upgrade.dart';
@@ -67,7 +67,7 @@ class _SettingsPageState extends State<SettingsPage> {
     };
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -598,15 +598,16 @@ class _InfoCard extends StatelessWidget {
 }
 
 Future<bool> checkGooglePlayUpdate() async {
-  try {
-    final info = await InAppUpdate.checkForUpdate();
-    if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-      await InAppUpdate.startFlexibleUpdate();
-      await InAppUpdate.completeFlexibleUpdate();
-    }
-    return true;
-  } catch (e) {
-    debugPrint('Update check failed: $e');
-    return false;
-  }
+  // try {
+  //   final info = await InAppUpdate.checkForUpdate();
+  //   if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+  //     await InAppUpdate.startFlexibleUpdate();
+  //     await InAppUpdate.completeFlexibleUpdate();
+  //   }
+  //   return true;
+  // } catch (e) {
+  //   debugPrint('Update check failed: $e');
+  //   return false;
+  // }
+  return false;
 }
