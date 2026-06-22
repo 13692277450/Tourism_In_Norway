@@ -1,26 +1,30 @@
+// settings_home.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-// import 'package:in_app_update/in_app_update.dart';
 
 import 'app_shared.dart' as shared;
 import 'settings_upgrade.dart';
 import 'user_register.dart';
 import 'user_auth.dart';
+import 'service_address.dart';
+import 'service_like.dart';
+import 'service_order.dart';
+import 'settings_orders.dart' as settings_orders;
 
 enum UpdateState { idle, checking, available, latest, updating, completed }
 
 class SettingsPage extends StatefulWidget {
-  final Locale locale;
-  final ValueChanged<Locale> onLocaleChanged;
+  final Locale? locale;
+  final ValueChanged<Locale>? onLocaleChanged;
   final ThemeMode themeMode;
-  final ValueChanged<ThemeMode> onThemeModeChanged;
+  final ValueChanged<ThemeMode>? onThemeModeChanged;
 
   const SettingsPage({
     super.key,
-    required this.locale,
-    required this.onLocaleChanged,
+    this.locale,
+    this.onLocaleChanged,
     required this.themeMode,
-    required this.onThemeModeChanged,
+    this.onThemeModeChanged,
   });
 
   @override
@@ -56,6 +60,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final locales = shared.AppLocalizations.supportedLocales;
     final localeNames = shared.AppLocalizations.languageNames;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 获取当前语言
+    final currentLocale = widget.locale ?? Localizations.localeOf(context);
 
     final updateMessages = <UpdateState, String>{
       UpdateState.idle: loc.updateIdle,
@@ -72,68 +78,34 @@ class _SettingsPageState extends State<SettingsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: 20.h),
-          _InfoCard(title: '用户账户', child: _buildUserAccountSection(isDark)),
-          SizedBox(height: 40.h),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  loc.settingsTitle,
-                  style: TextStyle(
-                    fontSize: 32.sp,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFE0E0E0) : null,
-                  ),
-                ),
-              ),
-              // 快速主题切换按钮
-              Container(
-                decoration: BoxDecoration(
-                  color:
-                      isDark
-                          ? const Color(0xFF2A2A3E)
-                          : const Color(0xFFE0E7FF),
-                  borderRadius: BorderRadius.circular(30.w),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _ThemeIconButton(
-                      icon: Icons.light_mode,
-                      label: 'Light',
-                      isSelected: !isDark,
-                      onTap: () => widget.onThemeModeChanged(ThemeMode.light),
-                    ),
-                    _ThemeIconButton(
-                      icon: Icons.dark_mode,
-                      label: 'Dark',
-                      isSelected: isDark,
-                      onTap: () => widget.onThemeModeChanged(ThemeMode.dark),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            loc.settingsSubtitle,
-            style: TextStyle(
-              fontSize: 15.sp,
-              color: isDark ? const Color(0xFF9E9E9E) : const Color(0xFF65748B),
-            ),
-          ),
-          SizedBox(height: 24.h),
 
-          // 主题设置卡片
-          _InfoCard(title: '主题设置', child: _buildThemeSection(isDark)),
+          // ==================== 用户账户区域 ====================
+          _InfoCard(title: '👤 用户账户', child: _buildUserAccountSection(isDark)),
           SizedBox(height: 20.h),
 
-          // 语言选择卡片
+          // ==================== 我的订单 ====================
           _InfoCard(
-            title: loc.languageSelection,
+            title: '📦 我的订单',
+            child: _buildOrderStatusSection(context, isDark),
+          ),
+          SizedBox(height: 20.h),
+
+          // ==================== 功能列表 ====================
+          _InfoCard(
+            title: '🛠️ 功能服务',
+            child: _buildFunctionList(context, isDark),
+          ),
+          SizedBox(height: 20.h),
+
+          // ==================== 主题设置 ====================
+          _InfoCard(title: '🎨 主题设置', child: _buildThemeSection(isDark)),
+          SizedBox(height: 20.h),
+
+          // ==================== 语言选择 ====================
+          _InfoCard(
+            title: '🌐 语言选择',
             child: DropdownButtonFormField<Locale>(
-              value: widget.locale,
+              value: currentLocale,
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.w),
@@ -158,15 +130,19 @@ class _SettingsPageState extends State<SettingsPage> {
                       .toList(),
               onChanged: (value) {
                 final newLocale = value;
-                if (newLocale != null) widget.onLocaleChanged(newLocale);
+                if (newLocale != null) {
+                  if (widget.onLocaleChanged != null) {
+                    widget.onLocaleChanged!(newLocale);
+                  }
+                }
               },
             ),
           ),
           SizedBox(height: 20.h),
 
-          // 自动更新卡片
+          // ==================== 自动更新 ====================
           _InfoCard(
-            title: loc.autoUpdateTitle,
+            title: '🔄 自动更新',
             child: Column(
               children: [
                 SwitchListTile(
@@ -220,9 +196,9 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           SizedBox(height: 20.h),
 
-          // 版本信息卡片
+          // ==================== 版本信息 ====================
           _InfoCard(
-            title: loc.appVersion,
+            title: '📱 版本信息',
             child: Column(
               children: [
                 _settingLine(loc.currentVersion, '1.0.0', isDark),
@@ -237,18 +213,388 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // 主题设置部分
+  // ==================== 用户账户区域 ====================
+  Widget _buildUserAccountSection(bool isDark) {
+    if (userManager.isLoggedIn) {
+      final user = userManager.currentUser!;
+      return Container(
+        padding: EdgeInsets.symmetric(vertical: 8.h),
+        child: Row(
+          children: [
+            Container(
+              width: 56.w,
+              height: 56.w,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(28.w),
+              ),
+              child: Center(
+                child: Text(
+                  user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                  style: TextStyle(
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user.name,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? const Color(0xFFE0E0E0) : null,
+                    ),
+                  ),
+                  Text(
+                    user.email,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color:
+                          isDark ? const Color(0xFF9E9E9E) : Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                userManager.logout();
+                setState(() {});
+              },
+              icon: Icon(
+                Icons.logout,
+                color: isDark ? const Color(0xFFE0E0E0) : Colors.redAccent,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Column(
+        children: [
+          ListTile(
+            leading: Icon(Icons.login, color: const Color(0xFF3D5AFE)),
+            title: Text(
+              '登录',
+              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
+            ),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              color: isDark ? const Color(0xFF9E9E9E) : null,
+              size: 16,
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              ).then((_) => setState(() {}));
+            },
+          ),
+          Divider(height: 1, color: isDark ? const Color(0xFF333333) : null),
+          ListTile(
+            leading: Icon(
+              Icons.app_registration,
+              color: const Color(0xFF3D5AFE),
+            ),
+            title: Text(
+              '注册',
+              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
+            ),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              color: isDark ? const Color(0xFF9E9E9E) : null,
+              size: 16,
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RegisterPage()),
+              ).then((_) => setState(() {}));
+            },
+          ),
+        ],
+      );
+    }
+  }
+
+  // ==================== 订单状态区域 ====================
+  Widget _buildOrderStatusSection(BuildContext context, bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _buildOrderStatusItem(
+          context: context,
+          icon: Icons.payment,
+          label: '待付款',
+          count: '3',
+          color: const Color(0xFFFF6B35),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => const settings_orders.ServiceOrderListPage(
+                      initialTab: 0,
+                      title: '待付款',
+                    ),
+              ),
+            );
+          },
+          isDark: isDark,
+        ),
+        _buildOrderStatusItem(
+          context: context,
+          icon: Icons.local_shipping,
+          label: '待发货',
+          count: '2',
+          color: const Color(0xFF3D5AFE),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => const settings_orders.ServiceOrderListPage(
+                      initialTab: 1,
+                      title: '待发货',
+                    ),
+              ),
+            );
+          },
+          isDark: isDark,
+        ),
+        _buildOrderStatusItem(
+          context: context,
+          icon: Icons.inbox,
+          label: '待收货',
+          count: '1',
+          color: const Color(0xFF00C853),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => const settings_orders.ServiceOrderListPage(
+                      initialTab: 2,
+                      title: '待收货',
+                    ),
+              ),
+            );
+          },
+          isDark: isDark,
+        ),
+        _buildOrderStatusItem(
+          context: context,
+          icon: Icons.rate_review,
+          label: '待评价',
+          count: '4',
+          color: const Color(0xFFFFD600),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => const settings_orders.ServiceOrderListPage(
+                      initialTab: 3,
+                      title: '待评价',
+                    ),
+              ),
+            );
+          },
+          isDark: isDark,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOrderStatusItem({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required String count,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 48.w,
+                height: 48.w,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 24.sp, color: color),
+              ),
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  padding: EdgeInsets.all(2.w),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    count,
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 6.h),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.sp,
+              color: isDark ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== 功能列表 ====================
+  Widget _buildFunctionList(BuildContext context, bool isDark) {
+    return Column(
+      children: [
+        _buildMenuItem(
+          context: context,
+          icon: Icons.location_on_outlined,
+          title: '收货地址管理',
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ServiceAddressPage()),
+              ),
+          isDark: isDark,
+        ),
+        _buildDivider(isDark),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.favorite_border,
+          title: '我的收藏',
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ServiceLikePage()),
+              ),
+          isDark: isDark,
+        ),
+        _buildDivider(isDark),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.shopping_bag_outlined,
+          title: '我的订单',
+          onTap:
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => const settings_orders.ServiceOrderListPage(
+                        initialTab: 0,
+                        title: '我的订单',
+                      ),
+                ),
+              ),
+          isDark: isDark,
+        ),
+        _buildDivider(isDark),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.message_outlined,
+          title: '消息通知',
+          onTap: () {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('消息通知功能开发中')));
+          },
+          isDark: isDark,
+        ),
+        _buildDivider(isDark),
+        _buildMenuItem(
+          context: context,
+          icon: Icons.help_outline,
+          title: '帮助中心',
+          onTap: () {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('帮助中心功能开发中')));
+          },
+          isDark: isDark,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuItem({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    required bool isDark,
+    Widget? trailing,
+  }) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF3D5AFE)),
+      title: Text(
+        title,
+        style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+      ),
+      trailing:
+          trailing ??
+          Icon(
+            Icons.chevron_right,
+            color: isDark ? Colors.grey[500] : Colors.grey[400],
+          ),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildDivider(bool isDark) {
+    return Divider(
+      height: 1,
+      color: isDark ? Colors.grey[800] : Colors.grey[200],
+    );
+  }
+
+  // ==================== 主题设置 ====================
   Widget _buildThemeSection(bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 三种主题模式选择
         _buildThemeOption(
           icon: Icons.brightness_auto,
           title: '跟随系统',
           subtitle: '根据系统设置自动切换',
           isSelected: widget.themeMode == ThemeMode.system,
-          onTap: () => widget.onThemeModeChanged(ThemeMode.system),
+          onTap: () {
+            if (widget.onThemeModeChanged != null) {
+              widget.onThemeModeChanged!(ThemeMode.system);
+            }
+          },
           isDark: isDark,
         ),
         SizedBox(height: 8.h),
@@ -257,7 +603,11 @@ class _SettingsPageState extends State<SettingsPage> {
           title: '亮色模式',
           subtitle: '始终使用亮色主题',
           isSelected: widget.themeMode == ThemeMode.light,
-          onTap: () => widget.onThemeModeChanged(ThemeMode.light),
+          onTap: () {
+            if (widget.onThemeModeChanged != null) {
+              widget.onThemeModeChanged!(ThemeMode.light);
+            }
+          },
           isDark: isDark,
         ),
         SizedBox(height: 8.h),
@@ -266,7 +616,11 @@ class _SettingsPageState extends State<SettingsPage> {
           title: '暗色模式',
           subtitle: '始终使用暗色主题',
           isSelected: widget.themeMode == ThemeMode.dark,
-          onTap: () => widget.onThemeModeChanged(ThemeMode.dark),
+          onTap: () {
+            if (widget.onThemeModeChanged != null) {
+              widget.onThemeModeChanged!(ThemeMode.dark);
+            }
+          },
           isDark: isDark,
         ),
       ],
@@ -383,121 +737,53 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+}
 
-  Widget _buildUserAccountSection(bool isDark) {
-    if (userManager.isLoggedIn) {
-      final user = userManager.currentUser!;
-      return Container(
-        padding: EdgeInsets.symmetric(vertical: 8.h),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 56.w,
-                  height: 56.w,
-                  decoration: BoxDecoration(
-                    color:
-                        isDark
-                            ? const Color(0xFF2A2A3E)
-                            : const Color(0xFFE0E7FF),
-                    borderRadius: BorderRadius.circular(28.w),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    size: 28,
-                    color:
-                        isDark
-                            ? const Color(0xFF64B5F6)
-                            : const Color(0xFF4338CA),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user.name,
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? const Color(0xFFE0E0E0) : null,
-                        ),
-                      ),
-                      Text(
-                        user.email,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color:
-                              isDark
-                                  ? const Color(0xFF9E9E9E)
-                                  : Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    userManager.logout();
-                    setState(() {});
-                  },
-                  icon: Icon(
-                    Icons.logout,
-                    color: isDark ? const Color(0xFFE0E0E0) : null,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    } else {
-      return Column(
-        children: [
-          ListTile(
-            title: Text(
-              '登录',
-              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              color: isDark ? const Color(0xFF9E9E9E) : null,
-              size: 16,
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              ).then((_) => setState(() {}));
-            },
-          ),
-          Divider(height: 1, color: isDark ? const Color(0xFF333333) : null),
-          ListTile(
-            title: Text(
-              '注册',
-              style: TextStyle(color: isDark ? const Color(0xFFE0E0E0) : null),
-            ),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              color: isDark ? const Color(0xFF9E9E9E) : null,
-              size: 16,
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const RegisterPage()),
-              ).then((_) => setState(() {}));
-            },
+// ==================== InfoCard 组件 ====================
+class _InfoCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _InfoCard({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(18.w),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
+        borderRadius: BorderRadius.circular(22.w),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? Colors.white : Colors.black).withOpacity(0.04),
+            blurRadius: 18,
+            offset: Offset(0, 10.h),
           ),
         ],
-      );
-    }
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
+              color: isDark ? const Color(0xFFE0E0E0) : null,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          child,
+        ],
+      ),
+    );
   }
 }
 
-// 快速主题切换按钮
+// ==================== 快捷主题切换按钮 ====================
 class _ThemeIconButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -554,60 +840,6 @@ class _ThemeIconButton extends StatelessWidget {
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final Widget child;
-
-  const _InfoCard({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(18.w),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E2E) : Colors.white,
-        borderRadius: BorderRadius.circular(22.w),
-        boxShadow: [
-          BoxShadow(
-            color: (isDark ? Colors.white : Colors.black).withOpacity(0.04),
-            blurRadius: 18,
-            offset: Offset(0, 10.h),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w700,
-              color: isDark ? const Color(0xFFE0E0E0) : null,
-            ),
-          ),
-          SizedBox(height: 12.h),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
 Future<bool> checkGooglePlayUpdate() async {
-  // try {
-  //   final info = await InAppUpdate.checkForUpdate();
-  //   if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-  //     await InAppUpdate.startFlexibleUpdate();
-  //     await InAppUpdate.completeFlexibleUpdate();
-  //   }
-  //   return true;
-  // } catch (e) {
-  //   debugPrint('Update check failed: $e');
-  //   return false;
-  // }
   return false;
 }

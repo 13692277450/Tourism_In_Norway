@@ -8,7 +8,7 @@ import 'app_shared.dart' as shared;
 import 'user_auth.dart';
 
 class ServiceOrderListPage extends StatefulWidget {
-  const ServiceOrderListPage({super.key});
+  const ServiceOrderListPage({super.key, required int initialTab});
 
   @override
   State<ServiceOrderListPage> createState() => _ServiceOrderListPageState();

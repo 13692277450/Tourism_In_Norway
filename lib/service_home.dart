@@ -1,7 +1,7 @@
 // service_home.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:tourism_in_norway/service_settings.dart';
+import 'package:tourism_in_norway/settings_home.dart';
 import 'service_models.dart';
 import 'service_api.dart';
 import 'service_theme.dart' as theme;
@@ -287,9 +287,21 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     final brightness = MediaQuery.platformBrightnessOf(context);
     final themeMode =
         brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
+
+    // 获取当前语言
+    final locale = Localizations.localeOf(context);
+
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => ServiceSettings(themeMode: themeMode)),
+      MaterialPageRoute(
+        builder:
+            (_) => SettingsPage(
+              locale: locale,
+              onLocaleChanged: (newLocale) {},
+              themeMode: themeMode,
+              onThemeModeChanged: (newThemeMode) {},
+            ),
+      ),
     ).then((_) => _loadGoods(isRefresh: true));
   }
 

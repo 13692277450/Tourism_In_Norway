@@ -446,9 +446,9 @@ class MainScreen extends StatelessWidget {
   Widget _buildPage(BuildContext context) {
     switch (selectedIndex) {
       case 1:
-        return const EducationPage();
+        return const EducationHomePage();
       case 2:
-        return const BbsPage();
+        return const BbsHomePage();
       case 3:
         return ServiceHomePage();
       case 4:

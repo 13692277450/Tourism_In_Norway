@@ -703,7 +703,9 @@ class AppConfig {
   static const String port3006 = '3006';
   static const String port3007 = '3007';
   static const String port3008 = '3008';
+  static const String port3002 = '3002';
   static const String baseWebUrl3004 = '$baseWebUrl:$port3004';
+  static const String baseWebUrl3002 = '$baseWebUrl:$port3002';
 }
 
 // 用户状态管理

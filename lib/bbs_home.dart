@@ -139,6 +139,29 @@ Color _getCategoryColor(int categoryId) {
   }
 }
 
+// ==================== 获取分类Emoji ====================
+String _getCategoryEmojiByName(String categoryName) {
+  final Map<String, String> emojiMap = {
+    '全部': '📋',
+    '酒店住宿': '🏨',
+    '美食餐厅': '🍜', // 修正：美食分享用🍜
+    '交通出行': '🚗', // 修正：交通出行用🚗
+    '旅游攻略': '✈️',
+    '文化体验': '🎭',
+    '实用信息': '📌',
+    '景点推荐': '🏞️',
+    '活动体验': '🎪',
+    '自然风光': '🌿',
+    '购物分享': '🛍️',
+    '生活日常': '☀️',
+    '摄影分享': '📷',
+    '游记攻略': '📝',
+    '行程规划': '📅',
+    '住宿推荐': '🏢',
+  };
+  return emojiMap[categoryName] ?? '📝';
+}
+
 // ==================== CachedPostImage 组件 ====================
 class CachedPostImage extends StatelessWidget {
   final String imageUrl;
@@ -201,8 +224,6 @@ class _PostCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDelete;
   final int? currentUserId;
-  final Map<int, String> categoryEmojis;
-  final Map<String, String> categoryNameEmojis;
   final String Function(int) getHotEmoji;
 
   const _PostCard({
@@ -210,32 +231,15 @@ class _PostCard extends StatelessWidget {
     required this.onTap,
     required this.onDelete,
     this.currentUserId,
-    required this.categoryEmojis,
-    required this.categoryNameEmojis,
     required this.getHotEmoji,
   });
-
-  String _getEmojiForCategory(int categoryId, String categoryName) {
-    if (categoryEmojis.containsKey(categoryId)) {
-      return categoryEmojis[categoryId]!;
-    }
-    for (final entry in categoryNameEmojis.entries) {
-      if (categoryName.contains(entry.key)) {
-        return entry.value;
-      }
-    }
-    return '📝';
-  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isOwnPost = currentUserId != null && post.user_id == currentUserId;
     final hotEmoji = getHotEmoji(post.likesCount);
-    final categoryEmoji = _getEmojiForCategory(
-      post.categoryId,
-      post.categoryName,
-    );
+    final categoryEmoji = _getCategoryEmojiByName(post.categoryName);
 
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
@@ -306,7 +310,6 @@ class _PostCard extends StatelessWidget {
                     ),
                     SizedBox(height: 8.h),
 
-                    // 使用带缓存的图片组件
                     if (post.images.isNotEmpty)
                       SizedBox(
                         height: 80.h,
@@ -423,7 +426,6 @@ class _PostCard extends StatelessWidget {
                                     : Colors.grey[500],
                           ),
                         ),
-                        // 如果点赞超过100，在底部中间显示热门Emoji
                         if (hotEmoji.isNotEmpty) ...[
                           const Spacer(),
                           Container(
@@ -562,14 +564,14 @@ class _PostCard extends StatelessWidget {
 }
 
 // ==================== BbsPage 主页面 ====================
-class BbsPage extends StatefulWidget {
-  const BbsPage({super.key});
+class BbsHomePage extends StatefulWidget {
+  const BbsHomePage({super.key});
 
   @override
-  State<BbsPage> createState() => _BbsPageState();
+  State<BbsHomePage> createState() => _BbsPageState();
 }
 
-class _BbsPageState extends State<BbsPage> {
+class _BbsPageState extends State<BbsHomePage> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
 
@@ -586,32 +588,10 @@ class _BbsPageState extends State<BbsPage> {
   bool _hasMore = true;
   bool _isLoadingMore = false;
   bool _isLoading = true;
+  bool _isCategoriesLoaded = false; // 分类是否加载完成
   String? _errorMessage;
 
   final shared.UserManager userManager = shared.UserManager();
-
-  // 分类对应的彩色Emoji
-  final Map<int, String> _categoryEmojis = {
-    1: '💬',
-    2: '🍽️',
-    3: '✈️',
-    4: '🎭',
-    5: '📌',
-    6: '🏨',
-    7: '🎪',
-    8: '🌿',
-  };
-
-  final Map<String, String> _categoryNameEmojis = {
-    '酒店住宿': '🏨',
-    '美食餐厅': '🍽️',
-    '旅游攻略': '✈️',
-    '文化体验': '🎭',
-    '实用信息': '📌',
-    '景点推荐': '🏞️',
-    '活动体验': '🎪',
-    '自然风光': '🌿',
-  };
 
   // 热门Emoji列表（点赞超过100时显示）
   final List<String> _hotEmojis = [
@@ -638,8 +618,7 @@ class _BbsPageState extends State<BbsPage> {
   @override
   void initState() {
     super.initState();
-    _fetchCategories();
-    _fetchPosts();
+    _fetchCategoriesAndPosts();
   }
 
   @override
@@ -647,6 +626,19 @@ class _BbsPageState extends State<BbsPage> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  // 先加载分类，再加载帖子
+  Future<void> _fetchCategoriesAndPosts() async {
+    await _fetchCategories();
+    // 分类加载完成后才加载帖子
+    if (mounted) {
+      setState(() {
+        _isCategoriesLoaded = true;
+        _isLoading = true;
+      });
+      await _fetchPosts(isRefresh: true);
+    }
   }
 
   Future<void> _fetchCategories() async {
@@ -921,7 +913,7 @@ class _BbsPageState extends State<BbsPage> {
         },
         child: CustomScrollView(
           slivers: [
-            // 标题栏 - 添加彩色icon，文字改为深橙色
+            // 标题栏
             SliverAppBar(
               title: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -942,7 +934,7 @@ class _BbsPageState extends State<BbsPage> {
                   Text(
                     '论坛',
                     style: TextStyle(
-                      color: const Color(0xFFE67E22), // 深橙色
+                      color: const Color(0xFFE67E22),
                       fontWeight: FontWeight.bold,
                       fontSize: 20.sp,
                     ),
@@ -1075,6 +1067,7 @@ class _BbsPageState extends State<BbsPage> {
               ),
             ),
 
+            // 分类按钮 - 添加彩色Emoji
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 42.h,
@@ -1086,11 +1079,13 @@ class _BbsPageState extends State<BbsPage> {
                           padding: EdgeInsets.symmetric(horizontal: 16.w),
                           itemCount: _categories.length + 1,
                           itemBuilder: (context, index) {
+                            // "全部"按钮 - 前面加📋
                             if (index == 0) {
                               final category = _categories[0];
                               final isSelected =
                                   !_showMyPosts &&
                                   _selectedCategoryId == category.id;
+                              final emoji = '📋';
                               return Padding(
                                 padding: EdgeInsets.only(right: 12.w),
                                 child: ElevatedButton(
@@ -1126,13 +1121,25 @@ class _BbsPageState extends State<BbsPage> {
                                     ),
                                     elevation: isSelected ? 4 : 0,
                                   ),
-                                  child: Text(category.name),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        emoji,
+                                        style: TextStyle(fontSize: 14.sp),
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      Text(category.name),
+                                    ],
+                                  ),
                                 ),
                               );
                             }
 
+                            // "我的留言"按钮 - 前面加💬
                             if (index == 1) {
                               final isSelected = _showMyPosts;
+                              final emoji = '💬';
                               return Padding(
                                 padding: EdgeInsets.only(right: 12.w),
                                 child: ElevatedButton(
@@ -1179,15 +1186,29 @@ class _BbsPageState extends State<BbsPage> {
                                     ),
                                     elevation: isSelected ? 4 : 0,
                                   ),
-                                  child: const Text('我的留言'),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        emoji,
+                                        style: TextStyle(fontSize: 14.sp),
+                                      ),
+                                      SizedBox(width: 4.w),
+                                      const Text('我的留言'),
+                                    ],
+                                  ),
                                 ),
                               );
                             }
 
+                            // 其他分类按钮 - 根据名称获取对应的Emoji
                             final category = _categories[index - 1];
                             final isSelected =
                                 !_showMyPosts &&
                                 _selectedCategoryId == category.id;
+                            final emoji = _getCategoryEmojiByName(
+                              category.name,
+                            );
                             return Padding(
                               padding: EdgeInsets.only(right: 12.w),
                               child: ElevatedButton(
@@ -1223,13 +1244,30 @@ class _BbsPageState extends State<BbsPage> {
                                   ),
                                   elevation: isSelected ? 4 : 0,
                                 ),
-                                child: Text(category.name),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      emoji,
+                                      style: TextStyle(fontSize: 14.sp),
+                                    ),
+                                    SizedBox(width: 4.w),
+                                    Text(category.name),
+                                  ],
+                                ),
                               ),
                             );
                           },
                         ),
               ),
             ),
+
+            // 如果分类还没加载完成，显示加载指示器
+            if (!_isCategoriesLoaded)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: const Center(child: CircularProgressIndicator()),
+              ),
 
             if (_showMyPosts && !userManager.isLoggedIn)
               SliverFillRemaining(
@@ -1278,7 +1316,10 @@ class _BbsPageState extends State<BbsPage> {
                 ),
               ),
 
-            if (!_showMyPosts && _isLoading && _posts.isEmpty)
+            if (!_showMyPosts &&
+                _isLoading &&
+                _posts.isEmpty &&
+                _isCategoriesLoaded)
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: const Center(child: CircularProgressIndicator()),
@@ -1304,8 +1345,6 @@ class _BbsPageState extends State<BbsPage> {
                     onTap: () => _navigateToPostDetail(post),
                     onDelete: () => _deletePost(post.id),
                     currentUserId: userManager.currentUser?.user_id,
-                    categoryEmojis: _categoryEmojis,
-                    categoryNameEmojis: _categoryNameEmojis,
                     getHotEmoji: _getHotEmoji,
                   );
                 }, childCount: _posts.length),
@@ -1344,8 +1383,6 @@ class _BbsPageState extends State<BbsPage> {
                     onTap: () => _navigateToPostDetail(post),
                     onDelete: () => _deletePost(post.id),
                     currentUserId: userManager.currentUser?.user_id,
-                    categoryEmojis: _categoryEmojis,
-                    categoryNameEmojis: _categoryNameEmojis,
                     getHotEmoji: _getHotEmoji,
                   );
                 }, childCount: _myPosts.length),
