@@ -696,7 +696,7 @@ const List<String> countryList = [
 class AppConfig {
   // 基础Web服务地址
   //static const String baseWebUrl = 'https://104.168.125.34';
-  static const String baseWebUrl = 'http://192.168.10.105';
+  static const String baseWebUrl = 'http://192.168.10.103';
   static const String port3003 = '3003';
   static const String port3004 = '3004';
   static const String port3005 = '3005';

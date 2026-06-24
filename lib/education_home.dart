@@ -18,7 +18,7 @@ class _EducationHomePageState extends State<EducationHomePage> {
   List<dynamic> _recommendations = [];
   List<dynamic> _tags = [];
   bool _isLoading = true;
-  String _searchQuery = '';
+  final String _searchQuery = '';
 
   @override
   void initState() {
@@ -264,8 +264,9 @@ class _EducationHomePageState extends State<EducationHomePage> {
                 if (_isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (index >= _universities.length)
+                if (index >= _universities.length) {
                   return const SizedBox.shrink();
+                }
                 final uni = _universities[index];
                 return _buildUniversityCard(uni, isDark);
               }, childCount: _isLoading ? 4 : _universities.length),
@@ -307,8 +308,9 @@ class _EducationHomePageState extends State<EducationHomePage> {
             padding: EdgeInsets.symmetric(horizontal: 16.w),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
-                if (index >= _recommendations.length)
+                if (index >= _recommendations.length) {
                   return const SizedBox.shrink();
+                }
                 final rec = _recommendations[index];
                 return _buildRecommendationCard(rec, isDark);
               }, childCount: _recommendations.length),

@@ -370,7 +370,7 @@ class OrderListTab extends StatelessWidget {
                 children: [
                   Icon(icon, color: Colors.white),
                   SizedBox(width: 8.w),
-                  Text('跳转到${status}页面'),
+                  Text('跳转到$status页面'),
                 ],
               ),
               backgroundColor: color,

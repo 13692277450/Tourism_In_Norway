@@ -8,7 +8,6 @@ import 'user_register.dart';
 import 'user_auth.dart';
 import 'service_address.dart';
 import 'service_like.dart';
-import 'service_order.dart';
 import 'settings_orders.dart' as settings_orders;
 
 enum UpdateState { idle, checking, available, latest, updating, completed }

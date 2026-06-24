@@ -1,6 +1,5 @@
 // service_wechat.dart
 import 'package:fluwx/fluwx.dart' as fluwx;
-import 'package:tourism_in_norway/app_shared.dart' as shared;
 import 'package:tourism_in_norway/user_auth.dart';
 
 class ServiceWeChatService {

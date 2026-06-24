@@ -32,6 +32,7 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   bool _hasMore = true;
   bool _isLoading = true;
   bool _isLoadingMore = false;
+  bool _isCategoriesLoaded = false; // 分类是否加载完成
   String? _errorMessage;
   int? _currentUserId;
 
@@ -75,7 +76,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
         return entry.value;
       }
     }
-    // 默认返回
     return '📌';
   }
 
@@ -83,8 +83,8 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   void initState() {
     super.initState();
     _loadUser();
-    _loadCategories();
-    _loadGoods(isRefresh: true);
+    // 先加载分类，分类加载完成后再加载商品
+    _loadCategoriesAndGoods();
 
     _scrollController.addListener(_onScroll);
   }
@@ -120,6 +120,19 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     }
   }
 
+  // 先加载分类，再加载商品
+  Future<void> _loadCategoriesAndGoods() async {
+    // 先加载分类
+    await _loadCategories();
+    // 分类加载完成后，再加载商品
+    if (mounted) {
+      setState(() {
+        _isCategoriesLoaded = true;
+      });
+      await _loadGoods(isRefresh: true);
+    }
+  }
+
   Future<void> _refreshLikeStatusForCurrentGoods() async {
     if (_currentUserId == null || _currentUserId! <= 0) return;
     if (_goodsList.isEmpty) return;
@@ -147,13 +160,31 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   Future<void> _loadCategories() async {
-    final categories = await ServiceApi.getCategories();
-    setState(() {
-      _categories = [ServiceCategory(id: 0, name: '全部'), ...categories];
-    });
+    try {
+      final categories = await ServiceApi.getCategories();
+      if (mounted) {
+        setState(() {
+          _categories = [ServiceCategory(id: 0, name: '全部'), ...categories];
+        });
+      }
+    } catch (e) {
+      print('❌ 加载分类失败: $e');
+      // 即使分类加载失败，也设置一个空分类列表，让用户可以继续
+      if (mounted) {
+        setState(() {
+          _categories = [ServiceCategory(id: 0, name: '全部')];
+        });
+      }
+    }
   }
 
   Future<void> _loadGoods({bool isRefresh = false}) async {
+    // 如果分类还没加载完成，等待
+    if (!_isCategoriesLoaded && !isRefresh) {
+      print('⏳ 分类未加载完成，等待...');
+      return;
+    }
+
     if (_isLoadingMore && !isRefresh) return;
     if (!_hasMore && !isRefresh) return;
 
@@ -204,53 +235,60 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           print('✅ 收藏状态加载完成: ${likeStatus.length} 个商品');
         }
 
-        setState(() {
-          if (isRefresh) {
-            _goodsList = newGoods;
-          } else {
-            final existingIds = _goodsList.map((g) => g.id).toSet();
-            final uniqueNewGoods =
-                newGoods.where((g) => !existingIds.contains(g.id)).toList();
-            _goodsList.addAll(uniqueNewGoods);
-            _goodsList.sort((a, b) => b.id.compareTo(a.id));
-          }
+        if (mounted) {
+          setState(() {
+            if (isRefresh) {
+              _goodsList = newGoods;
+            } else {
+              final existingIds = _goodsList.map((g) => g.id).toSet();
+              final uniqueNewGoods =
+                  newGoods.where((g) => !existingIds.contains(g.id)).toList();
+              _goodsList.addAll(uniqueNewGoods);
+              _goodsList.sort((a, b) => b.id.compareTo(a.id));
+            }
 
-          final totalLoaded = _goodsList.length;
-          if (newGoods.isEmpty || totalLoaded >= total) {
-            _hasMore = false;
-          } else {
-            _currentPage++;
-            _hasMore = true;
-          }
+            final totalLoaded = _goodsList.length;
+            if (newGoods.isEmpty || totalLoaded >= total) {
+              _hasMore = false;
+            } else {
+              _currentPage++;
+              _hasMore = true;
+            }
 
-          _isLoading = false;
-          _isLoadingMore = false;
+            _isLoading = false;
+            _isLoadingMore = false;
 
-          if (_goodsList.isEmpty) {
-            _errorMessage = '暂无商品';
-          }
-        });
+            if (_goodsList.isEmpty) {
+              _errorMessage = '暂无商品';
+            }
+          });
+        }
       } else {
         final errorMsg = result['message'] ?? '加载失败，请稍后重试';
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isLoadingMore = false;
+            _errorMessage = errorMsg;
+          });
+        }
+      }
+    } catch (e) {
+      print('❌ 加载商品失败: $e');
+      if (mounted) {
         setState(() {
           _isLoading = false;
           _isLoadingMore = false;
-          _errorMessage = errorMsg;
+          if (isRefresh || _goodsList.isEmpty) {
+            _errorMessage = '网络错误，请检查连接';
+          }
         });
       }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _isLoadingMore = false;
-        if (isRefresh || _goodsList.isEmpty) {
-          _errorMessage = '网络错误，请检查连接';
-        }
-      });
     }
   }
 
   void _loadMoreGoods() {
-    if (!_isLoadingMore && _hasMore && !_isLoading) {
+    if (!_isLoadingMore && _hasMore && !_isLoading && _isCategoriesLoaded) {
       print('🔄 加载更多数据，当前页: $_currentPage');
       _loadGoods();
     }
@@ -258,7 +296,9 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
 
   void _searchGoods() {
     FocusScope.of(context).unfocus();
-    _loadGoods(isRefresh: true);
+    if (_isCategoriesLoaded) {
+      _loadGoods(isRefresh: true);
+    }
     _searchController.clear();
   }
 
@@ -266,21 +306,31 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     setState(() {
       _selectedCategoryId = categoryId;
     });
-    _loadGoods(isRefresh: true);
+    if (_isCategoriesLoaded) {
+      _loadGoods(isRefresh: true);
+    }
   }
 
   void _navigateToCart() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ServiceCartPage()),
-    ).then((_) => _loadGoods(isRefresh: true));
+    ).then((_) {
+      if (_isCategoriesLoaded) {
+        _loadGoods(isRefresh: true);
+      }
+    });
   }
 
   void _navigateToLike() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ServiceLikePage()),
-    ).then((_) => _loadGoods(isRefresh: true));
+    ).then((_) {
+      if (_isCategoriesLoaded) {
+        _loadGoods(isRefresh: true);
+      }
+    });
   }
 
   void _navigateToSettings() {
@@ -288,7 +338,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     final themeMode =
         brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
 
-    // 获取当前语言
     final locale = Localizations.localeOf(context);
 
     Navigator.push(
@@ -302,7 +351,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
               onThemeModeChanged: (newThemeMode) {},
             ),
       ),
-    ).then((_) => _loadGoods(isRefresh: true));
+    ).then((_) {
+      if (_isCategoriesLoaded) {
+        _loadGoods(isRefresh: true);
+      }
+    });
   }
 
   void _goLogin() {
@@ -311,7 +364,9 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
       MaterialPageRoute(builder: (context) => const LoginPage()),
     ).then((_) {
       _loadUser();
-      _loadGoods(isRefresh: true);
+      if (_isCategoriesLoaded) {
+        _loadGoods(isRefresh: true);
+      }
     });
   }
 
@@ -319,7 +374,11 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => ServiceProductDetailPage(goods: goods)),
-    ).then((_) => _loadGoods(isRefresh: true));
+    ).then((_) {
+      if (_isCategoriesLoaded) {
+        _loadGoods(isRefresh: true);
+      }
+    });
   }
 
   void _toggleLike(ServiceGoods goods) async {
@@ -496,7 +555,27 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   Widget _buildCategoryBar(bool isDark) {
+    // 分类加载中时显示占位
+    if (!_isCategoriesLoaded) {
+      return SizedBox(
+        height: 35.h,
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                theme.ServiceMetalColors.primary,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     if (_categories.isEmpty) return const SizedBox.shrink();
+
     return SizedBox(
       height: 35.h,
       child: ListView.builder(
@@ -607,6 +686,24 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
   }
 
   Widget _buildGoodsList(bool isDark) {
+    // 分类加载中时显示加载状态
+    if (!_isCategoriesLoaded) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 40,
+              height: 40,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(height: 16),
+            Text('加载分类中...'),
+          ],
+        ),
+      );
+    }
+
     if (_isLoading && _goodsList.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -719,7 +816,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 商品图片
             ClipRRect(
               borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
               child: Stack(
@@ -764,7 +860,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                             ? 'goods_${goods.id}_${goods.mainImage!.hashCode}'
                             : null,
                   ),
-                  // 评分标签
                   if (goods.score > 0)
                     Positioned(
                       top: 8.w,
@@ -803,7 +898,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                 ],
               ),
             ),
-            // 商品信息 - 使用Expanded确保内容不溢出
             Expanded(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(10.w, 8.h, 10.w, 8.h),
@@ -811,7 +905,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // 商品名称
                     Flexible(
                       child: Text(
                         goods.name,
@@ -829,7 +922,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                       ),
                     ),
                     SizedBox(height: 2.h),
-                    // 简短描述
                     if (goods.shortDescription != null &&
                         goods.shortDescription!.isNotEmpty)
                       Flexible(
@@ -849,7 +941,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                         ),
                       ),
                     SizedBox(height: 6.h),
-                    // 价格行
                     Row(
                       children: [
                         Flexible(
@@ -886,7 +977,6 @@ class _ServiceHomePageState extends State<ServiceHomePage> {
                       ],
                     ),
                     SizedBox(height: 6.h),
-                    // 销量和点赞行
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

@@ -9,6 +9,23 @@ should be done in one month.
 
 <img width="1240" height="2772" alt="NorwaytravelAppHome" src="https://github.com/user-attachments/assets/141b4a5f-d832-4e83-b62e-9c0ff006b028" />
 
+![alt text](<UI/ui01 (1).jpg>)
 
+
+![alt text](<UI/ui01 (2).jpg>)
+
+![alt text](<UI/ui01 (3).jpg>)
+
+![alt text](<UI/ui01 (4).jpg>)
+
+![alt text](<UI/ui01 (5).jpg>)
+
+![alt text](<UI/ui01 (6).jpg>)
+
+![alt text](<UI/ui01 (7).jpg>)
+
+![alt text](<UI/ui01 (8).jpg>)
+
+![alt text](<UI/ui01 (9).jpg>)
 
 "# Tourism_In_Norway" 
