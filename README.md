@@ -1,6 +1,6 @@
 # tourism_in_norway
 
-A new Flutter project.
+A Flutter project which create by Flutter SDK, Dart language, Node.js, Express.js, MySQL.
 
 ## Getting Started
 
