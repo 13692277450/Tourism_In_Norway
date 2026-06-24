@@ -7,7 +7,6 @@ A new Flutter project.
 This project is a  Flutter application about travle information in the part of Europe. now it's designing in progress about Norway.
 should be done in one month.
 
-<img width="1240" height="2772" alt="NorwaytravelAppHome" src="https://github.com/user-attachments/assets/141b4a5f-d832-4e83-b62e-9c0ff006b028" />
 
 ![alt text](<UI/ui01 (1).jpg>)
 
@@ -22,7 +21,6 @@ should be done in one month.
 
 ![alt text](<UI/ui01 (6).jpg>)
 
-![alt text](<UI/ui01 (7).jpg>)
 
 ![alt text](<UI/ui01 (8).jpg>)
 
