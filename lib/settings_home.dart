@@ -1,6 +1,7 @@
 // settings_home.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:tourism_in_norway/admin_login.dart';
 
 import 'app_shared.dart' as shared;
 import 'settings_upgrade.dart';
@@ -194,7 +195,27 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           SizedBox(height: 20.h),
-
+          // ==================== ADMINADMIN ====================
+          _InfoCard(
+            title: 'Admin Settings',
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  // 打开登录页
+                  MaterialPageRoute(
+                    builder: (context) => const AdminLoginPage(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3D5AFE),
+                foregroundColor: Colors.white,
+              ),
+              child: Text('Admin Login'),
+            ),
+          ),
+          SizedBox(height: 20.h),
           // ==================== 版本信息 ====================
           _InfoCard(
             title: '📱 版本信息',

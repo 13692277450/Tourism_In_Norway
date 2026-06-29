@@ -26,4 +26,15 @@ should be done in one month.
 
 ![alt text](<UI/ui01 (9).jpg>)
 
+## Backend Admin Panel:
+
+### Light Mode
+
+![alt text](image.png)
+
+### Dark Mode
+
+![alt text](image-1.png)
+
+
 "# Tourism_In_Norway" 
