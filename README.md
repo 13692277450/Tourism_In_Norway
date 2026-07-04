@@ -37,8 +37,11 @@ should be done in one month.
 ![alt text](image-1.png)
 
 
-### Dashboard
+### Dashboard light mode
 
 ![alt text](image-2.png)
 
+### Dashboard dark mode
+
+![alt text](image-3.png)
 "# Tourism_In_Norway" 
