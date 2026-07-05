@@ -1,7 +1,6 @@
 # tourism_in_norway
 
-A Flutter project which create by Flutter SDK, Dart language, Node.js, Express.js, MySQL. This project Front and backend source code is on sale, the price is 399 Euro, pls feel free contact by m13692277450@outlook.com if you are interesting with it.
-
+A Flutter project which create by Flutter SDK, Dart language, Node.js, Express.js, MySQL. 
 ## Getting Started
 
 This project is a  Flutter application about travle information in the part of Europe. now it's designing in progress about Norway.
