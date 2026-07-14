@@ -44,4 +44,11 @@ should be done in one month.
 ### Dashboard dark mode
 
 ![alt text](image-3.png)
+
+## **If you like and support this project, pls conside support me by below link:**
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/mangzhang)
+
+License: MIT License.
+
 "# Tourism_In_Norway" 
