@@ -6,7 +6,6 @@ A Flutter project which create by Flutter SDK, Dart language, Node.js, Express.j
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/mangzhang)
 
-License: MIT License.
 
 ## Getting Started
 
